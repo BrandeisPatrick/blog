@@ -31,13 +31,21 @@ Implementation notes:
 Aim for the blend of the two reference blogs: **Lilian Weng's structure + rigor**
 with **nrehiew's intuition-first, opinionated delivery.**
 
-**Titles** — descriptive topic phrase, often with a framing lens or a question.
-A one-line *dek* (subtitle) under the title frames the story.
+**Titles** — descriptive topic phrase, often with a framing lens.
 - Good: "The path to 1M context window" · "SFT, RL, and On-Policy Distillation Through a Distributional Lens" · "Why We Think"
 
-**Section headings** — informative, not cute. They may be **assertive claims or
-questions** (nrehiew style): "Why does RL forget less?", "The wall: why long context is hard",
-"The explanation I prefer." Avoid one-word vague headings.
+**Subtitle (dek)** — ONE short line, nrehiew's "On X, Y, and Z" shape — name the threads, don't hook.
+Not a paragraph. The opening *paragraph* carries the hook (and ideally the trend/why-now).
+- Good: "On positional encoding, the KV cache, attention, and everything else that had to change to read a million tokens."
+
+**Section headings** — nrehiew style: **Title Case**, phrased as a **claim or question** that
+*states the takeaway*, not a topic label. Each heading must **encode the load-bearing "why"** —
+for a long-context piece, *why this matters when the context gets long*. Be **specific**: name the
+mechanism (N²/N scaling, RoPE-vs-NoPE), don't gesture vaguely ("keep it where it helps" = too vague;
+"RoPE for Local Order, NoPE for Long-Range Reach" = good). **No number prefixes** (the TOC numbers them).
+Don't over-claim — a heading shouldn't imply its section explains the whole topic.
+- Good: "Why Length Is Expensive: Attention Scales as N², Memory as N" · "A Long Window Is Useless If the Model Ignores the Middle" · "Do You Even Need Attention?"
+- Lilian's plainer noun-label style ("Latent Variable Modeling") is the alternative, but it can't carry a "why" — use nrehiew's for this blog.
 
 **Structure / how to deliver knowledge**
 - Open with a **hook + a unifying frame**: state the one mental model or "the whole game is X"
