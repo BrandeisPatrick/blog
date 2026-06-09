@@ -41,7 +41,7 @@ main, .hero, footer { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
 /* Desktop style modeled on lilianweng.github.io (Hugo PaperMod theme):
    ~720px content column, system sans, 18px body, 1.6 leading, TOC box. */
 body.wide main, body.wide footer { max-width: 768px; }   /* 720px content + 2×24px gutters */
-.article { font-size: 18px; line-height: 1.6; }
+.article { font-size: 16px; line-height: 1.6; }           /* matches lilianweng.github.io */
 .article p { margin: 0 0 1.2em; }
 .article .dek { font-size: 1.1em; line-height: 1.5; color: var(--muted); }
 /* PaperMod-style content links: dark text, underlined (not colored). */
@@ -52,14 +52,14 @@ body.wide main, body.wide footer { max-width: 768px; }   /* 720px content + 2×2
 html { scroll-behavior: smooth; }
 :target { scroll-margin-top: 24px; }
 
-/* Table-of-contents box (PaperMod .toc) */
-.toc { margin: 8px 0 40px; border: 1px solid var(--rule); background: #f6f6f4; border-radius: 8px; padding: 6px 6px; font-size: 15px; }
-.toc > summary { cursor: pointer; font-weight: 600; padding: 6px 14px; color: var(--fg); list-style-position: outside; }
-.toc .inner { margin: 0; padding: 4px 26px 10px; }
-.toc ol { margin: 0; padding-left: 20px; }
-.toc li { margin: 4px 0; }
-.toc a { color: var(--muted); text-decoration: none; }
-.toc a:hover { color: var(--fg); text-decoration: underline; }
+/* Table-of-contents box (PaperMod .toc) — compact, muted links */
+.toc { margin: 8px 0 36px; border: 1px solid var(--rule); background: #f6f6f4; border-radius: 8px; padding: 8px 10px; font-size: 14px; line-height: 1.5; }
+.toc > summary { cursor: pointer; font-weight: 600; padding: 4px 8px; color: var(--fg); }
+.toc .inner { margin: 0; padding: 6px 8px 4px; }
+.toc ol { margin: 0; padding-left: 30px; }
+.toc li { margin: 1px 0; }
+.toc .inner a { color: var(--muted); text-decoration: none; }
+.toc .inner a:hover { color: var(--accent); text-decoration: underline; }
 
 /* ---- Hero ---- */
 .hero { padding-top: 64px; padding-bottom: 8px; }
