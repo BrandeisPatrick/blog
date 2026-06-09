@@ -118,7 +118,8 @@ body.wide main, body.wide footer { max-width: 1180px; }
 .backlink:hover { color: var(--fg); }
 
 /* ---- Figures ---- */
-.article figure { margin: 36px 0; }
+/* Cap figures so they stay a comfortable size even when the text column is wide. */
+.article figure { margin: 36px auto; max-width: 720px; }
 .article figure img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); border-radius: 8px; background: #fff; }
 .article figcaption { margin-top: 10px; font-size: 14px; color: var(--muted); line-height: 1.5; }
 .article figcaption b { color: var(--fg); font-weight: 600; }
