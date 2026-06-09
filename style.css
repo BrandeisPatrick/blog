@@ -45,10 +45,10 @@ main, .hero, footer { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
    renders ~64 actual characters per line. */
 body.wide main, body.wide footer {
   font-size: clamp(1.0625rem, 1rem + 0.45vw, 1.3125rem); /* 17px → 21px */
-  max-width: 52ch;
+  max-width: 47ch;                                        /* measures to ~65 CPL */
 }
-.article { line-height: 1.62; }
-.article p { margin: 0 0 1.35em; line-height: 1.62; }
+.article { line-height: 1.58; }
+.article p { margin: 0 0 1.35em; line-height: 1.58; }
 .article .dek { font-size: 1.18em; line-height: 1.4; }
 
 /* ---- Hero ---- */
