@@ -35,9 +35,9 @@ body {
 
 main, .hero, footer { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
 
-/* Article pages get a roomier column so they don't feel cramped on wide screens,
-   while staying short of uncomfortably long text lines. */
-body.wide main, body.wide footer { max-width: 900px; }
+/* Article pages get a roomier, fluid column so they fill desktop screens
+   instead of leaving big empty margins. */
+body.wide main, body.wide footer { max-width: 1180px; }
 
 /* ---- Hero ---- */
 .hero { padding-top: 64px; padding-bottom: 8px; }
