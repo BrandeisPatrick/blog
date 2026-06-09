@@ -9,6 +9,8 @@
   --fg: #1b1b1a;
   --muted: #6b6b66;
   --accent: #b5482e;
+  --link: #2f6f7a;
+  --link-soft: rgba(47,111,122,.38);
   --rule: #ececec;
   --maxw: 680px;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -44,10 +46,10 @@ body.wide main, body.wide footer { max-width: 768px; }   /* 720px content + 2×2
 .article { font-size: 16px; line-height: 1.6; }           /* matches lilianweng.github.io */
 .article p { margin: 0 0 1.2em; }
 .article .dek { font-size: 1.1em; line-height: 1.5; color: var(--muted); }
-/* PaperMod-style content links: dark text, underlined (not colored). */
-.article a { color: var(--fg); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
-.article a:hover { color: var(--accent); }
-.article .refs a { color: var(--fg); }
+/* Content / citation links: calm teal, soft underline — readable when dense. */
+.article a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; text-decoration-color: var(--link-soft); }
+.article a:hover { color: #214e57; text-decoration-color: currentColor; }
+.article .refs a { color: var(--link); }
 
 html { scroll-behavior: smooth; }
 :target { scroll-margin-top: 24px; }
@@ -123,7 +125,7 @@ html { scroll-behavior: smooth; }
 .article p { margin: 0 0 20px; }
 .article h2 { margin: 40px 0 12px; font-size: 24px; }
 .article h3 { margin: 32px 0 8px; font-size: 19px; }
-.article a { color: var(--accent); }
+.article a:visited { color: var(--link); }
 .article blockquote {
   margin: 24px 0; padding: 4px 20px;
   border-left: 3px solid var(--rule); color: var(--muted); font-style: italic;
@@ -156,7 +158,7 @@ html { scroll-behavior: smooth; }
 .article th { font-weight: 600; }
 .refs { font-size: 14px; line-height: 1.55; color: var(--muted); }
 .refs li { margin: 7px 0; }
-.refs a { color: var(--accent); word-break: break-word; }
+.refs a { color: var(--link); word-break: break-word; }
 .footnote-num { font-size: 0.7em; vertical-align: super; color: var(--accent); text-decoration: none; padding: 0 1px; }
 
 /* ---- Footer ---- */
