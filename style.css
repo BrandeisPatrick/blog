@@ -140,10 +140,10 @@ html { scroll-behavior: smooth; }
 .backlink:hover { color: var(--fg); }
 
 /* ---- Figures ---- */
-/* Figures fill the reading column — sized to match the text, never oversized. */
-.article figure { margin: 36px auto; max-width: 100%; }
-.article figure img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); border-radius: 8px; background: #fff; }
-.article figcaption { margin-top: 10px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+/* Figures — small, centered, no border, centered caption (like the reference). */
+.article figure { margin: 30px auto; max-width: 560px; }
+.article figure img { width: 100%; height: auto; display: block; border-radius: 4px; }
+.article figcaption { margin-top: 10px; font-size: 13px; color: var(--muted); line-height: 1.5; text-align: center; }
 .article figcaption b { color: var(--fg); font-weight: 600; }
 
 /* ---- Article extras ---- */
