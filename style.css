@@ -38,10 +38,10 @@ main, .hero, footer { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
 /* Article pages: tuned for reading, not for filling the screen.
    ~700px measure ≈ 70 chars/line, 19px text, 1.7 line-height — the
    typographic sweet spot. Figures may run a little wider than the text. */
-body.wide main, body.wide footer { max-width: 720px; }
-.article { font-size: 19px; line-height: 1.72; }
-.article p { margin: 0 0 22px; }
-.article .dek { font-size: clamp(19px, 4.5vw, 23px); line-height: 1.5; }
+body.wide main, body.wide footer { max-width: 660px; }
+.article { font-size: 21px; line-height: 1.6; }
+.article p { margin: 0 0 24px; }
+.article .dek { font-size: clamp(20px, 4.5vw, 25px); line-height: 1.45; }
 
 /* ---- Hero ---- */
 .hero { padding-top: 64px; padding-bottom: 8px; }
