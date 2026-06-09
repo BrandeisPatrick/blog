@@ -1,0 +1,11 @@
+# Claude Code local config (machine-specific, not for the published site)
+.claude/
+
+# macOS / editor junk
+.DS_Store
+*.swp
+*~
+
+# Logs and deps (in case this ever grows a toolchain)
+*.log
+node_modules/
