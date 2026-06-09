@@ -86,87 +86,53 @@
 
       <h2 id="s2">Positional Encoding: RoPE for Local Order, NoPE for Long-Range Reach</h2>
 
-      <p>Self-attention is permutation-invariant: on its own, it cannot tell "dog bites man" from "man
-        bites dog," because it sees a set of tokens rather than a sequence. The original Transformer
-        (<a href="https://arxiv.org/abs/1706.03762">Vaswani et al., 2017</a>) injected order with fixed
-        <b>sinusoidal</b> encodings, but GPT-2 and GPT-3 (<a href="https://arxiv.org/abs/2005.14165">Brown et al., 2020</a>)
-        switched to <b>learned absolute positional embeddings</b> — a lookup table with one trainable
-        vector per position, from 0 to <i>L−1</i>. (It is often said that GPT-3 used sinusoidal encodings;
-        it did not. It used the learned table, capped at <i>L</i> = 2,048.)</p>
-
-      <p>That table is exactly the problem. If a model only ever trains on positions 0 through 2,047,
-        position 2,048 has no vector at all, and the model simply cannot process a longer sequence without
-        being retrained. Absolute positional embeddings build a wall at the training length.</p>
-
-      <p>The escape was to encode <i>relative</i> distance instead of absolute position. Shaw et al.
-        (<a href="https://arxiv.org/abs/1803.02155">2018</a>) added learned relative offsets to attention,
-        and Transformer-XL (<a href="https://arxiv.org/abs/1901.02860">Dai et al., 2019</a>) and T5
-        (<a href="https://arxiv.org/abs/1910.10683">Raffel et al., 2020</a>) refined the idea with bias
-        terms and log-spaced buckets. Because these schemes encode "how far apart" rather than "where
-        exactly," the model never meets a position it has not seen in some relative form before.</p>
-
-      <p>The decisive step was <b>RoPE</b>, rotary position embedding
-        (<a href="https://arxiv.org/abs/2104.09864">Su et al., 2021</a>). Instead of adding a position
-        vector, RoPE rotates each query and key by an angle proportional to its position, so that the
-        score between a query and a key depends only on their relative distance <i>(m − n)</i>. It is
-        parameter-free and now nearly universal: LLaMA, Mistral, Qwen, DeepSeek, and Gemma all use it.</p>
+      <p>Almost every model today encodes position with <b>RoPE</b>, rotary position embedding
+        (<a href="https://arxiv.org/abs/2104.09864">Su et al., 2021</a>). Rather than add a position vector
+        to each token, RoPE rotates every query and key by an angle proportional to its position, so that
+        the attention score between them depends only on their <i>relative</i> distance <i>(m − n)</i>. It
+        is parameter-free and, since LLaMA adopted it, effectively universal — Mistral, Qwen, DeepSeek, and
+        Gemma all use it. It is the foundation everything else in this section builds on.</p>
 
       <p>RoPE has two properties, though, that are helpful up close and become liabilities at range. The
         first is a built-in <b>long-term decay</b>: the rotation makes the query–key score fall off as two
-        tokens move farther apart. That is exactly what you want for local word order, and exactly what you
-        do not want when the useful information sits a million tokens back. The second is that RoPE's
-        rotation frequencies are effectively <b>calibrated to the training length</b>. Feed the model
-        positions far beyond what it saw in training and those angles are out of distribution, so attention
-        degrades. In short, RoPE is both anchored to where it trained and biased toward the neighborhood —
-        the two things that hurt most at a million tokens.</p>
+        tokens move farther apart — exactly what you want for local word order, and exactly what you do not
+        want when the useful information sits a million tokens back. The second is that RoPE's rotation
+        frequencies are effectively <b>calibrated to the training length</b>; feed it positions far beyond
+        what it saw in training and those angles are out of distribution, so attention degrades. RoPE is
+        both anchored to where it trained and biased toward the neighborhood — the two things that hurt most
+        at a million tokens.</p>
 
       <figure>
-        <img src="../figures/fig4-pos-encoding.svg" alt="Diagram of positional-encoding evolution: sinusoidal and learned absolute, a relative branch with Shaw and T5, converging on RoPE in 2021, then extensions PI/NTK/YaRN, LongRoPE and base scaling, and finally iRoPE with NoPE." />
-        <figcaption><b>Figure 3 — Positional encoding, 2017–2025.</b> Absolute schemes hit a hard length cap; relative schemes encode distance; RoPE unified them with rotations — and the newest models interleave position-free (NoPE) layers on top.</figcaption>
+        <img src="../figures/fig5-rope-vs-nope.svg" alt="Plot contrasting RoPE and NoPE: RoPE's attention decays with token distance and scatters past the training-length wall, while NoPE stays flat across any distance." />
+        <figcaption><b>Figure 3 — RoPE vs NoPE.</b> RoPE's attention decays with distance and breaks down past its training length; a position-free (NoPE) layer stays flat and has no length cap. The newest models (iRoPE) keep RoPE layers for local order and add NoPE layers for the long-range reach.</figcaption>
       </figure>
 
-      <h3>Pushing the anchor out: PI, NTK, YaRN</h3>
+      <p>You can stretch RoPE's range with a brief continued-pretraining pass — Position Interpolation
+        (<a href="https://arxiv.org/abs/2306.15595">Chen et al., 2023</a>) and YaRN
+        (<a href="https://arxiv.org/abs/2309.00071">Peng et al., 2023</a>) are the standard tricks, and
+        they are what carry most models to 128K and beyond — but they only push the training-length anchor
+        outward; they do nothing about the decay. A RoPE model stretched to a million tokens still
+        struggles to <i>attend</i> uniformly across them.</p>
 
-      <p>The first wave of fixes attacks the training-length anchor, stretching RoPE's usable range with a
-        brief continued-pretraining pass rather than a full retraining. Position Interpolation
-        (<a href="https://arxiv.org/abs/2306.15595">Chen et al., 2023</a>) squeezes the position indices
-        back into the trained range, which is roughly 600× more stable than extrapolating and extended
-        LLaMA to 32K in under a thousand fine-tuning steps. NTK-aware scaling and ABF
-        (<a href="https://arxiv.org/abs/2309.16039">Xiong et al., 2023</a>) instead raise the RoPE base
-        (for example from 10,000 to 500,000), which lengthens the low-frequency cycles; Llama 3 used a base
-        of 500,000 to reach 128K. YaRN (<a href="https://arxiv.org/abs/2309.00071">Peng et al., 2023</a>)
-        blends interpolation across frequency bands and adds a temperature correction, reaching the same
-        quality with about 10× fewer tokens, and it has become the workhorse that DeepSeek and Qwen use to
-        extend to 128K and beyond.</p>
-
-      <p>All of these move the anchor, but none of them touch the decay. A RoPE model whose range has been
-        stretched to a million tokens still struggles to <i>attend</i> uniformly across them.</p>
-
-      <h3>The frontier move: drop position on some layers (NoPE)</h3>
-
-      <p>The newest idea is almost embarrassingly simple: on a fraction of the layers, use <b>no positional
-        encoding at all</b> (<b>NoPE</b>) and let those layers read order from the causal mask alone. A
-        NoPE layer has no rotation, so it has neither of RoPE's problems — there is no distance decay, so
-        it can attend across the whole sequence, and no training-length anchor, so nothing goes out of
-        distribution as the context grows. The recipe, then, is to keep RoPE on most layers for sharp local
-        order, and let the position-free layers do the long-range reaching
-        (<a href="https://arxiv.org/abs/2305.19466">Kazemnejad et al., 2023</a>;
-        <a href="https://arxiv.org/abs/2501.18795">Yang et al., 2025</a>).</p>
+      <p>The newest idea fixes both at once, and it is almost embarrassingly simple: on a fraction of the
+        layers, use <b>no positional encoding at all</b> (<b>NoPE</b>) and let them read order from the
+        causal mask alone (<a href="https://arxiv.org/abs/2305.19466">Kazemnejad et al., 2023</a>;
+        <a href="https://arxiv.org/abs/2501.18795">Yang et al., 2025</a>). A NoPE layer has no rotation, so
+        it has neither problem — no distance decay, so it can attend across the whole sequence, and no
+        training-length anchor, so nothing goes out of distribution as the context grows. The recipe is to
+        keep RoPE on most layers for sharp local order and let the position-free layers do the long-range
+        reaching.</p>
 
       <p>This is what the longest-context models actually do. Meta's Llama 4
         (<a href="https://huggingface.co/blog/llama4-release">2025</a>) calls it <b>iRoPE</b>: roughly
-        three RoPE layers for every one NoPE layer, plus an inference-time attention-temperature scaling.
-        It is trained at 256K and generalizes to 10M tokens. Hugging Face's fully-open SmolLM3
-        (<a href="https://huggingface.co/blog/smollm3">2025</a>), a 3B model, uses the same recipe — RoPE
-        on three-quarters of its layers, NoPE on every fourth — with the RoPE base raised to 5M and YaRN to
-        reach 128K. Because SmolLM3 publishes its weights <i>and</i> its training recipe, it is the
-        clearest public confirmation of the pattern; the proprietary 1M models (Gemini, GPT-4.1, Claude)
-        do not disclose their positional scheme, but are widely assumed to be doing something similar.</p>
-
-      <p>So the modern answer to "how do you encode position for a million tokens?" is to keep it where it
-        helps and drop it where it hurts. Position pins down local word order, so it stays on most layers;
-        remove it on the layers that have to see the whole document, and the model finally reaches as far
-        as its context window claims to.</p>
+        three RoPE layers for every one NoPE layer, plus an inference-time attention-temperature scaling,
+        trained at 256K and generalizing to 10M tokens. Hugging Face's fully-open SmolLM3
+        (<a href="https://huggingface.co/blog/smollm3">2025</a>) uses the same recipe — RoPE on
+        three-quarters of its layers, NoPE on every fourth. Because SmolLM3 publishes its weights
+        <i>and</i> its training recipe, it is the clearest public confirmation of the pattern; the
+        proprietary 1M models (Gemini, GPT-4.1, Claude) do not disclose their positional scheme but are
+        widely assumed to do something similar. The modern answer to "how do you encode position for a
+        million tokens?" is to keep it where it helps and drop it where it hurts.</p>
 
       <hr />
 
