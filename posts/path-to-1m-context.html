@@ -43,29 +43,20 @@
 
       <h2>1. The wall: why long context is hard</h2>
 
-      <p>Two costs make long context expensive, and they scale differently.</p>
-
-      <p>The first is <b>attention itself</b>. In a standard Transformer, every token attends to every
-        other token, so a sequence of length <i>N</i> produces an <i>N×N</i> score matrix. That's
-        <i>O(N²)</i> compute <em>and</em> <i>O(N²)</i> memory. Double the context and you quadruple the
-        cost; go from 2K to 1M and the naive attention matrix is ~250,000× larger. For years this was
-        simply impossible to train.</p>
-
-      <p>The second is the <b>KV cache</b>. When a model generates text, it caches the keys and values
-        of every previous token so it doesn't recompute them. That cache grows <i>linearly</i> with
-        context — but the constant is brutal. A 70B model like Llama 3 at 128K tokens needs roughly
-        <b>40 GB</b> of KV cache in fp16, on top of ~140 GB of weights.<a href="#r" class="footnote-num">refs</a>
-        At a million tokens it would not fit on any single accelerator.</p>
+      <p>Two costs make long context expensive, and they scale differently. <b>Attention</b> is
+        <i>O(N²)</i>: every token attends to every other, so going from 2K to 1M tokens makes the score
+        matrix ~250,000× bigger — for years simply impossible to train. The <b>KV cache</b> (the keys and
+        values a model holds for every prior token) grows only <i>linearly</i>, but the constant is
+        brutal: Llama 3 70B needs ~<b>40 GB</b> at 128K tokens, on top of ~140 GB of weights.<a href="#r" class="footnote-num">refs</a></p>
 
       <figure>
         <img src="../figures/fig3-attention-wall.svg" alt="Log-log plot of relative cost versus sequence length, comparing O(N squared) standard attention against O(N) FlashAttention/linear methods." />
-        <figcaption><b>Figure 2 — The quadratic wall.</b> Relative cost versus sequence length (both axes log). Standard attention's <i>O(N²)</i> curve pulls decisively away from the linear <i>O(N)</i> curve that IO-aware and sub-quadratic methods achieve. Closing this gap is the central systems story of long context.</figcaption>
+        <figcaption><b>Figure 2 — The quadratic wall.</b> Relative cost versus sequence length (both axes log). Standard attention's <i>O(N²)</i> curve pulls decisively away from the <i>O(N)</i> curve that IO-aware and sub-quadratic methods achieve.</figcaption>
       </figure>
 
-      <p>So the path to 1M tokens is really a campaign on two fronts: <b>make attention sub-quadratic
-        (or at least IO-efficient)</b>, and <b>shrink the per-token memory footprint</b>. Everything
-        below is some attack on one of those two problems — plus the positional-encoding problem, which
-        came first because it set the hard ceiling.</p>
+      <p>That's the whole game. Everything below is an attack on one of these two costs — make attention
+        cheaper, or shrink the cache — plus the positional-encoding problem, which came first because it
+        set the hard ceiling.</p>
 
       <hr />
 
