@@ -34,9 +34,21 @@
         </nav>
       </details>
 
-      <p class="dek">In May 2020, GPT-3 could read 2,048 tokens at once. Five years later, a single
-        model reads ten million. That ~5,000× jump did not come from one trick — it came from
-        quietly rebuilding nearly every layer of the stack. This is a tour of what actually changed.</p>
+      <p class="dek">On positional encoding, the KV cache, attention, and everything else that had to
+        change to read a million tokens.</p>
+
+      <p>Sometime in the last two years, the million-token context window stopped being a headline and
+        became the spec sheet. Google's <b>Gemini 1.5</b> got there first in early 2024; since then
+        OpenAI's <b>GPT-4.1</b>, Anthropic's <b>Claude 4</b>, Alibaba's <b>Qwen</b>, Meta's <b>Llama 4</b>,
+        and <b>DeepSeek V4</b> have all shipped 1M-token windows — and increasingly they hold up
+        <i>across</i> the whole million rather than falling apart in the middle. A million tokens is now
+        the floor a frontier model is expected to clear, with 2M, 4M, even 10M already in preview. So the
+        open question isn't <i>whether</i> the next model will take a million tokens — that's becoming the
+        default. It's <i>how</i>.</p>
+
+      <p>That's a ~5,000× jump from GPT-3's 2,048 tokens in 2020, and it didn't come from one trick. This
+        is a tour of what actually changed — across positional encoding, the KV cache, attention,
+        architecture, training, and the systems that hold it all together.</p>
 
       <figure>
         <img src="../figures/fig1-context-growth.svg" alt="Line chart of maximum context window from 2020 to 2026 on a log scale, rising from GPT-3's 2,048 tokens to Llama 4 Scout's 10M." />
