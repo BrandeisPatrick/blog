@@ -113,6 +113,25 @@ main, .hero, footer { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
 .backlink { display: inline-block; margin: 0 0 24px; color: var(--muted); text-decoration: none; font-size: 15px; }
 .backlink:hover { color: var(--fg); }
 
+/* ---- Figures ---- */
+.article figure { margin: 36px 0; }
+.article figure img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); border-radius: 8px; background: #fff; }
+.article figcaption { margin-top: 10px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+.article figcaption b { color: var(--fg); font-weight: 600; }
+
+/* ---- Article extras ---- */
+.dek { font-size: clamp(18px, 4.5vw, 22px); color: var(--muted); line-height: 1.45; margin: 0 0 28px; }
+.article ul, .article ol { margin: 0 0 20px; padding-left: 24px; }
+.article li { margin: 6px 0; }
+.article hr { border: none; border-top: 1px solid var(--rule); margin: 40px 0; }
+.article table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 15px; }
+.article th, .article td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.article th { font-weight: 600; }
+.refs { font-size: 14px; line-height: 1.55; color: var(--muted); }
+.refs li { margin: 7px 0; }
+.refs a { color: var(--accent); word-break: break-word; }
+.footnote-num { font-size: 0.7em; vertical-align: super; color: var(--accent); text-decoration: none; padding: 0 1px; }
+
 /* ---- Footer ---- */
 footer {
   border-top: 1px solid var(--rule);

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The path to 1M context window — Bat</title>
+  <meta name="description" content="How LLMs went from GPT-3's 2,048 tokens to 1M+ — positional encoding, the KV cache, the attention algorithm, training recipes, systems, and optimizers. A guided tour of everything that changed." />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <main>
+    <a class="backlink" href="../index.html">← all writing</a>
+
+    <article class="article">
+      <h1>The path to 1M context window</h1>
+      <p class="meta"><time datetime="2026-06-08">June 8, 2026</time> · ~20 min read</p>
+
+      <p class="dek">In May 2020, GPT-3 could read 2,048 tokens at once. Five years later, a single
+        model reads ten million. That ~5,000× jump did not come from one trick — it came from
+        quietly rebuilding nearly every layer of the stack. This is a tour of what actually changed.</p>
+
+      <figure>
+        <img src="../figures/fig1-context-growth.svg" alt="Line chart of maximum context window from 2020 to 2026 on a log scale, rising from GPT-3's 2,048 tokens to Llama 4 Scout's 10M." />
+        <figcaption><b>Figure 1 — The frontier.</b> Maximum advertised context window over time (log scale). The line traces the running record: GPT-3 (2K) → GPT-4 (8K) → Claude 2 (100K) → Gemini 1.5 Pro (1M) → Llama 4 Scout (10M). Grey dots are other notable releases clustering at the 128K and 1M tiers.</figcaption>
+      </figure>
+
+      <p>It is tempting to think of "context length" as a single setting someone turned up. It isn't.
+        A long context stresses six different parts of a language model at once, and each one had to
+        be re-engineered:</p>
+
+      <ul>
+        <li><b>Positional encoding</b> — how the model knows <i>where</i> a token sits had a hard ceiling built in.</li>
+        <li><b>The KV cache</b> — memory that grows linearly with every token you keep around.</li>
+        <li><b>The attention algorithm</b> — compute and memory that grow with the <i>square</i> of the sequence.</li>
+        <li><b>The architecture</b> — whether you even use full attention at all.</li>
+        <li><b>The training recipe</b> — you can't just test on long inputs; you have to train on them.</li>
+        <li><b>Systems &amp; optimization</b> — fitting a million-token sequence across many GPUs without diverging.</li>
+      </ul>
+
+      <p>Let's walk the stack.</p>
+
+      <hr />
+
+      <h2>1. The wall: why long context is hard</h2>
+
+      <p>Two costs make long context expensive, and they scale differently.</p>
+
+      <p>The first is <b>attention itself</b>. In a standard Transformer, every token attends to every
+        other token, so a sequence of length <i>N</i> produces an <i>N×N</i> score matrix. That's
+        <i>O(N²)</i> compute <em>and</em> <i>O(N²)</i> memory. Double the context and you quadruple the
+        cost; go from 2K to 1M and the naive attention matrix is ~250,000× larger. For years this was
+        simply impossible to train.</p>
+
+      <p>The second is the <b>KV cache</b>. When a model generates text, it caches the keys and values
+        of every previous token so it doesn't recompute them. That cache grows <i>linearly</i> with
+        context — but the constant is brutal. A 70B model like Llama 3 at 128K tokens needs roughly
+        <b>40 GB</b> of KV cache in fp16, on top of ~140 GB of weights.<a href="#r" class="footnote-num">refs</a>
+        At a million tokens it would not fit on any single accelerator.</p>
+
+      <figure>
+        <img src="../figures/fig3-attention-wall.svg" alt="Log-log plot of relative cost versus sequence length, comparing O(N squared) standard attention against O(N) FlashAttention/linear methods." />
+        <figcaption><b>Figure 2 — The quadratic wall.</b> Relative cost versus sequence length (both axes log). Standard attention's <i>O(N²)</i> curve pulls decisively away from the linear <i>O(N)</i> curve that IO-aware and sub-quadratic methods achieve. Closing this gap is the central systems story of long context.</figcaption>
+      </figure>
+
+      <p>So the path to 1M tokens is really a campaign on two fronts: <b>make attention sub-quadratic
+        (or at least IO-efficient)</b>, and <b>shrink the per-token memory footprint</b>. Everything
+        below is some attack on one of those two problems — plus the positional-encoding problem, which
+        came first because it set the hard ceiling.</p>
+
+      <hr />
+
+      <h2>2. Positional encoding: from a hard cap to rotations</h2>
+
+      <p>Self-attention is permutation-invariant — without help, it can't tell "dog bites man" from
+        "man bites dog." The original 2017 Transformer injected order with fixed <b>sinusoidal</b>
+        encodings.<a href="#r" class="footnote-num">refs</a> But GPT-2 and GPT-3 switched to
+        <b>learned absolute positional embeddings</b>: a lookup table with one trainable vector per
+        position, 0 to <i>L−1</i>. (A common misconception is that GPT-3 used sinusoidal encodings; it
+        did not — it used the learned table, capped at <i>L</i>=2,048.)</p>
+
+      <p>That table is exactly the problem. If you only ever train positions 0–2047, position 2048 has
+        <i>no vector at all</i>. The model can't process a longer sequence without retraining. Absolute
+        position embeddings build a wall at the training length.</p>
+
+      <p>The escape was to encode <b>relative</b> distance instead of absolute position — Shaw et al.
+        (2018) added learned relative offsets to attention; Transformer-XL and T5 refined the idea with
+        bias terms and log-spaced buckets.<a href="#r" class="footnote-num">refs</a> Because these encode
+        "how far apart," not "where exactly," the model never meets a completely unseen position.</p>
+
+      <p>The decisive move was <b>RoPE</b> (Rotary Position Embedding, 2021). Instead of <i>adding</i> a
+        position vector, RoPE <i>rotates</i> each query and key by an angle proportional to its position.
+        The math has a beautiful property: the dot product of a rotated query and key depends only on
+        their <i>relative</i> distance <i>(m−n)</i>, not their absolute positions. It's parameter-free,
+        norm-preserving, and decays gracefully with distance.<a href="#r" class="footnote-num">refs</a>
+        RoPE is now nearly universal — LLaMA 1/2/3/4, Mistral, Qwen, DeepSeek, Gemma, and essentially
+        every open-weight frontier model use it. (ALiBi, a 2021 alternative that biases attention toward
+        recent tokens, was influential but its built-in recency bias made it a poor fit for uniform
+        million-token recall.)</p>
+
+      <figure>
+        <img src="../figures/fig4-pos-encoding.svg" alt="Diagram of positional-encoding evolution: sinusoidal and learned absolute, a relative branch with Shaw and T5, converging on RoPE in 2021, then extensions PI/NTK/YaRN, LongRoPE and base scaling, and finally iRoPE with NoPE." />
+        <figcaption><b>Figure 3 — Positional encoding, 2017–2025.</b> Absolute schemes hit a hard length cap; relative schemes encode distance; RoPE unified them with rotations and became the substrate that every later context-extension trick builds on.</figcaption>
+      </figure>
+
+      <h3>Stretching RoPE past its training length</h3>
+
+      <p>RoPE made <i>extension</i> possible, but a model trained at 4K still degrades sharply at 100K,
+        because its lowest-frequency rotation dimensions never complete a full cycle within the training
+        window. A series of techniques fixed this cheaply, usually with a brief continued-pretraining
+        pass rather than training from scratch:</p>
+
+      <ul>
+        <li><b>Position Interpolation</b> (PI, 2023) linearly squeezes position indices back into the
+          trained range. Its perturbation bound is ~600× tighter than naive extrapolation, and it
+          extended LLaMA to 32K in under 1,000 fine-tuning steps.<a href="#r" class="footnote-num">refs</a></li>
+        <li><b>NTK-aware scaling</b> and <b>ABF</b> (adjusting the RoPE base, e.g. from 10,000 to 500,000)
+          stretch low-frequency dimensions while preserving high-frequency ones. Llama 3 used base
+          500,000 to reach 128K.</li>
+        <li><b>YaRN</b> (2023) blends interpolation across frequency bands and adds an attention-temperature
+          correction, reaching the same quality with ~10× fewer tokens and 2.5× fewer steps than PI. It's
+          the recipe DeepSeek-V2/V3 use.<a href="#r" class="footnote-num">refs</a></li>
+        <li><b>LongRoPE</b> (2024) uses evolutionary search for per-dimension scaling factors, pushing
+          LLaMA-2 and Mistral to <b>2M tokens</b> with ~1,000 fine-tuning steps.</li>
+        <li><b>iRoPE</b> (Llama 4, 2025) interleaves standard RoPE layers with <b>NoPE</b> layers (no
+          positional encoding at all — relying on the causal mask) every fourth layer. Trained at 256K, it
+          generalizes to <b>10M tokens</b> at inference with attention-temperature scaling.</li>
+      </ul>
+
+      <hr />
+
+      <h2>3. The KV cache: MHA → MQA → GQA → MLA</h2>
+
+      <p>Even with positions solved, the KV cache is the memory bottleneck at inference. The fix was to
+        stop giving every attention head its own keys and values.</p>
+
+      <ul>
+        <li><b>Multi-Head Attention (MHA)</b> — the GPT-3 baseline. Every head caches its own K and V.</li>
+        <li><b>Multi-Query Attention (MQA, 2019)</b> — all query heads share <i>one</i> K/V head. With
+          128 heads, that's a 128× smaller cache, at some quality cost.<a href="#r" class="footnote-num">refs</a></li>
+        <li><b>Grouped-Query Attention (GQA, 2023)</b> — the pragmatic middle ground: split heads into
+          <i>G</i> groups that each share K/V. With 8 groups you get an 8–16× reduction and keep almost
+          all of MHA's quality. An existing MHA checkpoint can be "uptrained" to GQA with ~5% of original
+          compute. Llama 2/3, Mistral, and most open models use it.<a href="#r" class="footnote-num">refs</a></li>
+        <li><b>Multi-head Latent Attention (MLA, 2024)</b> — DeepSeek's approach: instead of fewer heads,
+          compress K and V into a low-rank <i>latent</i> vector (plus a small decoupled RoPE component),
+          and cache only that. DeepSeek reported a <b>93.3%</b> KV-cache reduction and 5.76× higher
+          throughput.<a href="#r" class="footnote-num">refs</a></li>
+      </ul>
+
+      <figure>
+        <img src="../figures/fig2-kvcache.svg" alt="Bar chart of KV cache floats per token per layer for MHA, GQA, MLA, and MQA on a log scale, showing reductions of 1x, 16x, 57x, and 128x." />
+        <figcaption><b>Figure 4 — Shrinking the KV cache.</b> Floats cached per token per layer for a 128-head, 128-dim example (caching K and V). MLA's ~57× is the <i>per-head</i> compression ratio from these config numbers; end-to-end analyses of the full DeepSeek-V3 cache report a still-dramatic ~28× reduction. Orthogonally, <b>KV quantization</b> (FP8, or 2–3 bit schemes like KIVI and KVQuant) cuts bytes-per-element another 2–8×.</figcaption>
+      </figure>
+
+      <hr />
+
+      <h2>4. The attention algorithm: making O(N²) survivable</h2>
+
+      <p>Reducing the cache helps inference memory, but training still has to compute attention. Two
+        strategies emerged: make the <i>exact</i> computation IO-efficient, or make it <i>sparse</i>.</p>
+
+      <p><b>FlashAttention</b> (2022) is the single most important piece of plumbing here. It computes
+        exact attention without ever writing the <i>N×N</i> matrix to high-bandwidth memory — it tiles
+        Q, K, V into SRAM-sized blocks and keeps a running softmax. The activation memory drops from
+        <i>O(N²)</i> to <i>O(N)</i>, and HBM traffic falls by roughly 9× in practice (the often-quoted
+        "O(N²)→O(N)" is a simplification; the precise bound is <i>O(N²d²/M)</i>). FlashAttention-2 and -3
+        pushed hardware utilization from ~25% to 75% on A100/H100.<a href="#r" class="footnote-num">refs</a>
+        Almost every model since 2023 trains on it.</p>
+
+      <p>The sparse lineage attacks the exponent directly. Sparse Transformers (2019) cut <i>O(N²)</i> to
+        <i>O(N√N)</i>; Longformer and BigBird (2020) used sliding-window + global tokens to reach
+        <i>O(N)</i>.<a href="#r" class="footnote-num">refs</a> Mistral 7B (2023) shipped <b>sliding-window
+        attention</b> with a rolling KV buffer as a headline feature. <b>StreamingLLM</b> (2023) made a
+        lovely observation: models dump excess attention onto the first few "sink" tokens, so if you keep
+        those 4 sink tokens plus a recent window, you can generate indefinitely at fixed memory.
+        DeepSeek's <b>Native Sparse Attention</b> (2025) makes sparsity <i>trainable</i> end-to-end,
+        combining compressed, selected, and local-window paths for ~11× faster decoding at 64K.</p>
+
+      <hr />
+
+      <h2>5. Beyond attention: state-space models and hybrids</h2>
+
+      <p>If attention is inherently quadratic, why not replace it? <b>State-space models (SSMs)</b>
+        compress the entire past into a fixed-size state, giving <i>O(N)</i> time and <i>O(1)</i>
+        inference memory — like an RNN that can be trained in parallel.</p>
+
+      <p>The line runs from HiPPO and S4 (which first cracked the 16K-token Long Range Arena tasks where
+        Transformers scored near chance) through <b>Mamba</b> (2023), whose <i>selective</i> mechanism
+        lets the state decide what to keep. A Mamba-3B matched Transformers twice its size on perplexity
+        and ran ~5× faster at long sequences.<a href="#r" class="footnote-num">refs</a> Mamba-2 then proved
+        a formal duality between SSMs and attention, unifying the two families.</p>
+
+      <p>The catch: pure SSMs are weaker at <i>precise recall</i> — looking up an exact token far back
+        (Mamba's multi-query associative recall accuracy collapses where attention stays near 100%). So
+        the winning designs are <b>hybrids</b>. <b>Jamba</b> (2024) interleaves one attention layer per
+        seven Mamba layers plus MoE, fitting a 256K context in 4 GB of KV cache versus 32 GB for a
+        comparable Transformer. <b>Samba</b> pairs Mamba with sliding-window attention and extrapolates to
+        256K. The attention layers handle exact retrieval; the SSM layers handle cheap long-range
+        compression.</p>
+
+      <hr />
+
+      <h2>6. The training recipe: you have to train long</h2>
+
+      <p>None of the above matters if you only ever train on short sequences. But training <i>everything</i>
+        at 128K would be absurdly expensive (that quadratic cost again). The industry converged on a
+        <b>multi-stage curriculum</b>: do the vast bulk of pretraining at a short length where attention is
+        cheap, then a short, data-engineered long-context phase.</p>
+
+      <p>Llama 3 is the canonical example: ~15T tokens at 8K, then ~800B tokens ramping through six stages
+        from 8K to 128K, with the RoPE base raised to 500,000. Each stage advanced only once two criteria
+        were met — short-context benchmarks recovered <i>and</i> needle-in-a-haystack recall hit ~100% at
+        the new length.<a href="#r" class="footnote-num">refs</a> DeepSeek-V3 did the same with two
+        1,000-step YaRN phases (4K→32K→128K) on top of 14.8T tokens of 4K pretraining — 128K context for
+        the cost of 2,000 extra steps.</p>
+
+      <p>The data details turned out to matter as much as the length:</p>
+      <ul>
+        <li><b>Document packing with intra-document masking</b> — pack many short docs into one long
+          sequence for efficiency, but mask attention so tokens only see their own document.</li>
+        <li><b>Long-data upsampling</b> — code repositories and books carry genuine long-range
+          dependencies; Princeton's <b>ProLong</b> showed that the right data mix, trained on just 40B
+          tokens, beat Llama-3.1-8B-Instruct's ~800B-token long-context training on the HELMET benchmark.</li>
+        <li><b>Synthetic long-range tasks</b> — fill-in-the-middle, key/passage retrieval, and paragraph
+          reordering inject the long-distance structure that natural text often lacks (Qwen2.5-1M).</li>
+      </ul>
+
+      <hr />
+
+      <h2>7. Systems: spreading a million tokens across the cluster</h2>
+
+      <p>A million-token sequence doesn't fit on one device, so the sequence itself gets sharded.
+        <b>Context (sequence) parallelism</b> splits the sequence across GPUs; Llama 3 used CP=16 so each
+        rank handled an 8K slice of a 128K sequence. The elegant version is <b>Ring Attention</b> (2023):
+        arrange devices in a ring, stream KV blocks around it, and overlap that communication with
+        computation so it's effectively free. It scales context linearly with device count — demonstrated
+        at 256K tokens on 8× A100 and millions of tokens on larger pods, and is the lineage behind
+        Gemini 1.5's million-token training.<a href="#r" class="footnote-num">refs</a></p>
+
+      <p>On the inference side, <b>PagedAttention</b> (vLLM, 2023) borrowed virtual-memory paging from
+        operating systems: store the KV cache in non-contiguous blocks via a page table, cutting memory
+        waste from 60–80% to under 4% and letting one server hold far longer contexts or larger
+        batches.<a href="#r" class="footnote-num">refs</a> Together with FP8 KV quantization, this is what
+        makes long context economical to <i>serve</i>, not just train.</p>
+
+      <hr />
+
+      <h2>8. Optimizer &amp; stability: keeping a long run alive</h2>
+
+      <p>Longer sequences and bigger models make training more fragile, and a single loss spike at 128K
+        can corrupt a very expensive run. The stability toolkit grew accordingly — much of it invisible
+        in model cards but essential:</p>
+
+      <ul>
+        <li><b>Pre-LN + AdamW</b> — moving LayerNorm inside the residual branch and decoupling weight
+          decay (AdamW) were the early enablers of stable deep training; both are near-universal.<a href="#r" class="footnote-num">refs</a></li>
+        <li><b>Schedules</b> — GPT-3-era linear-warmup + cosine decay gave way to <b>Warmup-Stable-Decay</b>
+          (WSD), which is "horizon-free": you can trigger the decay at any point, which is perfect for
+          bolting a long-context phase onto a finished base model.</li>
+        <li><b>z-loss &amp; QK-norm</b> — a tiny penalty on the softmax normalizer (z-loss) and normalizing
+          queries/keys before attention (QK-norm) both prevent logit explosion. QK-norm matters more at
+          long context, where one collapsed attention distribution loses information across the whole
+          sequence.</li>
+        <li><b>muP / MetaP</b> — parametrizations that keep optimal hyperparameters stable as you scale
+          width, so you tune on a small proxy and transfer to the big model without re-tuning at each
+          stage.</li>
+        <li><b>Muon</b> — a newer optimizer that orthogonalizes gradient updates, reported at ~2× the
+          compute efficiency of AdamW and adopted (as MuonClip, with spectral-norm clipping for attention
+          stability) in trillion-parameter models like Kimi K2.</li>
+      </ul>
+
+      <hr />
+
+      <h2>9. Post-training &amp; evaluation: proving it actually works</h2>
+
+      <p>A model can have a 1M-token window and still ignore most of it. Two findings drove the field
+        here. <b>"Lost in the Middle"</b> (2023) showed a U-shaped curve: models reliably use information
+        at the start and end of the context but miss things in the middle, dropping &gt;30 points on
+        multi-document QA.<a href="#r" class="footnote-num">refs</a> And Anthropic found that Claude 2.1
+        scored just 27% on needle retrieval until a one-line prompt nudge raised it to 98% — long-context
+        ability can be suppressed by post-training, not just enabled by it.</p>
+
+      <p>Evaluation matured past perplexity into targeted probes: <b>Needle-in-a-Haystack</b> (find a
+        planted fact), <b>RULER</b> (synthetic tasks at controlled lengths that expose a model's
+        <i>effective</i> context, usually well below its advertised one), <b>LongBench</b>, and
+        <b>InfiniteBench</b>. These benchmarks became training targets — Llama 3 literally gated each
+        context-extension stage on near-perfect NIAH recall. The frontier claim today is Gemini 1.5's
+        &gt;99.7% recall at 1M tokens and GPT-4.1's 100% NIAH retrieval to 1M.</p>
+
+      <hr />
+
+      <h2>The modern 1M recipe, assembled</h2>
+
+      <p>Put it all together and a 2026-era long-context model looks roughly like this:</p>
+
+      <table>
+        <thead><tr><th>Layer</th><th>GPT-3 (2020)</th><th>1M-context model (2025–26)</th></tr></thead>
+        <tbody>
+          <tr><td>Positional encoding</td><td>Learned absolute (cap 2,048)</td><td>RoPE + YaRN/LongRoPE, or iRoPE+NoPE</td></tr>
+          <tr><td>Attention heads</td><td>Full MHA</td><td>GQA or MLA (+ KV quantization)</td></tr>
+          <tr><td>Attention algorithm</td><td>Dense O(N²)</td><td>FlashAttention-3, sliding window, sinks, sparse</td></tr>
+          <tr><td>Architecture</td><td>Dense Transformer</td><td>MoE, sometimes SSM hybrids</td></tr>
+          <tr><td>Training</td><td>Single length, 2K</td><td>Multi-stage curriculum to 128K–256K + synthetic data</td></tr>
+          <tr><td>Systems</td><td>Data parallel</td><td>+ Context parallel / ring attention, paged KV</td></tr>
+          <tr><td>Optimizer</td><td>Adam + cosine</td><td>AdamW/Muon + WSD, z-loss, QK-norm, muP</td></tr>
+          <tr><td>Evaluation</td><td>Perplexity</td><td>NIAH, RULER, LongBench gating each stage</td></tr>
+        </tbody>
+      </table>
+
+      <p>No single breakthrough took us from 2K to 10M. RoPE removed the hard ceiling; FlashAttention made
+        the quadratic survivable; GQA and MLA shrank the cache; the multi-stage recipe taught models to
+        actually use the length; and ring attention spread it across the cluster. The "1M context window"
+        on a spec sheet is the visible tip of five years of work spread across the entire stack — and the
+        same logic that got us here (cheaper attention, smaller caches, better length generalization) is
+        what will push the next jump, whether that's 100M tokens of attention or something that isn't
+        attention at all.</p>
+
+      <hr />
+
+      <h2 id="r">References &amp; further reading</h2>
+      <ol class="refs">
+        <li>Vaswani et al., <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a> (2017).</li>
+        <li>Brown et al., <a href="https://arxiv.org/abs/2005.14165">Language Models are Few-Shot Learners (GPT-3)</a> (2020).</li>
+        <li>Shaw et al., <a href="https://arxiv.org/abs/1803.02155">Self-Attention with Relative Position Representations</a> (2018); Dai et al., <a href="https://arxiv.org/abs/1901.02860">Transformer-XL</a> (2019); Raffel et al., <a href="https://arxiv.org/abs/1910.10683">T5</a> (2020).</li>
+        <li>Su et al., <a href="https://arxiv.org/abs/2104.09864">RoFormer: Rotary Position Embedding</a> (2021); Press et al., <a href="https://arxiv.org/abs/2108.12409">ALiBi</a> (2021); Kazemnejad et al., <a href="https://arxiv.org/abs/2305.19466">The Impact of Positional Encoding on Length Generalization (NoPE)</a> (2023).</li>
+        <li>Chen et al., <a href="https://arxiv.org/abs/2306.15595">Extending Context Window via Positional Interpolation</a> (2023); Peng et al., <a href="https://arxiv.org/abs/2309.00071">YaRN</a> (2023, ICLR 2024); Ding et al., <a href="https://arxiv.org/abs/2402.13753">LongRoPE</a> (2024); Xiong et al., <a href="https://arxiv.org/abs/2309.16039">Effective Long-Context Scaling (ABF)</a> (2023).</li>
+        <li>Shazeer, <a href="https://arxiv.org/abs/1911.02150">Fast Transformer Decoding (MQA)</a> (2019); Ainslie et al., <a href="https://arxiv.org/abs/2305.13245">GQA</a> (2023); DeepSeek-AI, <a href="https://arxiv.org/abs/2405.04434">DeepSeek-V2 (MLA)</a> (2024) and <a href="https://arxiv.org/abs/2412.19437">DeepSeek-V3</a> (2024).</li>
+        <li>Dao et al., <a href="https://arxiv.org/abs/2205.14135">FlashAttention</a> (2022), <a href="https://arxiv.org/abs/2307.08691">FlashAttention-2</a> (2023); Shah et al., <a href="https://arxiv.org/abs/2407.08608">FlashAttention-3</a> (2024).</li>
+        <li>Child et al., <a href="https://arxiv.org/abs/1904.10509">Sparse Transformers</a> (2019); Beltagy et al., <a href="https://arxiv.org/abs/2004.05150">Longformer</a> (2020); Zaheer et al., <a href="https://arxiv.org/abs/2007.14062">BigBird</a> (2020); Xiao et al., <a href="https://arxiv.org/abs/2309.17453">StreamingLLM</a> (2023); Jiang et al., <a href="https://arxiv.org/abs/2310.06825">Mistral 7B</a> (2023); DeepSeek-AI, <a href="https://arxiv.org/abs/2502.11089">Native Sparse Attention</a> (2025).</li>
+        <li>Gu et al., <a href="https://arxiv.org/abs/2111.00396">S4</a> (2021); Gu &amp; Dao, <a href="https://arxiv.org/abs/2312.00752">Mamba</a> (2023); Dao &amp; Gu, <a href="https://arxiv.org/abs/2405.21060">Mamba-2 / SSD</a> (2024); Lieber et al., <a href="https://arxiv.org/abs/2403.19887">Jamba</a> (2024); Ren et al., <a href="https://arxiv.org/abs/2406.07522">Samba</a> (2024).</li>
+        <li>Dubey et al., <a href="https://arxiv.org/abs/2407.21783">The Llama 3 Herd of Models</a> (2024); Gao et al., <a href="https://arxiv.org/abs/2410.02660">ProLong</a> (2024); Qwen Team, <a href="https://arxiv.org/abs/2501.15383">Qwen2.5-1M</a> (2025).</li>
+        <li>Liu et al., <a href="https://arxiv.org/abs/2310.01889">Ring Attention</a> (2023); Korthikanti et al., <a href="https://arxiv.org/abs/2205.05198">Reducing Activation Recomputation (Sequence Parallelism)</a> (2022); Kwon et al., <a href="https://arxiv.org/abs/2309.06180">PagedAttention / vLLM</a> (2023).</li>
+        <li>Loshchilov &amp; Hutter, <a href="https://arxiv.org/abs/1711.05101">AdamW</a> (2017); Yang et al., <a href="https://arxiv.org/abs/2203.03466">Tensor Programs V (muP)</a> (2022); Hu et al., <a href="https://arxiv.org/abs/2404.06395">MiniCPM (WSD)</a> (2024).</li>
+        <li>Liu et al., <a href="https://arxiv.org/abs/2307.03172">Lost in the Middle</a> (2023); Hsieh et al., <a href="https://arxiv.org/abs/2404.06654">RULER</a> (2024); Bai et al., <a href="https://arxiv.org/abs/2308.14508">LongBench</a> (2023); Gemini Team, <a href="https://arxiv.org/abs/2403.05530">Gemini 1.5</a> (2024).</li>
+      </ol>
+
+      <p class="meta" style="margin-top:32px">Sources were gathered and cross-checked with a fan-out of
+        research agents; dates and figures were verified against primary papers, but if you spot an error,
+        I'd genuinely like to know.</p>
+    </article>
+  </main>
+
+  <footer>
+    <p>© <span id="year">2026</span> Bat</p>
+  </footer>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

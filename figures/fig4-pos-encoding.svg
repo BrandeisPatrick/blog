@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Evolution of positional encoding">
+  <rect width="760" height="320" fill="#ffffff"/>
+  <defs>
+    <marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#6b6b66"/>
+    </marker>
+  </defs>
+  <style>
+    .box{fill:#fff;stroke:#d9d7d1;stroke-width:1.2;rx:7}
+    .t{font-size:13px;fill:#1b1b1a;font-weight:700}
+    .s{font-size:11px;fill:#6b6b66}
+    .yr{font-size:11px;fill:#b5482e;font-weight:700}
+    .ln{stroke:#6b6b66;stroke-width:1.4;fill:none}
+    .hd{font-size:12px;fill:#6b6b66;font-weight:600}
+  </style>
+
+  <!-- lane labels -->
+  <text x="16" y="74" class="hd">absolute</text>
+  <text x="16" y="166" class="hd">relative</text>
+  <text x="16" y="250" class="hd">rotary + ext.</text>
+
+  <!-- ABSOLUTE lane -->
+  <rect class="box" x="95" y="44" width="150" height="52" rx="7"/>
+  <text x="105" y="64" class="yr">2017</text><text x="105" y="80" class="t">Sinusoidal PE</text><text x="105" y="92" class="s">fixed, original Transformer</text>
+
+  <rect class="box" x="285" y="44" width="160" height="52" rx="7"/>
+  <text x="295" y="64" class="yr">2018–20</text><text x="295" y="80" class="t">Learned absolute</text><text x="295" y="92" class="s">GPT-2/3 · hard length cap</text>
+
+  <!-- RELATIVE lane -->
+  <rect class="box" x="95" y="138" width="150" height="52" rx="7"/>
+  <text x="105" y="158" class="yr">2018</text><text x="105" y="174" class="t">Shaw et al. relative</text><text x="105" y="186" class="s">distance, not position</text>
+
+  <rect class="box" x="285" y="138" width="160" height="52" rx="7"/>
+  <text x="295" y="158" class="yr">2019–20</text><text x="295" y="174" class="t">T5 / Transformer-XL</text><text x="295" y="186" class="s">bias buckets · recurrence</text>
+
+  <!-- ROPE lane -->
+  <rect class="box" x="285" y="232" width="160" height="56" rx="7" stroke="#b5482e" stroke-width="2"/>
+  <text x="295" y="252" class="yr">2021</text><text x="295" y="268" class="t">RoPE (rotary)</text><text x="295" y="280" class="s">relative via rotation</text>
+
+  <rect class="box" x="490" y="138" width="150" height="52" rx="7"/>
+  <text x="500" y="158" class="yr">2023</text><text x="500" y="174" class="t">PI · NTK · YaRN</text><text x="500" y="186" class="s">interpolate to extend</text>
+
+  <rect class="box" x="490" y="232" width="150" height="56" rx="7"/>
+  <text x="500" y="252" class="yr">2024</text><text x="500" y="268" class="t">LongRoPE · θ=500K</text><text x="500" y="280" class="s">per-dim · base scaling</text>
+
+  <rect class="box" x="660" y="186" width="92" height="56" rx="7" stroke="#b5482e" stroke-width="2"/>
+  <text x="668" y="206" class="yr">2025</text><text x="668" y="222" class="t">iRoPE</text><text x="668" y="234" class="s">+ NoPE → 10M</text>
+
+  <!-- arrows -->
+  <path class="ln" d="M245,70 L283,70" marker-end="url(#ar)"/>
+  <path class="ln" d="M245,164 L283,164" marker-end="url(#ar)"/>
+  <path class="ln" d="M365,96 L365,136" marker-end="url(#ar)"/>
+  <path class="ln" d="M365,190 L365,230" marker-end="url(#ar)"/>
+  <path class="ln" d="M445,256 C470,256 470,164 488,164" marker-end="url(#ar)"/>
+  <path class="ln" d="M445,260 L488,260" marker-end="url(#ar)"/>
+  <path class="ln" d="M565,190 L565,230" marker-end="url(#ar)"/>
+  <path class="ln" d="M640,256 C652,256 652,214 658,214" marker-end="url(#ar)"/>
+  <path class="ln" d="M640,160 C652,160 652,214 658,214" marker-end="url(#ar)"/>
+</svg>
