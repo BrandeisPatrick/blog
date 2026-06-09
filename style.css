@@ -35,9 +35,13 @@ body {
 
 main, .hero, footer { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
 
-/* Article pages get a roomier, fluid column so they fill desktop screens
-   instead of leaving big empty margins. */
-body.wide main, body.wide footer { max-width: 1180px; }
+/* Article pages: tuned for reading, not for filling the screen.
+   ~700px measure ≈ 70 chars/line, 19px text, 1.7 line-height — the
+   typographic sweet spot. Figures may run a little wider than the text. */
+body.wide main, body.wide footer { max-width: 720px; }
+.article { font-size: 19px; line-height: 1.72; }
+.article p { margin: 0 0 22px; }
+.article .dek { font-size: clamp(19px, 4.5vw, 23px); line-height: 1.5; }
 
 /* ---- Hero ---- */
 .hero { padding-top: 64px; padding-bottom: 8px; }
@@ -118,8 +122,8 @@ body.wide main, body.wide footer { max-width: 1180px; }
 .backlink:hover { color: var(--fg); }
 
 /* ---- Figures ---- */
-/* Cap figures so they stay a comfortable size even when the text column is wide. */
-.article figure { margin: 36px auto; max-width: 720px; }
+/* Figures fill the reading column — sized to match the text, never oversized. */
+.article figure { margin: 36px auto; max-width: 100%; }
 .article figure img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); border-radius: 8px; background: #fff; }
 .article figcaption { margin-top: 10px; font-size: 14px; color: var(--muted); line-height: 1.5; }
 .article figcaption b { color: var(--fg); font-weight: 600; }
