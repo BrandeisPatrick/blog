@@ -15,6 +15,25 @@
       <h1>The path to 1M context window</h1>
       <p class="meta"><time datetime="2026-06-08">June 8, 2026</time> · ~20 min read</p>
 
+      <details class="toc" open>
+        <summary>Table of Contents</summary>
+        <nav class="inner">
+          <ol>
+            <li><a href="#s1">The wall: why long context is hard</a></li>
+            <li><a href="#s2">Positional encoding: from a hard cap to rotations</a></li>
+            <li><a href="#s3">The KV cache: MHA → MQA → GQA → MLA</a></li>
+            <li><a href="#s4">The attention algorithm: making O(N²) survivable</a></li>
+            <li><a href="#s5">Beyond attention: state-space models and hybrids</a></li>
+            <li><a href="#s6">The training recipe: you have to train long</a></li>
+            <li><a href="#s7">Systems: spreading a million tokens across the cluster</a></li>
+            <li><a href="#s8">Optimizer &amp; stability</a></li>
+            <li><a href="#s9">Post-training &amp; evaluation</a></li>
+            <li><a href="#s10">The modern 1M recipe, assembled</a></li>
+            <li><a href="#r">References &amp; further reading</a></li>
+          </ol>
+        </nav>
+      </details>
+
       <p class="dek">In May 2020, GPT-3 could read 2,048 tokens at once. Five years later, a single
         model reads ten million. That ~5,000× jump did not come from one trick — it came from
         quietly rebuilding nearly every layer of the stack. This is a tour of what actually changed.</p>
@@ -41,7 +60,7 @@
 
       <hr />
 
-      <h2>1. The wall: why long context is hard</h2>
+      <h2 id="s1">1. The wall: why long context is hard</h2>
 
       <p>Two costs make long context expensive, and they scale differently. <b>Attention</b> is
         <i>O(N²)</i>: every token attends to every other, so going from 2K to 1M tokens makes the score
@@ -60,7 +79,7 @@
 
       <hr />
 
-      <h2>2. Positional encoding: from a hard cap to rotations</h2>
+      <h2 id="s2">2. Positional encoding: from a hard cap to rotations</h2>
 
       <p>Self-attention is permutation-invariant — without help, it can't tell "dog bites man" from
         "man bites dog." The original 2017 Transformer injected order with fixed <b>sinusoidal</b>
@@ -119,7 +138,7 @@
 
       <hr />
 
-      <h2>3. The KV cache: MHA → MQA → GQA → MLA</h2>
+      <h2 id="s3">3. The KV cache: MHA → MQA → GQA → MLA</h2>
 
       <p>Even with positions solved, the KV cache is the memory bottleneck at inference. The fix was to
         stop giving every attention head its own keys and values.</p>
@@ -145,7 +164,7 @@
 
       <hr />
 
-      <h2>4. The attention algorithm: making O(N²) survivable</h2>
+      <h2 id="s4">4. The attention algorithm: making O(N²) survivable</h2>
 
       <p>Reducing the cache helps inference memory, but training still has to compute attention. Two
         strategies emerged: make the <i>exact</i> computation IO-efficient, or make it <i>sparse</i>.</p>
@@ -169,7 +188,7 @@
 
       <hr />
 
-      <h2>5. Beyond attention: state-space models and hybrids</h2>
+      <h2 id="s5">5. Beyond attention: state-space models and hybrids</h2>
 
       <p>If attention is inherently quadratic, why not replace it? <b>State-space models (SSMs)</b>
         compress the entire past into a fixed-size state, giving <i>O(N)</i> time and <i>O(1)</i>
@@ -191,7 +210,7 @@
 
       <hr />
 
-      <h2>6. The training recipe: you have to train long</h2>
+      <h2 id="s6">6. The training recipe: you have to train long</h2>
 
       <p>None of the above matters if you only ever train on short sequences. But training <i>everything</i>
         at 128K would be absurdly expensive (that quadratic cost again). The industry converged on a
@@ -218,7 +237,7 @@
 
       <hr />
 
-      <h2>7. Systems: spreading a million tokens across the cluster</h2>
+      <h2 id="s7">7. Systems: spreading a million tokens across the cluster</h2>
 
       <p>A million-token sequence doesn't fit on one device, so the sequence itself gets sharded.
         <b>Context (sequence) parallelism</b> splits the sequence across GPUs; Llama 3 used CP=16 so each
@@ -236,7 +255,7 @@
 
       <hr />
 
-      <h2>8. Optimizer &amp; stability: keeping a long run alive</h2>
+      <h2 id="s8">8. Optimizer &amp; stability: keeping a long run alive</h2>
 
       <p>Longer sequences and bigger models make training more fragile, and a single loss spike at 128K
         can corrupt a very expensive run. The stability toolkit grew accordingly — much of it invisible
@@ -262,7 +281,7 @@
 
       <hr />
 
-      <h2>9. Post-training &amp; evaluation: proving it actually works</h2>
+      <h2 id="s9">9. Post-training &amp; evaluation: proving it actually works</h2>
 
       <p>A model can have a 1M-token window and still ignore most of it. Two findings drove the field
         here. <b>"Lost in the Middle"</b> (2023) showed a U-shaped curve: models reliably use information
@@ -280,7 +299,7 @@
 
       <hr />
 
-      <h2>The modern 1M recipe, assembled</h2>
+      <h2 id="s10">The modern 1M recipe, assembled</h2>
 
       <p>Put it all together and a 2026-era long-context model looks roughly like this:</p>
 

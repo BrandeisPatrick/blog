@@ -38,18 +38,28 @@ main, .hero, footer { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
 /* Article pages: tuned for reading, not for filling the screen.
    ~700px measure ≈ 70 chars/line, 19px text, 1.7 line-height — the
    typographic sweet spot. Figures may run a little wider than the text. */
-/* Reading layout — evidence-based (Bringhurst 45–75/66-ideal; Dyson & Haselgrove
-   2001 comprehension peak ~55–75 CPL; WCAG 1.4.8 ≤80 max; WCAG F94 fluid-safe).
-   Fluid 17→21px body; measure pinned via `ch` so CPL stays ~constant across
-   screens; 1.6 leading. Note: `ch` is the "0" width (~1.3× avg char), so ~52ch
-   renders ~64 actual characters per line. */
-body.wide main, body.wide footer {
-  font-size: clamp(1.0625rem, 1rem + 0.45vw, 1.3125rem); /* 17px → 21px */
-  max-width: 47ch;                                        /* measures to ~65 CPL */
-}
-.article { line-height: 1.58; }
-.article p { margin: 0 0 1.35em; line-height: 1.58; }
-.article .dek { font-size: 1.18em; line-height: 1.4; }
+/* Desktop style modeled on lilianweng.github.io (Hugo PaperMod theme):
+   ~720px content column, system sans, 18px body, 1.6 leading, TOC box. */
+body.wide main, body.wide footer { max-width: 768px; }   /* 720px content + 2×24px gutters */
+.article { font-size: 18px; line-height: 1.6; }
+.article p { margin: 0 0 1.2em; }
+.article .dek { font-size: 1.1em; line-height: 1.5; color: var(--muted); }
+/* PaperMod-style content links: dark text, underlined (not colored). */
+.article a { color: var(--fg); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+.article a:hover { color: var(--accent); }
+.article .refs a { color: var(--fg); }
+
+html { scroll-behavior: smooth; }
+:target { scroll-margin-top: 24px; }
+
+/* Table-of-contents box (PaperMod .toc) */
+.toc { margin: 8px 0 40px; border: 1px solid var(--rule); background: #f6f6f4; border-radius: 8px; padding: 6px 6px; font-size: 15px; }
+.toc > summary { cursor: pointer; font-weight: 600; padding: 6px 14px; color: var(--fg); list-style-position: outside; }
+.toc .inner { margin: 0; padding: 4px 26px 10px; }
+.toc ol { margin: 0; padding-left: 20px; }
+.toc li { margin: 4px 0; }
+.toc a { color: var(--muted); text-decoration: none; }
+.toc a:hover { color: var(--fg); text-decoration: underline; }
 
 /* ---- Hero ---- */
 .hero { padding-top: 64px; padding-bottom: 8px; }
