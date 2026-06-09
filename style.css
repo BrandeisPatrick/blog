@@ -46,9 +46,9 @@ body.wide main, body.wide footer { max-width: 768px; }   /* 720px content + 2×2
 .article { font-size: 16px; line-height: 1.6; }           /* matches lilianweng.github.io */
 .article p { margin: 0 0 1.2em; }
 .article .dek { font-size: 1.1em; line-height: 1.5; color: var(--muted); }
-/* Content / citation links: standard dark text, faint underline — quiet, not distracting. */
-.article a { color: var(--fg); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; text-decoration-color: rgba(27,27,26,.22); }
-.article a:hover { text-decoration-color: currentColor; }
+/* Content / citation links: same color as the paragraph text, plain underline. */
+.article a { color: var(--fg); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+.article a:hover { text-decoration-thickness: 2px; }
 .article .refs a { color: var(--fg); }
 
 html { scroll-behavior: smooth; }
