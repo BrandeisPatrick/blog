@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bat — Notes</title>
+  <meta name="description" content="Personal notes and writing by Bat." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero">
+    <h1 class="site-title">Bat</h1>
+    <!-- Pretext enhances this tagline into freely-arranged text.
+         If JS is off, the plain text below still reads fine. -->
+    <p id="pretext-hero" class="tagline" data-text="things I think about, written down">things I think about, written down</p>
+  </header>
+
+  <main>
+    <nav class="topnav">
+      <a href="index.html" aria-current="page">Writing</a>
+      <a href="about.html">About</a>
+    </nav>
+
+    <section class="post-list" aria-label="Posts">
+      <article class="post-link">
+        <a href="posts/hello-world.html">
+          <h2>Hello, world</h2>
+          <p class="meta"><time datetime="2026-06-08">June 8, 2026</time></p>
+          <p class="excerpt">Why I finally started keeping a public notebook, and what I plan to put in it.</p>
+        </a>
+      </article>
+
+      <article class="post-link">
+        <a href="posts/on-fast-websites.html">
+          <h2>On keeping websites fast</h2>
+          <p class="meta"><time datetime="2026-06-08">June 8, 2026</time></p>
+          <p class="excerpt">A few plain-HTML habits that make a page load instantly on any device.</p>
+        </a>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <p>© <span id="year">2026</span> Bat · built with plain HTML &amp; <a href="https://github.com/chenglou/pretext">Pretext</a></p>
+  </footer>
+
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <script type="module" src="js/pretext-hero.js"></script>
+</body>
+</html>
