@@ -21,7 +21,7 @@
           <ol>
             <li><a href="#s1">Why length is expensive: N² attention, N memory</a></li>
             <li><a href="#s2">Positional encoding: RoPE for order, NoPE for reach</a></li>
-            <li><a href="#s3">The KV cache: shrink the memory length multiplies</a></li>
+            <li><a href="#s3">The KV cache: shrink the memory that length multiplies</a></li>
             <li><a href="#s4">Attention: getting out from under O(N²)</a></li>
             <li><a href="#s5">Do you even need attention?</a></li>
             <li><a href="#s6">Capability isn’t enough: you have to train long</a></li>
@@ -38,10 +38,10 @@
         change to read a million tokens.</p>
 
       <p>In the last two years the million-token context window went from headline to spec sheet. Gemini 1.5
-        got there first in early 2024; <b>GPT-4.1</b>, <b>Claude 4</b>, <b>Qwen</b>, <b>Llama 4</b>, and
-        <b>DeepSeek V4</b> have all shipped 1M windows since, and increasingly they hold up <i>across</i> the
-        whole million rather than falling apart in the middle. A million tokens is now the floor, with 2M,
-        4M, even 10M already in preview. The open question isn't <i>whether</i> the next model takes a
+        got there first in early 2024; GPT-4.1, Claude 4, Qwen2.5-1M, Llama 4, and DeepSeek-V4 have all
+        shipped 1M windows since, and increasingly they hold up <i>across</i> the whole million rather than
+        falling apart in the middle. A million tokens is now the default rather than the record — Llama 4
+        Scout already advertises 10M. The open question isn't <i>whether</i> the next model takes a
         million tokens — it's <i>how</i>.</p>
 
       <figure>
@@ -49,7 +49,8 @@
         <figcaption><b>Figure 1 — The frontier.</b> The largest context window available at any time (log scale); the staircase steps up at each new record — GPT-3 (2K) → GPT-4 (8K) → Claude 2 (100K) → Gemini 1.5 Pro (1M) → MiniMax-01 (4M) → Llama 4 Scout (10M), where it has held. But the <i>record</i> (10M) and the <i>default</i> are now different things: by 2026 the field has settled at 1M (grey dots — Grok, GPT-5, Claude Opus, DeepSeek-V4). A million tokens is the new normal, not the ceiling.</figcaption>
       </figure>
 
-      <p>That is a ~5,000× jump from GPT-3's 2,048 tokens, and it didn't come from one trick. Long context
+      <p>A million tokens is a ~500× jump from GPT-3's 2,048 — Scout's 10M is ~5,000× — and it didn't
+        come from one trick. Long context
         stresses six parts of a model at once — positional encoding, the KV cache, the attention algorithm,
         the architecture, the training recipe, and the systems around them — and each had to be rebuilt.
         Let's walk the stack.</p>
@@ -74,13 +75,14 @@
 
       <figure>
         <img src="../figures/fig3-attention-wall.svg" alt="Log-log plot of relative cost versus sequence length, comparing O(N squared) standard attention against O(N) FlashAttention/linear methods." />
-        <figcaption><b>Figure 2 — The quadratic wall.</b> Relative cost versus sequence length (both axes log). Standard attention's <i>O(N²)</i> curve pulls decisively away from the <i>O(N)</i> curve that IO-aware and sub-quadratic methods achieve.</figcaption>
+        <figcaption><b>Figure 2 — The quadratic wall.</b> Relative cost versus sequence length (both axes log). Standard attention's <i>O(N²)</i> curve pulls decisively away from <i>O(N)</i> — which sub-quadratic methods achieve in compute, and IO-aware kernels like FlashAttention in memory.</figcaption>
       </figure>
 
-      <p>These two costs are what make long context <i>expensive</i>, but they are not the whole story.
-        Cheaper attention and a smaller cache are necessary, and two of the sections below attack them
-        directly; the others fill in the remaining pieces. We start with the one that came first, because
-        it set a hard ceiling on length itself: how the model represents position.</p>
+      <p>These two costs are what make long context <i>expensive</i>, but cheap isn't the same as
+        <i>capable</i>. Cheaper attention and a smaller cache each get a section below; so do the quieter
+        requirements — representing a million positions, training on sequences that long, and spreading one
+        sequence across many GPUs. We start with position, because it came first: before cost was even the
+        problem, it set a hard ceiling on length itself.</p>
 
       <hr />
 
@@ -91,7 +93,7 @@
         to each token, RoPE rotates every query and key by an angle proportional to its position, so that
         the attention score between them depends only on their <i>relative</i> distance <i>(m − n)</i>. It
         is parameter-free and, since LLaMA adopted it, effectively universal — Mistral, Qwen, DeepSeek, and
-        Gemma all use it. It is the foundation everything else in this section builds on.</p>
+        Gemma all use it.</p>
 
       <p>RoPE has two properties, though, that are helpful up close and become liabilities at range. The
         first is a built-in <b>long-term decay</b>: the rotation makes the query–key score fall off as two
@@ -151,8 +153,7 @@
         <li><b>Grouped-Query Attention (GQA)</b> — the pragmatic middle ground
           (<a href="https://arxiv.org/abs/2305.13245">Ainslie et al., 2023</a>): split the heads into
           <i>G</i> groups that each share one K/V pair. With 8 groups you get an 8–16× reduction while
-          keeping almost all of MHA's quality, and an existing MHA checkpoint can be "uptrained" to GQA
-          with about 5% of the original compute. Llama 2/3, Mistral, and most open models use it.</li>
+          keeping almost all of MHA's quality. Llama 2/3, Mistral, and most open models use it.</li>
         <li><b>Multi-head Latent Attention (MLA)</b> — DeepSeek's approach
           (<a href="https://arxiv.org/abs/2405.04434">DeepSeek-V2, 2024</a>): rather than use fewer heads,
           compress K and V into a low-rank <i>latent</i> vector (plus a small decoupled RoPE component) and
@@ -279,26 +280,24 @@
       <h2 id="s8">Why Long Training Runs Blow Up</h2>
 
       <p>Longer sequences and larger models make training more fragile, and a single loss spike partway
-        through a 128K run can corrupt something very expensive. The stability toolkit grew to match — most
-        of it invisible in model cards, but essential.</p>
+        through a 128K run can corrupt something very expensive. Much of the stability toolkit is
+        general-purpose background by now — Pre-LN placement and AdamW
+        (<a href="https://arxiv.org/abs/1711.05101">Loshchilov &amp; Hutter, 2017</a>) are near-universal,
+        and newer optimizers like Muon (adopted as MuonClip in
+        <a href="https://arxiv.org/abs/2507.20534">Kimi K2, 2025</a>) chase raw efficiency. Three pieces
+        matter specifically when the sequences get long:</p>
 
       <ul>
-        <li><b>Pre-LN and AdamW</b> — moving LayerNorm inside the residual branch, and decoupling weight
-          decay with AdamW (<a href="https://arxiv.org/abs/1711.05101">Loshchilov &amp; Hutter, 2017</a>),
-          were the early enablers of stable deep training; both are now near-universal.</li>
-        <li><b>Schedules</b> — the GPT-3-era linear-warmup-plus-cosine schedule gave way to Warmup-Stable-Decay
-          (<a href="https://arxiv.org/abs/2404.06395">Hu et al., 2024</a>), which is "horizon-free": you can
-          trigger the decay at any point, which is perfect for bolting a long-context phase onto a finished
-          base model.</li>
+        <li><b>Warmup-Stable-Decay schedules</b> — the GPT-3-era linear-warmup-plus-cosine schedule fixed
+          the training horizon in advance; WSD (<a href="https://arxiv.org/abs/2404.06395">Hu et al., 2024</a>)
+          is "horizon-free": you can trigger the decay at any point, which is exactly what bolting a
+          long-context phase onto a finished base model requires.</li>
         <li><b>z-loss and QK-norm</b> — a small penalty on the softmax normalizer (z-loss) and normalizing
           queries and keys before attention (QK-norm) both head off logit explosion. QK-norm matters more at
           long context, where one collapsed attention distribution loses information across the whole sequence.</li>
-        <li><b>muP and MetaP</b> — parametrizations (<a href="https://arxiv.org/abs/2203.03466">Yang et al., 2022</a>)
-          that keep optimal hyperparameters stable as width grows, so you tune on a small proxy and transfer
-          to the full model without re-tuning at each stage.</li>
-        <li><b>Muon</b> — a newer optimizer that orthogonalizes gradient updates, reported at roughly 2× the
-          compute efficiency of AdamW and adopted (as MuonClip, with spectral-norm clipping for attention
-          stability) in trillion-parameter models such as Kimi K2.</li>
+        <li><b>muP</b> — a parametrization (<a href="https://arxiv.org/abs/2203.03466">Yang et al., 2022</a>)
+          that keeps optimal hyperparameters stable as the model scales, so a multi-stage context-extension
+          curriculum doesn't need re-tuning at every stage.</li>
       </ul>
 
       <hr />
@@ -309,8 +308,9 @@
         to take that seriously. "Lost in the Middle"
         (<a href="https://arxiv.org/abs/2307.03172">Liu et al., 2023</a>) showed a U-shaped curve: models
         reliably use information at the start and end of the context but miss things in the middle, dropping
-        more than 30 points on multi-document QA. And Anthropic found that Claude 2.1 scored just 27% on
-        needle retrieval until a one-line prompt nudge raised it to 98% — a reminder that long-context
+        more than 30 points on multi-document QA. And
+        <a href="https://www.anthropic.com/news/claude-2-1-prompting">Anthropic found</a> that Claude 2.1
+        scored just 27% on needle retrieval until a one-line prompt nudge raised it to 98% — a reminder that long-context
         ability can be suppressed by post-training, not only enabled by it.</p>
 
       <p>Evaluation matured past perplexity into targeted probes. Needle-in-a-Haystack plants a fact and
@@ -346,7 +346,7 @@
       <p>No single breakthrough took us from 2K to 10M. RoPE removed the hard ceiling; FlashAttention made
         the quadratic survivable; GQA and MLA shrank the cache; the multi-stage curriculum taught models to
         actually use the length; and ring attention spread it across the cluster. The "1M context window"
-        on a spec sheet is the visible tip of five years of work spread across the entire stack — and the
+        on a spec sheet is the visible tip of half a decade of work spread across the entire stack — and the
         same logic that got us here, of cheaper attention, smaller caches, and better length generalization,
         is what will push the next jump, whether that turns out to be 100M tokens of attention or something
         that isn't attention at all.</p>
