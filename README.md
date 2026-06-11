@@ -1,12 +1,12 @@
-# BrandeisPatrick.github.io
+# blog
 
 My personal notebook. Plain HTML + CSS, no build step, hosted free on GitHub Pages.
-Live at **https://brandeispatrick.github.io**.
+Live at **https://brandeispatrick.github.io/blog/**.
 
 ## How it's built
 
 - **No framework, no build.** Every page is a static `.html` file you can open directly.
-- **One stylesheet** (`style.css`) — a single readable column, system fonts, light/dark via `prefers-color-scheme`.
+- **One stylesheet** (`style.css`) — a single readable column, system fonts, a fixed light theme.
 - **[Pretext](https://github.com/chenglou/pretext)** powers the freely-arranged hero tagline on the homepage (loaded from a CDN, progressively enhanced — the page works fine without it).
 
 ## Add a post
