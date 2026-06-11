@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inside the agent loop — Bat</title>
+  <meta name="description" content="A step-by-step walk through what a coding agent actually does between your prompt and its reply." />
+  <link rel="stylesheet" href="../style.css?v=6" />
+</head>
+<body class="wide">
+  <main>
+    <a class="backlink" href="../index.html">← all writing</a>
+
+    <article class="article">
+      <h1>Inside the agent loop</h1>
+      <p class="meta"><time datetime="2026-06-10">June 10, 2026</time></p>
+
+      <p>When you type a prompt into a coding agent and watch it think, edit files,
+        run a command, and come back with an answer, it looks like one smooth
+        motion. It isn't. Between your keystroke and its reply is a tight loop that
+        runs the same dozen steps over and over until the work is done. I built a
+        small interactive demo of that loop; this post is the written version of
+        what it shows.</p>
+
+      <p>The whole game is this: <strong>an agent is a model in a loop with
+        tools.</strong> Everything below is plumbing around that one idea — get the
+        right context into the model, stream its answer out, run whatever it asked
+        for, and decide whether to go around again.</p>
+
+      <h2>Before the Model Sees Anything, the Input Is Sanitized</h2>
+      <p>The first thing that happens to your prompt is defensive. The raw input is
+        scrubbed — invisible Unicode is stripped, and anything that triggers an
+        explicit risk warning is flagged before it goes any further. This is cheap
+        and unglamorous, and it's first for a reason: everything downstream trusts
+        that this ran.</p>
+
+      <h2>Context Is Assembled, Not Just Passed Through</h2>
+      <p>The model never sees your message alone. It sees an assembled package: the
+        system prompt, project-specific instructions (a <code>CLAUDE.md</code>),
+        relevant memory, connected tool definitions (MCP servers), and an
+        anti-injection system prompt. The quality of an agent is mostly the quality
+        of this step — what it chooses to include, and what it leaves out.</p>
+
+      <h2>The Transcript Is Written to Disk So the Session Can Resume</h2>
+      <p>Session state is persisted permanently — written to a
+        <code>session.jsonl</code> on disk. That's the unglamorous feature that
+        makes <code>--resume</code> work: the loop is stateless in the model but
+        stateful on disk, so you can close the terminal and pick the conversation
+        back up exactly where it was.</p>
+
+      <h2>Background Work Starts Early to Hide Latency</h2>
+      <p>Before the model is even queried, the loop launches asynchronous threads to
+        search past interactions and specialized skills for anything relevant. The
+        point is timing: this search runs <em>in parallel</em> with the model call,
+        so by the time the results matter they're already waiting. Latency you can't
+        remove, you hide.</p>
+
+      <h2>Context Gets Budgeted and Compacted to Fit the Window</h2>
+      <p>A token budget is enforced — oversized tool outputs get caught here — and
+        if the conversation is too long, compaction kicks in. It's layered: snip out
+        temporary UI markers first, then clear old tool outputs, and only as a last
+        resort summarize old conversation. The cheapest compression that frees
+        enough room wins; you don't summarize if deleting a stale log would do.</p>
+
+      <h2>The Model Is Streamed, and Tools Fire Before the Stream Ends</h2>
+      <p>The model is queried over a persistent byte-stream (server-sent events).
+        This is where it gets interesting. As tokens arrive, an interceptor watches
+        for structural markers: <code>&lt;thinking&gt;</code> tokens are buffered as
+        internal reasoning, plain text is sent to your terminal, and
+        <code>&lt;tool_use&gt;</code> JSON is buffered separately. The clever part —
+        once a complete tool call has streamed in, the agent can <strong>start
+        executing it before the stream has even finished</strong>. The syscalls are
+        initiated mid-flight, not after.</p>
+
+      <h2>Errors Are Caught Mid-Flight, Not After</h2>
+      <p>If the model call fails partway through — the classic "prompt too long"
+        rejection — the loop catches it live and retries with more aggressive
+        compression rather than dropping the turn. Most of the time this never
+        fires; it's the safety net that makes the streaming optimism above safe to
+        attempt.</p>
+
+      <h2>Raw Output Is Vetted Before Any Tool Runs</h2>
+      <p>The model's raw response is run through post-sample hooks: is the JSON
+        structurally valid, and are the requested tool calls classified as safe?
+        Nothing the model asks for is taken on faith — the structure and the intent
+        are both checked before a single tool executes.</p>
+
+      <h2>Tools Run in Parallel, Behind a Permission Gate</h2>
+      <p>Now the requested tools actually execute. Permissions are validated first,
+        independent tools run in parallel, and a command like <code>Bash</code>
+        passes an AST-level command-injection check before it's allowed to run. This
+        is the step that does real work in the world, so it's the most guarded.</p>
+
+      <p>It's also where the one rule worth repeating lives: an agent that can run
+        code on your machine is only as safe as the code and content you point it
+        at. Prompt injection is real — <strong>only use these tools with code you
+        trust.</strong></p>
+
+      <h2>The Prefetched Context Is Injected Just in Time</h2>
+      <p>Remember the background search from earlier? Now the loop awaits those
+        threads and quietly injects whatever memories and skills it found into the
+        history — invisibly, as if they'd been there all along. The latency was
+        spent while the model was thinking, so this costs almost nothing now.</p>
+
+      <h2>The Loop Decides Whether to Go Again</h2>
+      <p>Finally, a decision. Did the model execute tools that produced new results
+        the conversation needs to react to? If yes, the loop goes back — not to the
+        very start, but to the context-assembly stage — carrying the new tool
+        outputs with it. If the goal is met, it halts and yields control back to
+        you.</p>
+
+      <p>That's the entire trick. There's no magic in any single step — sanitize,
+        assemble, stream, vet, execute, decide — but run that loop a few times with
+        good context and the right tools, and it reads code, fixes a bug, and
+        verifies the fix while you watch one fluid paragraph scroll by. The fluency
+        is the loop hiding its own seams.</p>
+
+      <hr />
+      <p class="meta">Adapted from an interactive demo I built of the main agent
+        loop. The mechanics described here are how agentic coding tools of this
+        generation tend to work; details vary by implementation.</p>
+    </article>
+  </main>
+
+  <footer>
+    <p>© <span id="year">2026</span> Bat</p>
+  </footer>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
