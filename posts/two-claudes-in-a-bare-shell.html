@@ -52,7 +52,7 @@
             <li><a href="#s1">The setup: one bash command per turn, nothing else</a></li>
             <li><a href="#s2">Opus declares victory in two turns; Fable grinds for eighty</a></li>
             <li><a href="#s3">The dreamed trajectory: 102 commands that never ran</a></li>
-            <li><a href="#s4">Confabulation looks like a generational marker — Opus is the anomaly</a></li>
+            <li><a href="#s4">Older models dream constantly, modern ones never do — then there’s Opus</a></li>
             <li><a href="#s5">Fable tests before it claims; Opus never ran a test</a></li>
             <li><a href="#s6">You can only recall if you stay long enough</a></li>
             <li><a href="#s7">Long-horizon archetypes: dreamer, worker, pragmatist, grinder</a></li>
@@ -158,26 +158,28 @@ echo DONE
         dream on #23534, another on #23950. I call this a <b>confabulated completion</b>: the model
         simulates the loop it expected instead of using the loop it's in, then trusts the simulation.</p>
 
-      <h2 id="s4">Confabulation Looks Like a Generational Marker — Opus Is the Anomaly</h2>
+      <h2 id="s4">Older Models Dream Constantly, Modern Ones Never Do — Then There’s Opus</h2>
 
-      <p>Is this a Claude quirk? No — and that's what makes it interesting. Across all eleven models
-        I've run on this harness, confabulated completions track <em>model generation</em> almost
-        perfectly. 2024-era DeepSeek V3 dreams on nearly every task. Mid-generation models do it
-        occasionally. Current frontier models almost never do it — <b>except Opus 4.8</b>.</p>
+      <p>So is this just a Claude quirk? No — and the cross-model picture is what makes it worth a
+        chart. Line up all eleven models I’ve put through this harness and confabulated completions
+        follow <em>training vintage</em> almost perfectly: DeepSeek V3, a 2024-era model, invents its
+        way through nearly every run; mid-cycle models slip now and then; today’s frontier models
+        essentially never do it. There is exactly one exception: <b>Opus 4.8</b>.</p>
 
       <div class="chart-wrap">
         <div id="c2"></div>
       </div>
       <p class="figcap" style="text-align:center;color:#6b6b66;font-size:13px;max-width:560px;margin:8px auto 0">
-        <b>Figure 2 — Share of runs ending in a confabulated completion.</b> Sorted descending.
-        Opus 4.8 sits among models a generation or two older; its sibling Fable 5 is at zero.
-        Hover for run counts.</p>
+        <b>Figure 2 — Fraction of runs where the model trusted an imagined session and called the job
+        done.</b> Bars sorted high to low. Opus 4.8 lands in territory belonging to models one or two
+        generations older, while Fable 5 — same lab — sits at zero. Hover any bar for exact counts.</p>
 
-      <p>Note the pair at the top of the frontier: <b>Fable 5: 0 of 4. Opus 4.8: 3 of 4.</b> Same lab,
-        presumably overlapping training infrastructure — and a categorical behavioral split. Whatever
-        changed between these two models changed <em>this</em>, specifically. Hold that thought for
-        section 8, because there are two very different explanations and I can't fully separate them
-        yet.</p>
+      <p>Look at where the two Claudes landed: <b>Fable 5 never confabulated (0 of 4); Opus 4.8 did it
+        on three of four tasks.</b> These are sibling models from one lab, built on largely shared
+        infrastructure — yet on this behavior they don’t differ by degree, they split absolutely.
+        Whatever was trained differently between them surfaces <em>here</em>, in this one habit. Keep
+        that in mind for section 8: two rival explanations fit this chart, and my data can’t fully
+        tell them apart yet.</p>
 
       <h2 id="s5">Fable Tests Before It Claims; Opus Never Ran a Test</h2>
 
