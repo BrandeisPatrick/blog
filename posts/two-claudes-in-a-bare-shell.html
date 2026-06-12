@@ -51,9 +51,9 @@
           <ol>
             <li><a href="#s1">The setup: one bash command per turn, nothing else</a></li>
             <li><a href="#s2">Opus declares victory in two turns; Fable grinds for eighty</a></li>
+            <li><a href="#s5">Fable tests before it claims; Opus never ran a test</a></li>
             <li><a href="#s3">The dreamed trajectory: 102 commands that never ran</a></li>
             <li><a href="#s4">Older models dream constantly, modern ones never do — then there’s Opus</a></li>
-            <li><a href="#s5">Fable tests before it claims; Opus never ran a test</a></li>
             <li><a href="#s6">You can only recall if you stay long enough</a></li>
             <li><a href="#s7">Long-horizon archetypes: dreamer, worker, pragmatist, grinder</a></li>
             <li><a href="#s8">The big caveat: maybe we measured the cage, not the animal</a></li>
@@ -116,8 +116,34 @@
 
       <p>A 2-turn run that ends in "task complete" sounds efficient. It wasn't: on tasks #13757,
         #23534 and #23950 Opus's final patch changed <b>zero lines</b> (or failed the hidden tests),
-        yet the model signed off confidently. To see why, you have to read the transcript — and the
-        transcript is one of the strangest artifacts I've collected.</p>
+        yet the model signed off
+        confidently. Before reading those transcripts, one more measurement pins down exactly what was
+        missing from Opus’s two turns.</p>
+
+      <h2 id="s5">Fable Tests Before It Claims; Opus Never Ran a Test</h2>
+
+      <p>The cleanest single behavioral discriminator I have between the two Claudes: <b>did the model
+        actually execute the test suite before declaring the task done?</b> Fable ran real tests in
+        3 of 4 tasks (and in both of its solved runs, verified <em>before</em> claiming success). Opus
+        executed <b>zero test commands across all four tasks</b> — every "all tests pass" in its
+        transcripts refers to a test run it imagined.</p>
+
+      <div class="chart-wrap">
+        <div id="c3"></div>
+        <div class="legend">
+          <span><i style="background:#b5482e"></i> Opus 4.8</span>
+          <span><i style="background:#1b1b1a"></i> Fable 5</span>
+          <span><i style="background:#9a9a94"></i> GPT-5.5 (reference)</span>
+        </div>
+      </div>
+      <p class="figcap" style="text-align:center;color:#6b6b66;font-size:13px;max-width:560px;margin:8px auto 0">
+        <b>Figure 2 — Real test executions per task.</b> Verified-before-done: Fable 2/4 runs,
+        GPT-5.5 4/4, Opus 0/4. GPT-5.5 shown as the cohort's most consistent verifier.</p>
+
+      <p>This is the difference that reads most like a <em>trained value</em> rather than a
+        capability gap. Running <code>pytest</code> in a bare shell is not hard — V3-class models
+        manage it. Fable's habit ("verify, then claim") and Opus's habit ("conclude from reasoning")
+        are policies, and on this evidence they were shaped by different incentives.</p>
 
       <h2 id="s3">The Dreamed Trajectory: 102 Commands That Never Ran</h2>
 
@@ -170,7 +196,7 @@ echo DONE
         <div id="c2"></div>
       </div>
       <p class="figcap" style="text-align:center;color:#6b6b66;font-size:13px;max-width:560px;margin:8px auto 0">
-        <b>Figure 2 — Fraction of runs where the model trusted an imagined session and called the job
+        <b>Figure 3 — Fraction of runs where the model trusted an imagined session and called the job
         done.</b> Bars sorted high to low. Opus 4.8 lands in territory belonging to models one or two
         generations older, while Fable 5 — same lab — sits at zero. Hover any bar for exact counts.</p>
 
@@ -180,31 +206,6 @@ echo DONE
         Whatever was trained differently between them surfaces <em>here</em>, in this one habit. Keep
         that in mind for section 8: two rival explanations fit this chart, and my data can’t fully
         tell them apart yet.</p>
-
-      <h2 id="s5">Fable Tests Before It Claims; Opus Never Ran a Test</h2>
-
-      <p>The cleanest single behavioral discriminator I have between the two Claudes: <b>did the model
-        actually execute the test suite before declaring the task done?</b> Fable ran real tests in
-        3 of 4 tasks (and in both of its solved runs, verified <em>before</em> claiming success). Opus
-        executed <b>zero test commands across all four tasks</b> — every "all tests pass" in its
-        transcripts refers to a test run it imagined.</p>
-
-      <div class="chart-wrap">
-        <div id="c3"></div>
-        <div class="legend">
-          <span><i style="background:#b5482e"></i> Opus 4.8</span>
-          <span><i style="background:#1b1b1a"></i> Fable 5</span>
-          <span><i style="background:#9a9a94"></i> GPT-5.5 (reference)</span>
-        </div>
-      </div>
-      <p class="figcap" style="text-align:center;color:#6b6b66;font-size:13px;max-width:560px;margin:8px auto 0">
-        <b>Figure 3 — Real test executions per task.</b> Verified-before-done: Fable 2/4 runs,
-        GPT-5.5 4/4, Opus 0/4. GPT-5.5 shown as the cohort's most consistent verifier.</p>
-
-      <p>This is the difference that reads most like a <em>trained value</em> rather than a
-        capability gap. Running <code>pytest</code> in a bare shell is not hard — V3-class models
-        manage it. Fable's habit ("verify, then claim") and Opus's habit ("conclude from reasoning")
-        are policies, and on this evidence they were shaped by different incentives.</p>
 
       <h2 id="s6">You Can Only Recall If You Stay Long Enough</h2>
 
