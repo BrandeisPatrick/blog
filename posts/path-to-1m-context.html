@@ -37,24 +37,16 @@
       <p class="dek">On positional encoding, the KV cache, attention, and everything else that had to
         change to read a million tokens.</p>
 
-      <p>In the last two years the million-token context window went from headline to spec sheet. Gemini 1.5
-        got there first in early 2024; GPT-4.1, Claude 4, Qwen2.5-1M, Llama 4, and DeepSeek-V4 have all
-        shipped 1M windows since, and increasingly they hold up <i>across</i> the whole million rather than
-        falling apart in the middle. A million tokens is now the default rather than the record — Llama 4
-        Scout already advertises 10M. The open question isn't <i>whether</i> the next model takes a
-        million tokens — it's <i>how</i>.</p>
+      <p>It started with GPT-3 in 2020 and a 2,048-token window. Then Claude 2 reached 100,000 tokens. Then
+        Gemini 1.5 Pro hit 1,000,000. How do you get from 2,048 to a million?</p>
 
       <figure>
         <img src="../figures/fig1-context-growth.svg?v=4" alt="Staircase chart of the largest available context window over time, stepping from GPT-3 (2K) up to Llama 4 Scout (10M), with a 2026 cluster of models at 1M." />
         <figcaption><b>Figure 1 — The frontier.</b> The largest context window available at any time (log scale); the staircase steps up at each new record — GPT-3 (2K) → GPT-4 (8K) → Claude 2 (100K) → Gemini 1.5 Pro (1M) → MiniMax-01 (4M) → Llama 4 Scout (10M), where it has held. But the <i>record</i> (10M) and the <i>default</i> are now different things: by 2026 the field has settled at 1M (grey dots — Grok, GPT-5.5, Claude Opus, DeepSeek-V4). A million tokens is the new normal, not the ceiling.</figcaption>
       </figure>
 
-      <p>A million tokens is a ~500× jump from GPT-3's 2,048 — Scout's 10M is ~5,000× — and it didn't
-        come from one trick. Long context
-        stresses eight parts of a model at once — positional encoding, the KV cache, the attention algorithm,
-        the architecture, the training recipe, the systems around them, the optimizer, and the evaluations
-        that prove it worked — and each had to be rebuilt.
-        Let's walk the stack.</p>
+      <p>Not one breakthrough — it took rebuilding eight different parts of the model at once. This post
+        walks through all eight.</p>
 
       <hr />
 
