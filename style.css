@@ -129,6 +129,27 @@ html { scroll-behavior: smooth; }
 }
 .status-review { color: var(--accent); border-color: currentColor; background: #fff; }
 
+/* ---- On the desk (work in progress, folded by default) ---- */
+.post-list.published { margin-bottom: 8px; }
+.desk { margin: 40px 0 64px; }
+.desk > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.desk > summary:hover { color: var(--fg); }
+.desk > summary .desk-note {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.desk .post-link { padding: 18px 0; }
+.desk .post-link h2 { font-size: 19px; }
+.desk .post-link .excerpt { font-size: 15px; margin-top: 4px; }
+
 /* ---- Article (post pages) ---- */
 .article { margin: 24px 0 80px; }
 .article h1 { font-size: clamp(30px, 7vw, 42px); line-height: 1.1; letter-spacing: -0.02em; margin: 8px 0 4px; }

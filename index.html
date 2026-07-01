@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bat — Notes</title>
   <meta name="description" content="Personal notes and writing by Bat." />
-  <link rel="stylesheet" href="style.css?v=7" />
+  <link rel="stylesheet" href="style.css?v=9" />
 </head>
 <body>
   <header class="hero">
@@ -21,7 +21,19 @@
       <a href="about.html">About</a>
     </nav>
 
-    <section class="post-list" aria-label="Posts">
+    <section class="post-list published" aria-label="Posts">
+      <article class="post-link">
+        <a href="posts/path-to-1m-context.html">
+          <h2>The path to 1M context window</h2>
+          <p class="meta"><time datetime="2026-06-08">June 8, 2026</time> · <span class="status status-review">In final review</span></p>
+          <p class="excerpt">How LLMs went from GPT-3's 2,048 tokens to 1M+ — positional encoding, the KV cache, the attention algorithm, training recipes, systems, and optimizers. A guided tour of everything that changed, with figures.</p>
+        </a>
+      </article>
+    </section>
+
+    <details class="desk">
+      <summary>On the desk <span class="desk-note">· 2 drafts, readable but still changing</span></summary>
+
       <article class="post-link">
         <a href="posts/two-claudes-in-a-bare-shell.html">
           <h2>Two Claudes in a bare shell</h2>
@@ -37,15 +49,7 @@
           <p class="excerpt">A step-by-step walk through what a coding agent actually does between your prompt and its reply — context assembly, streaming, mid-flight tool execution, compaction, and the decision to loop again. Adapted from an interactive demo.</p>
         </a>
       </article>
-
-      <article class="post-link">
-        <a href="posts/path-to-1m-context.html">
-          <h2>The path to 1M context window</h2>
-          <p class="meta"><time datetime="2026-06-08">June 8, 2026</time> · <span class="status status-review">In final review</span></p>
-          <p class="excerpt">How LLMs went from GPT-3's 2,048 tokens to 1M+ — positional encoding, the KV cache, the attention algorithm, training recipes, systems, and optimizers. A guided tour of everything that changed, with figures.</p>
-        </a>
-      </article>
-    </section>
+    </details>
   </main>
 
   <footer>
