@@ -41,7 +41,7 @@
         Gemini 1.5 Pro hit 1,000,000. How do you get from 2,048 to a million?</p>
 
       <figure>
-        <img src="../figures/fig1-context-growth.svg?v=4" alt="Staircase chart of the largest available context window over time, stepping from GPT-3 (2K) up to Llama 4 Scout (10M), with a 2026 cluster of models at 1M." />
+        <img src="../figures/fig1-context-growth.svg?v=5" alt="Staircase chart of the largest available context window over time, stepping from GPT-3 (2K) up to Llama 4 Scout (10M), with a 2026 cluster of models at 1M." />
         <figcaption><b>Figure 1 — The frontier.</b> The largest context window available at any time (log scale); the staircase steps up at each new record — GPT-3 (2K) → GPT-4 (8K) → Claude 2 (100K) → Gemini 1.5 Pro (1M) → MiniMax-01 (4M) → Llama 4 Scout (10M), where it has held. But the <i>record</i> (10M) and the <i>default</i> are now different things: by 2026 the field has settled at 1M (grey dots — Grok, GPT-5.5, Claude Opus, DeepSeek-V4). A million tokens is the new normal, not the ceiling.</figcaption>
       </figure>
 
@@ -55,19 +55,19 @@
       <p>Long context is expensive for two reasons, and the two scale very differently. The first is
         attention itself. In a standard Transformer (<a href="https://arxiv.org/abs/1706.03762">Vaswani et al., 2017</a>)
         every token attends to every other token, so the cost of the attention step grows with the square
-        of the sequence length, <i>O(N²)</i>. Going from 2,048 tokens to a million makes that step on the
-        order of 250,000× larger, which is the simple reason training on long sequences was infeasible for
-        years.</p>
+        of the sequence length, <i>O(N²)</i>. Go from 2,048 tokens to a million and that one step gets
+        roughly 250,000× more expensive. That alone is why training on long sequences stayed infeasible
+        for years.</p>
 
-      <p>The second reason is the KV cache. While a model generates text, it stores the key and value
-        vectors of every token it has already seen so that it doesn't recompute them, and that memory
-        grows linearly with the length of the context. The slope is gentle, but the constant is large: a
+      <p>The second reason is the KV cache — the working memory a model carries while it generates. For
+        every token it has seen, the model keeps that token's key and value vectors around so it never has
+        to recompute them, and that memory grows linearly with the length of the context. The slope is gentle, but the constant is large: a
         70B model like Llama 3 (<a href="https://arxiv.org/abs/2407.21783">Dubey et al., 2024</a>) holds
-        roughly 40 GB of KV cache at 128K tokens, on top of its ~140 GB of weights. At a million tokens, it
-        would not fit on a single accelerator.</p>
+        roughly 40 GB of KV cache at 128K tokens, on top of its ~140 GB of weights. At a million tokens, the
+        cache alone outgrows a single GPU.</p>
 
       <figure>
-        <img src="../figures/fig3-attention-wall.svg" alt="Log-log plot of relative cost versus sequence length, comparing O(N squared) standard attention against O(N) FlashAttention/linear methods." />
+        <img src="../figures/fig3-attention-wall.svg?v=2" alt="Log-log plot of relative cost versus sequence length, comparing O(N squared) standard attention against O(N) FlashAttention/linear methods." />
         <figcaption><b>Figure 2 — The quadratic wall.</b> Relative cost versus sequence length (both axes log). Standard attention's <i>O(N²)</i> curve pulls decisively away from <i>O(N)</i> — which sub-quadratic methods achieve in compute, and IO-aware kernels like FlashAttention in memory.</figcaption>
       </figure>
 
@@ -84,7 +84,8 @@
       <p>Almost every model today encodes position with <b>RoPE</b>, rotary position embedding
         (<a href="https://arxiv.org/abs/2104.09864">Su et al., 2021</a>). Rather than add a position vector
         to each token, RoPE rotates every query and key by an angle proportional to its position, so that
-        the attention score between them depends only on their <i>relative</i> distance <i>(m − n)</i>. It
+        the attention score between two tokens depends only on how far apart they are — <i>relative</i>
+        position, not absolute. It
         is parameter-free and, since LLaMA adopted it, effectively universal — Mistral, Qwen, DeepSeek, and
         Gemma all use it.</p>
 
@@ -98,7 +99,7 @@
         at a million tokens.</p>
 
       <figure>
-        <img src="../figures/fig5-rope-vs-nope.svg" alt="Plot contrasting RoPE and NoPE: RoPE's attention decays with token distance and scatters past the training-length wall, while NoPE stays flat across any distance." />
+        <img src="../figures/fig5-rope-vs-nope.svg?v=2" alt="Plot contrasting RoPE and NoPE: RoPE's attention decays with token distance and scatters past the training-length wall, while NoPE stays flat across any distance." />
         <figcaption><b>Figure 3 — RoPE vs NoPE.</b> RoPE's attention decays with distance and breaks down past its training length; a position-free (NoPE) layer stays flat and has no length cap. The newest models (iRoPE) keep RoPE layers for local order and add NoPE layers for the long-range reach.</figcaption>
       </figure>
 
@@ -133,10 +134,10 @@
 
       <h2 id="s3">The KV Cache: Shrink the Memory That Length Multiplies</h2>
 
-      <p>Even with positions solved, the KV cache remains the memory bottleneck at inference, because its
-        size is a per-token cost multiplied by the length of the context. The way to make a million tokens
-        fit, then, is to shrink what each token costs — and the history of attention heads is largely a
-        history of doing exactly that, by giving fewer heads their own keys and values.</p>
+      <p>Even with positions solved, the KV cache remains the memory bottleneck at inference: its size is
+        a per-token cost multiplied by the length of the context. The length is the whole point, so the
+        only lever left is what each token costs — and the history of attention heads is largely a history
+        of pulling that lever, by giving fewer heads their own keys and values.</p>
 
       <ul>
         <li><b>Multi-Head Attention (MHA)</b> — the GPT-3 baseline, in which every head caches its own K and V.</li>
@@ -194,10 +195,10 @@
 
       <h2 id="s5">Do You Even Need Attention?</h2>
 
-      <p>If attention is inherently quadratic, a natural question is whether you need it at all.
-        <b>State-space models (SSMs)</b> answer no, at least in part: they compress the entire past into a
-        fixed-size state, which gives <i>O(N)</i> time and <i>O(1)</i> inference memory, like a recurrent
-        network that can still be trained in parallel.</p>
+      <p>If attention is inherently quadratic, the tempting move is to get rid of it.
+        <b>State-space models (SSMs)</b> are the serious attempt: they compress the entire past into a
+        fixed-size state, which gives <i>O(N)</i> time and <i>O(1)</i> inference memory — in effect a
+        recurrent network that can still be trained in parallel.</p>
 
       <p>The line runs from HiPPO and S4 (<a href="https://arxiv.org/abs/2111.00396">Gu et al., 2021</a>),
         which first cracked the 16K-token Long Range Arena tasks where Transformers had scored near chance,
