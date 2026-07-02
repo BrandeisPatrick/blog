@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>From zero to forward deployed — Bat</title>
+  <meta name="description" content="The FDE job as an app-style interactive: tabbed screens, a skill radar, a clickable road from zero to hired with a you-are-here pin, and the interview loop as a funnel." />
+  <link rel="stylesheet" href="../style.css?v=9" />
+  <style>
+    /* ---------- app frame (post-local) — palette matches style.css ---------- */
+    .frame {
+      border: 1px solid #ececec; border-radius: 18px; background: #fff;
+      margin: 24px 0 8px; overflow: hidden;
+      box-shadow: 0 1px 2px rgba(27,27,26,.04), 0 8px 28px rgba(27,27,26,.06);
+    }
+    /* Without JS the screens stack like a normal article. With JS (.appjs) it becomes an app. */
+    .appjs { display: flex; flex-direction: column; height: min(76vh, 700px); }
+    .apphead {
+      display: none; align-items: center; justify-content: space-between;
+      padding: 12px 18px 10px; border-bottom: 1px solid #ececec;
+    }
+    .appjs .apphead { display: flex; }
+    .apphead .t { font-size: 14.5px; font-weight: 700; }
+    .apphead .dots { display: flex; gap: 5px; }
+    .apphead .dots i { width: 6px; height: 6px; border-radius: 50%; background: #ececec; }
+    .apphead .dots i.on { background: #b5482e; }
+
+    .screens { position: relative; flex: 1; }
+    .screen { padding: 18px 20px 22px; }
+    .screen h3 { margin: 0 0 6px; font-size: 17px; }
+    .screen .lead { color: #6b6b66; font-size: 13.5px; line-height: 1.5; margin: 0 0 12px; }
+    .appjs .screens { overflow: hidden; }
+    .appjs .screen {
+      position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      transform: translateX(102%); opacity: 0; pointer-events: none;
+      transition: transform .32s ease, opacity .32s ease;
+    }
+    .appjs .screen.past { transform: translateX(-102%); }
+    .appjs .screen.on { transform: none; opacity: 1; pointer-events: auto; }
+    .screen svg { width: 100%; height: auto; display: block; }
+    .screen hr { border: none; border-top: 1px solid #ececec; margin: 18px 0; }
+
+    .tabbar { display: none; border-top: 1px solid #ececec; background: #fcfcfb; }
+    .appjs .tabbar { display: flex; }
+    .tabbar button {
+      flex: 1; background: none; border: none; cursor: pointer;
+      padding: 8px 2px 9px; color: #6b6b66;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      font: 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .tabbar button svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .tabbar button.on { color: #b5482e; font-weight: 600; }
+
+    /* bottom sheet (in-frame detail panel) */
+    .sheet {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
+      background: #1b1b1a; color: #fff; border-radius: 14px 14px 0 0;
+      padding: 14px 18px 16px; font-size: 13.5px; line-height: 1.5;
+      transform: translateY(105%); transition: transform .28s ease;
+      max-height: 62%; overflow-y: auto;
+    }
+    .sheet.open { transform: none; }
+    .sheet b { color: #ffd9cf; }
+    .sheet .x {
+      position: absolute; top: 8px; right: 12px; background: none; border: none;
+      color: #fff; font-size: 18px; cursor: pointer; line-height: 1;
+    }
+    .sheet h5 { margin: 0 24px 4px 0; font-size: 14px; color: #fff; }
+
+    /* stat chips (job screen) */
+    .stats { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+    .stat { border: 1px solid #ececec; border-radius: 10px; padding: 8px 12px; flex: 1 1 30%; min-width: 130px; }
+    .stat b { display: block; font-size: 17px; color: #b5482e; }
+    .stat span { font-size: 11.5px; color: #6b6b66; line-height: 1.3; display: block; margin-top: 2px; }
+
+    /* radar profile toggles */
+    .chart-controls { display: flex; gap: 8px; justify-content: center; margin: 4px 0 8px; flex-wrap: wrap; }
+    .chart-controls button {
+      font: 12.5px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 5px 12px; border: 1px solid #ececec; border-radius: 14px;
+      background: #fff; color: #6b6b66; cursor: pointer;
+    }
+    .chart-controls button.on { background: #1b1b1a; color: #fff; border-color: #1b1b1a; }
+    .chart-controls button.on.alt { background: #2f6f7a; border-color: #2f6f7a; }
+
+    /* stage card + chips (road screen) */
+    .card {
+      border: 1px solid #ececec; border-radius: 10px; background: #f6f6f4;
+      padding: 12px 14px; font-size: 13.5px; line-height: 1.5; margin-top: 10px;
+    }
+    .card h4 { margin: 0; font-size: 14.5px; }
+    .card .sub { color: #6b6b66; font-size: 12.5px; margin: 2px 0 6px; }
+    .card .chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0 2px; }
+    .card .chip { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid #ececec; background: #fff; }
+    .card .chip.b { border-color: #b5482e; color: #b5482e; }
+    .card .ready { margin: 8px 0 0; padding-top: 7px; border-top: 1px solid #ececec; font-size: 12.5px; }
+    .card .ready b { color: #b5482e; }
+
+    /* quiz wizard */
+    .quiz { max-width: 480px; margin: 0 auto; }
+    .quiz .qhead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .quiz .qhead b { font-size: 14.5px; }
+    .quiz .qhead span { font-size: 12px; color: #6b6b66; }
+    .quiz .steps { display: flex; gap: 5px; margin-bottom: 14px; }
+    .quiz .steps i { flex: 1; height: 4px; border-radius: 99px; background: #ececec; }
+    .quiz .steps i.done { background: #b5482e; }
+    .quiz label {
+      display: flex; gap: 10px; align-items: baseline; padding: 11px 12px; margin-bottom: 8px;
+      border: 1px solid #ececec; border-radius: 10px; font-size: 14px; cursor: pointer;
+    }
+    .quiz label:has(input:checked) { border-color: #b5482e; background: #fdf5f3; }
+    .quiz input { accent-color: #b5482e; }
+    .qnav { display: flex; justify-content: space-between; margin-top: 14px; }
+    .qnav button {
+      font: 13.5px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 9px 18px; border-radius: 999px; cursor: pointer; border: 1px solid #ececec; background: #fff; color: #1b1b1a;
+    }
+    .qnav button.primary { background: #b5482e; border-color: #b5482e; color: #fff; }
+    .qnav button:disabled { opacity: .35; cursor: default; }
+    .qresult { text-align: center; padding: 8px 0 4px; }
+    .qresult .big { font-size: 17px; font-weight: 700; margin: 4px 0 2px; }
+    .qresult .big b { color: #b5482e; }
+    .qresult p { font-size: 13.5px; color: #6b6b66; margin: 4px 0 12px; }
+
+    /* project cards (more screen) */
+    .projects { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 12px 0; }
+    .proj { border: 1px solid #ececec; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.5; }
+    .proj h4 { margin: 0 0 4px; font-size: 13.5px; }
+    .proj .sig { color: #6b6b66; display: block; margin-top: 5px; font-size: 12px; }
+    .proj .sig b { color: #b5482e; }
+
+    .refs-mini { font-size: 12.5px; line-height: 1.55; color: #6b6b66; padding-left: 18px; margin: 8px 0 0; }
+    .refs-mini a { color: #1b1b1a; }
+    .swipe-hint { text-align: center; color: #6b6b66; font-size: 12px; margin-top: 14px; }
+    .figcap { text-align: center; color: #6b6b66; font-size: 12px; max-width: 560px; margin: 8px auto 0; line-height: 1.5; }
+    .jump { color: #b5482e; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+  </style>
+</head>
+<body class="wide">
+  <main>
+    <a class="backlink" href="../index.html">← all writing</a>
+
+    <article class="article">
+      <h1>From zero to forward deployed</h1>
+      <p class="meta"><time datetime="2026-07-01">July 1, 2026</time> · interactive app · <span class="status">Draft — role data as of mid-2026</span></p>
+
+      <p class="dek">The forward deployed engineer job as a small app: six screens, tap through them —
+        what the job is, the skills it takes, the road from zero, and where you are on it.</p>
+
+      <div class="frame" id="frame" tabindex="0" aria-label="Interactive article: use the tab bar or arrow keys to change screens">
+        <div class="apphead">
+          <span class="t" id="apphead-title">The job</span>
+          <span class="dots" id="apphead-dots"></span>
+        </div>
+
+        <div class="screens" id="screens">
+
+          <!-- ========== screen 1: the job ========== -->
+          <section class="screen" data-title="The job">
+            <h3>The gap is the job</h3>
+            <p class="lead">Every AI product exists twice: in the demo, and inside the customer's stack.
+              An MIT-affiliated study found <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">~95%
+              of enterprise AI pilots</a> never reach measurable impact. The forward deployed engineer is
+              the vendor's answer: <a href="https://nabeelqu.co/reflections-on-palantir">embedded with the
+              customer</a>, part engineer, part consultant, part account owner.</p>
+            <svg viewBox="0 0 640 240" role="img" aria-label="The gap between demo and production, bridged by the FDE">
+              <path d="M25 105 L235 105 L235 226 L25 226 Z" fill="#f6f6f4" stroke="#ececec"/>
+              <path d="M405 86 L615 86 L615 226 L405 226 Z" fill="#f6f6f4" stroke="#ececec"/>
+              <text x="130" y="93" font-size="13" fill="#1b1b1a" font-weight="700" text-anchor="middle">THE DEMO</text>
+              <text x="130" y="128" font-size="11.5" fill="#6b6b66" text-anchor="middle">clean data · no auth · lab Wi-Fi</text>
+              <text x="130" y="146" font-size="11.5" fill="#6b6b66" text-anchor="middle">"it works!"</text>
+              <text x="510" y="74" font-size="13" fill="#1b1b1a" font-weight="700" text-anchor="middle">PRODUCTION AT ACME</text>
+              <text x="510" y="110" font-size="11.5" fill="#6b6b66" text-anchor="middle">their data · their rules · their VPC</text>
+              <text x="510" y="128" font-size="11.5" fill="#6b6b66" text-anchor="middle">"it works <tspan font-style="italic">here</tspan>."</text>
+              <text x="320" y="162" font-size="11" fill="#6b6b66" text-anchor="middle">legacy systems · SSO · compliance</text>
+              <text x="320" y="179" font-size="11" fill="#6b6b66" text-anchor="middle">data governance · unowned evals</text>
+              <text x="320" y="196" font-size="11" fill="#6b6b66" text-anchor="middle">org politics · the last mile</text>
+              <path d="M235 105 C 275 78, 365 70, 405 86" fill="none" stroke="#b5482e" stroke-width="3"/>
+              <circle cx="320" cy="76" r="9" fill="#b5482e"/>
+              <text x="320" y="58" font-size="12" fill="#b5482e" font-weight="700" text-anchor="middle" stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">the FDE</text>
+            </svg>
+            <div class="stats">
+              <div class="stat"><b>224</b><span>open FDE roles across 39 AI companies, <a href="https://jobsbyculture.com/blog/forward-deployed-engineer-boom-2026">May 2026</a></span></div>
+              <div class="stat"><b>+800%</b><span>year-over-year growth in <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">FDE postings</a></span></div>
+              <div class="stat"><b>$1B</b><span><a href="https://www.cnbc.com/2026/06/30/aws-amazon-ai-forward-deployed-engineers.html">AWS's new unit</a> embedding engineers with customers, June 2026</span></div>
+            </div>
+            <p class="swipe-hint">swipe or use the tabs below — 6 screens →</p>
+          </section>
+
+          <!-- ========== screen 2: skills ========== -->
+          <section class="screen" data-title="Skills">
+            <h3>The skill radar</h3>
+            <p class="lead">Six axes repeat in every 2026 FDE job post. Toggle the profiles; <b>tap any
+              axis label</b> for the concrete skills and the interview round that probes them. The gap
+              between the two shapes is the curriculum.</p>
+            <div class="chart-controls" id="radar-controls"></div>
+            <div id="radar"></div>
+          </section>
+
+          <!-- ========== screen 3: the road ========== -->
+          <section class="screen" data-title="Road">
+            <h3>The road from zero</h3>
+            <p class="lead">Five stages, each ending in something shipped. <b>Tap a station.</b>
+              The <b style="color:#b5482e">pin</b> is placed by the quiz on the next screen —
+              <span class="jump" data-go="3">take it</span>.</p>
+            <div id="road"></div>
+            <div class="card" id="stage-card"></div>
+          </section>
+
+          <!-- ========== screen 4: quiz ========== -->
+          <section class="screen" data-title="Quiz">
+            <h3>Where do you start?</h3>
+            <p class="lead">Twelve honest checks, four rounds. Nothing is stored or sent — your browser
+              talking to itself.</p>
+            <div class="quiz" id="quiz"></div>
+          </section>
+
+          <!-- ========== screen 5: the loop ========== -->
+          <section class="screen" data-title="Loop">
+            <h3>The interview funnel</h3>
+            <p class="lead"><a href="https://www.tryexponent.com/blog/forward-deployed-engineer-interview-the-definitive-2026-guide-fde">5–8
+              stages over 3–6 weeks</a>, roughly half of it not coding. <b>Tap a gate.</b> The red one
+              decides more than the rest combined.</p>
+            <div id="funnel"></div>
+            <p class="figcap">Coding rounds are practical — messy CSVs, small pipelines, rate limiters —
+              so LeetCode grinding is misallocated prep. Some companies swap a round for a 24–48h build
+              against a mock customer dataset.</p>
+          </section>
+
+          <!-- ========== screen 6: more ========== -->
+          <section class="screen" data-title="More">
+            <h3>The market, in two panels</h3>
+            <svg viewBox="0 0 640 260" role="img" aria-label="Top FDE hirers and reported compensation by level">
+              <text x="20" y="20" font-size="12.5" fill="#1b1b1a" font-weight="700">Open roles, top hirers (May 2026)</text>
+              <g font-size="11.5" fill="#1b1b1a">
+                <text x="92" y="50" text-anchor="end">Palantir</text>   <rect x="100" y="41" width="170" height="11" rx="2" fill="#b5482e"/><text x="276" y="50" fill="#6b6b66">51</text>
+                <text x="92" y="75" text-anchor="end">OpenAI</text>     <rect x="100" y="66" width="103" height="11" rx="2" fill="#b5482e" opacity=".85"/><text x="209" y="75" fill="#6b6b66">31</text>
+                <text x="92" y="100" text-anchor="end">Databricks</text><rect x="100" y="91" width="40" height="11" rx="2" fill="#b5482e" opacity=".7"/><text x="146" y="100" fill="#6b6b66">12</text>
+                <text x="92" y="125" text-anchor="end">Mistral</text>   <rect x="100" y="116" width="37" height="11" rx="2" fill="#b5482e" opacity=".7"/><text x="143" y="125" fill="#6b6b66">11</text>
+                <text x="92" y="150" text-anchor="end">Cohere</text>    <rect x="100" y="141" width="33" height="11" rx="2" fill="#b5482e" opacity=".7"/><text x="139" y="150" fill="#6b6b66">10</text>
+                <text x="92" y="175" text-anchor="end">Scale AI</text>  <rect x="100" y="166" width="27" height="11" rx="2" fill="#b5482e" opacity=".7"/><text x="133" y="175" fill="#6b6b66">8</text>
+              </g>
+              <text x="20" y="212" font-size="11" fill="#6b6b66">+ Anthropic &amp; Google under adjacent titles;</text>
+              <text x="20" y="228" font-size="11" fill="#6b6b66">most YC AI app companies</text>
+              <text x="352" y="20" font-size="12.5" fill="#1b1b1a" font-weight="700">Reported US total comp (top of market)</text>
+              <g font-size="11.5" fill="#1b1b1a">
+                <line x1="352" y1="180" x2="620" y2="180" stroke="#ececec"/>
+                <text x="352" y="198" font-size="10.5" fill="#6b6b66">$250K</text>
+                <text x="475" y="198" font-size="10.5" fill="#6b6b66">$500K</text>
+                <text x="600" y="198" font-size="10.5" fill="#6b6b66" text-anchor="end">$750K</text>
+                <text x="352" y="60">Mid</text>     <rect x="377" y="51" width="74" height="11" rx="5" fill="#2f6f7a"/><text x="459" y="60" fill="#6b6b66" font-size="11">300–450</text>
+                <text x="352" y="103">Senior</text> <rect x="451" y="94" width="49" height="11" rx="5" fill="#2f6f7a"/><text x="508" y="103" fill="#6b6b66" font-size="11">450–550</text>
+                <text x="352" y="146">Staff+</text> <rect x="525" y="137" width="74" height="11" rx="5" fill="#2f6f7a"/><text x="607" y="146" fill="#6b6b66" font-size="11" text-anchor="start">600+</text>
+              </g>
+            </svg>
+            <p class="figcap">Counts from <a href="https://jobsbyculture.com/blog/forward-deployed-engineer-boom-2026">JobsByCulture</a>;
+              comp from <a href="https://www.recruitingfromscratch.com/blog/what-does-a-forward-deployed-engineer-do-role-salary-guide">2026 salary guides</a> —
+              AI-lab / Palantir tier; startups pay meaningfully less, and
+              <a href="https://getperspective.ai/blog/forward-deployed-engineer-interview-questions-2026-prep-guide">trackers disagree</a>. Directional, not audited.</p>
+
+            <hr />
+            <h3>Three projects that signal</h3>
+            <div class="projects">
+              <div class="proj"><h4>RAG over hostile data</h4>Scanned PDFs, an old wiki export, inconsistent CSVs — retrieval plus a scored eval set with a regression gate.<span class="sig"><b>signal:</b> eval engineering — the #1 hand-wave interviewers punish</span></div>
+              <div class="proj"><h4>An agent with a paper trail</h4>A tool-calling workflow doing something real, with traces, cost/latency budgets, guardrails, a failure-mode table.<span class="sig"><b>signal:</b> "here's how I know when it breaks" — operator thinking</span></div>
+              <div class="proj"><h4>An integration you didn't control</h4>Ship into a system you don't own — their SSO, their review, their constraints — then write the war story.<span class="sig"><b>signal:</b> the actual job, miniaturized</span></div>
+            </div>
+
+            <hr />
+            <h3>Fine print</h3>
+            <p class="lead"><b>The title is having a moment</b> — some "FDE" posts are rebadged solutions
+              engineering; the tells that it's real are embedded customer time, code ownership, and a
+              product feedback loop. <b>The job is travel and tension</b> — the same embedded model that
+              makes it a founder factory makes it a grind. <b>This is a snapshot</b> — mid-2026 numbers
+              will drift; the six radar axes drift much slower.</p>
+
+            <hr />
+            <h3>References</h3>
+            <ol class="refs-mini">
+              <li>Nabeel S. Qureshi, <a href="https://nabeelqu.co/reflections-on-palantir">Reflections on Palantir</a> (2024).</li>
+              <li>Andrew Ng, <a href="https://x.com/AndrewYNg/status/2061477558693384395">on the AI FDE</a> (2026).</li>
+              <li><a href="https://jobsbyculture.com/blog/forward-deployed-engineer-boom-2026">JobsByCulture FDE tracker</a>; <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">KORE1 hiring guide</a> (incl. MIT NANDA statistic).</li>
+              <li><a href="https://www.cnbc.com/2026/06/30/aws-amazon-ai-forward-deployed-engineers.html">CNBC on AWS's $1B unit</a>; <a href="https://www.aboutamazon.com/news/aws/aws-1-billion-forward-deployed-ai-engineers">Amazon announcement</a>.</li>
+              <li><a href="https://www.tryexponent.com/blog/forward-deployed-engineer-interview-the-definitive-2026-guide-fde">Exponent FDE interview guide</a>; <a href="https://getperspective.ai/blog/forward-deployed-engineer-interview-questions-2026-prep-guide">Perspective AI prep guide</a>; <a href="https://fde.academy/blog/forward-deployed-engineer-interview-questions">FDE Academy</a>.</li>
+              <li><a href="https://www.paraform.com/blog/forward-deployed-ai-engineer">Paraform role guides</a>; <a href="https://www.marktechpost.com/2026/05/20/what-is-a-forward-deployed-engineer-the-ai-role-openai-anthropic-and-google-are-hiring-in-2026/">MarkTechPost</a>.</li>
+              <li><a href="https://www.recruitingfromscratch.com/blog/what-does-a-forward-deployed-engineer-do-role-salary-guide">Salary guide</a>; <a href="https://skillscouter.com/how-to-become-a-forward-deployed-engineer/">SkillScouter 90-day estimate</a>.</li>
+            </ol>
+            <p class="figcap" style="margin-top:14px">Draft note: numbers are directional, not audited.
+              If you're an FDE and a screen here doesn't match the job from the inside, I'd genuinely
+              like to hear it.</p>
+          </section>
+        </div>
+
+        <div class="sheet" id="sheet"><button class="x" id="sheet-x" aria-label="Close">✕</button><div id="sheet-body"></div></div>
+        <nav class="tabbar" id="tabbar" aria-label="Screens"></nav>
+      </div>
+
+      <p class="figcap" style="margin-top:10px">Built like the rest of this site — plain HTML, one file,
+        no framework. If JavaScript is off, the six screens read top-to-bottom as a normal post.</p>
+    </article>
+  </main>
+
+  <footer>
+    <p>© <span id="year">2026</span> Bat</p>
+  </footer>
+
+  <script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+  const NS = 'http://www.w3.org/2000/svg';
+
+  // ---------- app shell ----------
+  const frame = document.getElementById('frame');
+  frame.classList.add('appjs');
+  const screens = [...document.querySelectorAll('.screen')];
+  const ICONS = {
+    "The job": '<path d="M3 16V9h4v7M13 16V7h4v9M7 11c2.5-3 3.5-3 6-1.5"/>',
+    "Skills":  '<path d="M10 2l7 4v8l-7 4-7-4V6z"/><circle cx="10" cy="10" r="1.6"/>',
+    "Road":    '<path d="M2 16c5 0 5-6 9-6s3 6 7-2"/><circle cx="6" cy="13" r="1.4"/><circle cx="15" cy="9" r="1.4"/>',
+    "Quiz":    '<rect x="3" y="3" width="14" height="14" rx="3"/><path d="M6.5 10l2.5 2.5 4.5-5"/>',
+    "Loop":    '<path d="M3 4h14l-5 6v5l-4 2v-7z"/>',
+    "More":    '<circle cx="4" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="16" cy="10" r="1.5"/>'
+  };
+  const tabbar = document.getElementById('tabbar');
+  const dots = document.getElementById('apphead-dots');
+  screens.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.innerHTML = `<svg viewBox="0 0 20 20">${ICONS[s.dataset.title] || ''}</svg><span>${s.dataset.title}</span>`;
+    b.onclick = () => go(i);
+    tabbar.appendChild(b);
+    const d = document.createElement('i'); dots.appendChild(d);
+  });
+  let cur = 0;
+  function go(i) {
+    if (i < 0 || i >= screens.length) return;
+    cur = i;
+    screens.forEach((s, j) => {
+      s.classList.toggle('on', j === i);
+      s.classList.toggle('past', j < i);
+      if (j === i) s.scrollTop = s.scrollTop; // keep internal scroll
+    });
+    [...tabbar.children].forEach((b, j) => b.classList.toggle('on', j === i));
+    [...dots.children].forEach((d, j) => d.classList.toggle('on', j === i));
+    document.getElementById('apphead-title').textContent = screens[i].dataset.title;
+    closeSheet();
+  }
+  // swipe + keys
+  let tx = null, ty = null;
+  frame.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+  frame.addEventListener('touchend', e => {
+    if (tx === null) return;
+    const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 55 && Math.abs(dx) > 1.6 * Math.abs(dy)) go(cur + (dx < 0 ? 1 : -1));
+    tx = ty = null;
+  }, { passive: true });
+  frame.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+  document.querySelectorAll('.jump').forEach(el => el.addEventListener('click', () => go(+el.dataset.go)));
+
+  // ---------- bottom sheet ----------
+  const sheet = document.getElementById('sheet'), sheetBody = document.getElementById('sheet-body');
+  function openSheet(html) { sheetBody.innerHTML = html; sheet.classList.add('open'); }
+  function closeSheet() { sheet.classList.remove('open'); }
+  document.getElementById('sheet-x').onclick = closeSheet;
+  function wireSheets(root) {
+    root.querySelectorAll('[data-sheet]').forEach(el => {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', () => openSheet(el.dataset.sheet));
+    });
+  }
+
+  // ---------- screen 2: radar ----------
+  const AXES = [
+    ["Software craft", "<h5>Software craft</h5><b>Python/TS fluency · git flow · debugging unfamiliar code.</b><br>Probed in the practical coding round — messy parsing, small pipelines. Not LeetCode."],
+    ["Data & SQL", "<h5>Data &amp; SQL</h5><b>Joins &amp; aggregations on schemas you didn't design; Spark at data-heavy shops.</b><br>Probed via live SQL on a mock customer warehouse."],
+    ["Cloud & infra", "<h5>Cloud &amp; infra</h5><b>Deploy on AWS/GCP · Docker · SSO/OAuth · VPC constraints.</b><br>Probed in system design: 'it must live inside their network.'"],
+    ["LLM systems", "<h5>LLM systems</h5><b>RAG on messy data · tool-calling agents · token/cost/latency budgets.</b><br>Probed in design rounds and 24–48h take-home builds."],
+    ["Evals & obs.", "<h5>Evals &amp; observability</h5><b>Question sets · regression gates · traces · failure taxonomies.</b><br>The #1 hand-wave interviewers punish — bring numbers."],
+    ["Customer skills", "<h5>Customer skills</h5><b>Scoping before solving · tradeoffs in business language · de-escalation.</b><br>Probed in the case study + client sim — the weight-bearing rounds."]
+  ];
+  const PROFILES = [
+    { name: "Typical backend SWE", vals: [4.2, 3.4, 3.6, 1.6, 1.1, 1.4], color: "#6b6b66" },
+    { name: "FDE-ready",           vals: [4.2, 3.8, 4.0, 4.0, 3.9, 4.4], color: "#b5482e" }
+  ];
+  (function radar() {
+    const W = 640, H = 400, cx = W / 2, cy = 198, R = 138;
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Skill radar: typical backend SWE versus FDE-ready across six axes');
+    const pt = (i, v) => {
+      const a = -Math.PI / 2 + i * Math.PI / 3, r = R * v / 5;
+      return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    };
+    let g = '';
+    for (let ring = 1; ring <= 5; ring++) {
+      const pts = AXES.map((_, i) => pt(i, ring).join(',')).join(' ');
+      g += `<polygon points="${pts}" fill="none" stroke="#ececec" stroke-width="${ring === 5 ? 1.4 : 1}"/>`;
+    }
+    AXES.forEach((_, i) => { const [x, y] = pt(i, 5); g += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#ececec"/>`; });
+    PROFILES.forEach((p, k) => {
+      const pts = p.vals.map((v, i) => pt(i, v).join(',')).join(' ');
+      g += `<g id="prof${k}"><polygon points="${pts}" fill="${p.color}" opacity="0.13" stroke="${p.color}" stroke-width="2.2"/>`;
+      p.vals.forEach((v, i) => { const [x, y] = pt(i, v); g += `<circle cx="${x}" cy="${y}" r="3.2" fill="${p.color}"/>`; });
+      g += `</g>`;
+    });
+    AXES.forEach(([name, sheetHtml], i) => {
+      const [x, y] = pt(i, 6.25);
+      const anchor = Math.abs(x - cx) < 12 ? 'middle' : (x > cx ? 'start' : 'end');
+      g += `<text x="${x}" y="${y + 4}" font-size="12.5" font-weight="600" fill="#1b1b1a" text-anchor="${anchor}"
+             data-sheet="${sheetHtml.replace(/"/g, '&quot;')}"
+             stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">${name}</text>`;
+    });
+    svg.innerHTML = g;
+    document.getElementById('radar').appendChild(svg);
+    const rc = document.getElementById('radar-controls');
+    PROFILES.forEach((p, k) => {
+      const b = document.createElement('button');
+      b.textContent = p.name; b.classList.add('on'); if (k === 0) b.classList.add('alt');
+      b.onclick = () => {
+        b.classList.toggle('on');
+        document.getElementById('prof' + k).style.display = b.classList.contains('on') ? '' : 'none';
+      };
+      rc.appendChild(b);
+    });
+    wireSheets(svg);
+  })();
+
+  // ---------- screen 3: road ----------
+  const STAGES = [
+    { lbl: "Foundations", t: "3–6 mo", goal: "Make a computer do things.",
+      learn: ["Python or TS", "git + PRs", "SQL joins", "the terminal"],
+      build: ["a CLI tool you use", "one real automation"],
+      ready: "You build a small tool from a blank folder, no tutorial open." },
+    { lbl: "Ship full-stack", t: "4–8 mo", goal: "Learn what 'production' means by touching it.",
+      learn: ["HTTP/APIs/auth", "one cloud + Docker", "real databases", "reading logs"],
+      build: ["2–3 deployed services", "break one in prod, fix it"],
+      ready: "A stranger used your deploy — and you debugged it when it broke." },
+    { lbl: "The AI layer", t: "2–4 mo", goal: "LLMs as system components, not chat windows.",
+      learn: ["structured output + tools", "RAG on messy data", "agents + guardrails", "eval engineering"],
+      build: ["RAG w/ scored eval set", "agent w/ traces + budgets"],
+      ready: "'How do you know it works?' gets numbers, not vibes." },
+    { lbl: "Deployment reps", t: "3–6 mo", goal: "Work inside systems you don't control.",
+      learn: ["SSO/VPC/compliance-speak", "scoping vague asks", "writing war stories"],
+      build: ["freelance/internal AI gigs", "an integration that passed someone else's review"],
+      ready: "You have stories where the hard part wasn't the code." },
+    { lbl: "The hunt", t: "1–3 mo", goal: "Convert the stack into an offer.",
+      learn: ["the funnel (next screen)", "five 'I' stories", "target-company stacks"],
+      build: ["live mock case studies", "applications: startups first, then tier-1"],
+      ready: "You scope a vague problem aloud for 45 minutes without solving early." }
+  ];
+  const roadEl = document.getElementById('road');
+  const rsvg = document.createElementNS(NS, 'svg');
+  rsvg.setAttribute('viewBox', `0 0 640 235`);
+  rsvg.setAttribute('role', 'img');
+  rsvg.setAttribute('aria-label', 'A five-stage road from zero to forward deployed, with a movable you-are-here pin');
+  const ROAD_D = "M28 196 C 145 196 145 88 290 88 C 418 88 408 180 505 180 C 573 180 600 118 620 70";
+  rsvg.innerHTML = `
+    <path d="${ROAD_D}" fill="none" stroke="#ececec" stroke-width="7" stroke-linecap="round" id="road-base"/>
+    <path d="${ROAD_D}" fill="none" stroke="#b5482e" stroke-width="7" stroke-linecap="round" id="road-done" stroke-dasharray="0 9999"/>
+    <g id="road-stops"></g>
+    <g id="pin" style="transition: transform .35s ease">
+      <path d="M0 0 C -7 -12 -9 -16 -9 -21 A 9 9 0 1 1 9 -21 C 9 -16 7 -12 0 0 Z" fill="#b5482e"/>
+      <circle cx="0" cy="-21" r="3.2" fill="#fff"/>
+      <text x="0" y="-35" font-size="11" font-weight="700" fill="#b5482e" text-anchor="middle"
+            stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">you are here</text>
+    </g>`;
+  roadEl.appendChild(rsvg);
+  const roadPath = rsvg.querySelector('#road-base');
+  const roadLen = roadPath.getTotalLength();
+  const FR = [0.02, 0.26, 0.50, 0.74, 0.97];
+  const stationPts = FR.map(f => roadPath.getPointAtLength(roadLen * f));
+  const stopsG = rsvg.querySelector('#road-stops');
+  STAGES.forEach((s, i) => {
+    const p = stationPts[i];
+    const above = (i % 2 === 0);
+    const g = document.createElementNS(NS, 'g');
+    g.style.cursor = 'pointer';
+    g.innerHTML = `
+      <circle cx="${p.x}" cy="${p.y}" r="13" fill="#fff" stroke="#ececec" stroke-width="2" class="halo"/>
+      <text x="${p.x}" y="${p.y + 4.5}" font-size="12.5" font-weight="700" text-anchor="middle" fill="#6b6b66" class="num">${i}</text>
+      <text x="${p.x}" y="${p.y + (above ? -24 : 33)}" font-size="11.5" font-weight="600" fill="#1b1b1a" text-anchor="middle"
+            stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">${s.lbl}</text>
+      <text x="${p.x}" y="${p.y + (above ? -39 : 47)}" font-size="10.5" fill="#6b6b66" text-anchor="middle"
+            stroke="#fff" stroke-width="3" paint-order="stroke" stroke-linejoin="round">${s.t}</text>`;
+    g.addEventListener('click', () => renderStage(i));
+    stopsG.appendChild(g);
+  });
+  const scard = document.getElementById('stage-card');
+  function renderStage(i) {
+    [...stopsG.children].forEach((g, j) => {
+      g.querySelector('.halo').setAttribute('stroke', j === i ? '#b5482e' : '#ececec');
+      g.querySelector('.halo').setAttribute('fill', j === i ? '#b5482e' : '#fff');
+      g.querySelector('.num').setAttribute('fill', j === i ? '#fff' : '#6b6b66');
+    });
+    const s = STAGES[i];
+    scard.innerHTML = `<h4>Stage ${i} — ${s.lbl}</h4><p class="sub">${s.t} · ${s.goal}</p>
+      <div class="chips">${s.learn.map(x => `<span class="chip">${x}</span>`).join('')}</div>
+      <div class="chips">${s.build.map(x => `<span class="chip b">build: ${x}</span>`).join('')}</div>
+      <p class="ready"><b>You're ready when:</b> ${s.ready}</p>`;
+  }
+  renderStage(0);
+  const pin = rsvg.querySelector('#pin');
+  const done = rsvg.querySelector('#road-done');
+  function placePin(stage) {
+    const p = stationPts[stage];
+    pin.setAttribute('transform', `translate(${p.x}, ${p.y - 6})`);
+    done.setAttribute('stroke-dasharray', `${roadLen * FR[stage]} ${roadLen}`);
+  }
+  placePin(0);
+
+  // ---------- screen 4: quiz wizard ----------
+  const QUIZ = [
+    { name: "Round 1 · Foundations", items: ["fluent in Python or TypeScript", "git + PRs without thinking", "SQL joins on unseen schemas"] },
+    { name: "Round 2 · Production", items: ["deployed a real service to a cloud", "can containerize an app", "debugged production via logs"] },
+    { name: "Round 3 · The AI layer", items: ["built RAG on messy data", "written a scored eval set", "built a traced tool-calling agent"] },
+    { name: "Round 4 · Deployment", items: ["integrated with a system I didn't build", "explained a tradeoff to a non-engineer", "shipped something strangers use"] }
+  ];
+  const EST = ["~12–24 months out", "~9–18 months out", "~4–9 months out", "~3–6 months out", "~1–3 months out"];
+  const state = QUIZ.map(t => t.items.map(() => false));
+  let qstep = 0;
+  const quizEl = document.getElementById('quiz');
+  function renderQuiz() {
+    if (qstep < QUIZ.length) {
+      const t = QUIZ[qstep];
+      quizEl.innerHTML = `
+        <div class="qhead"><b>${t.name}</b><span>${qstep + 1} / 4 · check what's true today</span></div>
+        <div class="steps">${QUIZ.map((_, i) => `<i class="${i < qstep ? 'done' : ''}"></i>`).join('')}</div>
+        ${t.items.map((x, i) => `<label><input type="checkbox" data-i="${i}" ${state[qstep][i] ? 'checked' : ''}><span>${x}</span></label>`).join('')}
+        <div class="qnav">
+          <button id="q-back" ${qstep === 0 ? 'disabled' : ''}>← Back</button>
+          <button id="q-next" class="primary">${qstep === 3 ? 'See my result' : 'Next →'}</button>
+        </div>`;
+      quizEl.querySelectorAll('input').forEach(inp =>
+        inp.addEventListener('change', () => { state[qstep][+inp.dataset.i] = inp.checked; }));
+      quizEl.querySelector('#q-back').onclick = () => { qstep--; renderQuiz(); };
+      quizEl.querySelector('#q-next').onclick = () => { qstep++; renderQuiz(); };
+    } else {
+      const nDone = state.flat().filter(Boolean).length;
+      let gap = null;
+      for (let t = 0; t < 4; t++) if (state[t].some(v => !v)) { gap = t; break; }
+      const entry = (gap === null) ? 4 : (nDone === 0 ? 0 : gap);
+      placePin(entry); renderStage(entry);
+      const headline = (gap === null)
+        ? `You're not starting — <b>you're applying.</b>`
+        : `Enter at <b>Stage ${entry} — ${STAGES[entry].lbl}</b>`;
+      const sub = (gap === null)
+        ? `Stage 4 this month: mock the case study, write your five stories.`
+        : `${nDone}/12 checked · interview-ready ${EST[entry]}.`;
+      quizEl.innerHTML = `
+        <div class="steps">${QUIZ.map(() => `<i class="done"></i>`).join('')}</div>
+        <div class="qresult">
+          <div class="big">${headline}</div>
+          <p>${sub}</p>
+          <div class="qnav" style="justify-content:center; gap:10px">
+            <button id="q-redo">Retake</button>
+            <button id="q-road" class="primary">See your pin on the road →</button>
+          </div>
+        </div>`;
+      quizEl.querySelector('#q-redo').onclick = () => { qstep = 0; renderQuiz(); };
+      quizEl.querySelector('#q-road').onclick = () => go(2);
+    }
+  }
+  renderQuiz();
+
+  // ---------- screen 5: funnel ----------
+  const ROUNDS = [
+    ["Practical coding", "60 min", false, "<h5>Practical coding</h5><b>Messy CSV parsing, a small pipeline, a rate limiter.</b><br>Scored on tests, error handling, narration — clean-and-working beats clever. Not LeetCode."],
+    ["System design", "60 min", false, "<h5>System design</h5><b>An LLM system under enterprise constraints.</b><br>SSO, compliance, data that can't leave the building — evals and observability from day one."],
+    ["Case study", "45–60 min", true, "<h5>Decomposition case study</h5><b>A vague customer problem — you scope it.</b><br>Lowest pass rate, highest weight. #1 rejection: solving before scoping. Clarify → stakeholders → constraints → plan → risks."],
+    ["Client sim", "45 min", false, "<h5>Client simulation</h5><b>Role-play with a skeptical 'customer.'</b><br>De-escalation, expectation-setting, and saying 'I don't know — here's how I'll find out' without flinching."],
+    ["Behavioral", "45 min", false, "<h5>Behavioral</h5><b>Five stories, told with 'I' not 'we.'</b><br>Ambiguity, a failure, a disagreement, cross-functional work, impact without authority."]
+  ];
+  (function funnel() {
+    const W = 640, H = 230, x0 = 16, gap = 9, segW = 106;
+    const hs = [172, 144, 114, 90, 72, 58];
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'The FDE interview funnel: five rounds narrowing to an offer');
+    const cy = 112;
+    let g = '';
+    ROUNDS.forEach(([name, dur, hot, sheetHtml], i) => {
+      const x = x0 + i * (segW + gap);
+      const h1 = hs[i], h2 = hs[i + 1];
+      const fill = hot ? '#fdf0ec' : '#f6f6f4', stroke = hot ? '#b5482e' : '#ececec';
+      g += `<path d="M${x} ${cy - h1 / 2} L${x + segW} ${cy - h2 / 2} L${x + segW} ${cy + h2 / 2} L${x} ${cy + h1 / 2} Z"
+              fill="${fill}" stroke="${stroke}" stroke-width="${hot ? 2 : 1.2}"
+              data-sheet="${sheetHtml.replace(/"/g, '&quot;')}"/>`;
+      g += `<text x="${x + segW / 2}" y="${cy - 2}" font-size="12" font-weight="700" text-anchor="middle" fill="${hot ? '#b5482e' : '#1b1b1a'}" pointer-events="none">${name}</text>`;
+      g += `<text x="${x + segW / 2}" y="${cy + 14}" font-size="10.5" text-anchor="middle" fill="#6b6b66" pointer-events="none">${dur}</text>`;
+    });
+    const xe = x0 + 5 * (segW + gap);
+    g += `<path d="M${xe} ${cy - hs[5] / 2} L${xe + 24} ${cy} L${xe} ${cy + hs[5] / 2} Z" fill="#b5482e"/>`;
+    g += `<text x="${xe + 4}" y="${cy + 38}" font-size="12" font-weight="700" fill="#b5482e">offer</text>`;
+    svg.innerHTML = g;
+    document.getElementById('funnel').appendChild(svg);
+    wireSheets(svg);
+  })();
+
+  // boot
+  go(0);
+  </script>
+</body>
+</html>
