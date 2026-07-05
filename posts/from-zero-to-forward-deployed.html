@@ -4,31 +4,33 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>From zero to forward deployed — Bat</title>
-  <meta name="description" content="The FDE job as an app-style interactive: tabbed screens, a skill radar, a clickable road from zero to hired with a you-are-here pin, and the interview loop as a funnel." />
+  <meta name="description" content="A four-tab app about becoming a forward deployed engineer: what the job and interview look like, a seven-lesson path from Claude Cowork to building agents, curated videos, and a bring-your-own-key chat tutor." />
   <link rel="stylesheet" href="../style.css?v=9" />
   <style>
     /* ---------- app frame (post-local) — palette matches style.css ---------- */
     .frame {
       border: 1px solid #ececec; border-radius: 18px; background: #fff;
       margin: 24px 0 8px; overflow: hidden;
-      box-shadow: 0 1px 2px rgba(27,27,26,.04), 0 8px 28px rgba(27,27,26,.06);
     }
     /* Without JS the screens stack like a normal article. With JS (.appjs) it becomes an app. */
-    .appjs { display: flex; flex-direction: column; height: min(76vh, 700px); }
+    .appjs { display: flex; flex-direction: column; height: min(92vh, 940px); min-height: 560px; position: relative;
+      box-shadow: 0 1px 2px rgba(27,27,26,.04), 0 8px 28px rgba(27,27,26,.06); }
     .apphead {
       display: none; align-items: center; justify-content: space-between;
       padding: 12px 18px 10px; border-bottom: 1px solid #ececec;
     }
     .appjs .apphead { display: flex; }
-    .apphead .t { font-size: 14.5px; font-weight: 700; }
+    .apphead .t { font-size: 15px; font-weight: 700; }
     .apphead .dots { display: flex; gap: 5px; }
     .apphead .dots i { width: 6px; height: 6px; border-radius: 50%; background: #ececec; }
     .apphead .dots i.on { background: #b5482e; }
 
     .screens { position: relative; flex: 1; }
-    .screen { padding: 18px 20px 22px; }
-    .screen h3 { margin: 0 0 6px; font-size: 17px; }
-    .screen .lead { color: #6b6b66; font-size: 13.5px; line-height: 1.5; margin: 0 0 12px; }
+    .screen { padding: 18px 20px 24px; }
+    .screen h3 { margin: 0 0 6px; font-size: 18px; }
+    .screen .lead { color: #1b1b1a; font-size: 15px; line-height: 1.55; margin: 0 0 14px; }
+    .screen .lead a { color: inherit; }
+    .hint { color: #6b6b66; font-size: 12.5px; text-align: center; margin: 8px 0 0; }
     .appjs .screens { overflow: hidden; }
     .appjs .screen {
       position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -38,9 +40,10 @@
     .appjs .screen.past { transform: translateX(-102%); }
     .appjs .screen.on { transform: none; opacity: 1; pointer-events: auto; }
     .screen svg { width: 100%; height: auto; display: block; }
-    .screen hr { border: none; border-top: 1px solid #ececec; margin: 18px 0; }
+    .screen hr { border: none; border-top: 1px solid #ececec; margin: 20px 0; }
+    @media (max-width: 460px) { .screen { padding: 14px 14px 20px; } }
 
-    .tabbar { display: none; border-top: 1px solid #ececec; background: #fcfcfb; }
+    .tabbar { display: none; border-top: 1px solid #ececec; background: #fcfcfb; position: relative; z-index: 6; }
     .appjs .tabbar { display: flex; }
     .tabbar button {
       flex: 1; background: none; border: none; cursor: pointer;
@@ -55,85 +58,130 @@
     .sheet {
       position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
       background: #1b1b1a; color: #fff; border-radius: 14px 14px 0 0;
-      padding: 14px 18px 16px; font-size: 13.5px; line-height: 1.5;
+      padding: 14px 18px 72px; font-size: 14px; line-height: 1.55;
       transform: translateY(105%); transition: transform .28s ease;
-      max-height: 62%; overflow-y: auto;
+      max-height: 66%; overflow-y: auto;
     }
     .sheet.open { transform: none; }
     .sheet b { color: #ffd9cf; }
     .sheet .x {
       position: absolute; top: 8px; right: 12px; background: none; border: none;
-      color: #fff; font-size: 18px; cursor: pointer; line-height: 1;
+      color: #fff; font-size: 18px; cursor: pointer; line-height: 1; padding: 4px;
     }
-    .sheet h5 { margin: 0 24px 4px 0; font-size: 14px; color: #fff; }
+    .sheet h5 { margin: 0 26px 5px 0; font-size: 14.5px; color: #fff; }
 
-    /* stat chips (job screen) */
-    .stats { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
-    .stat { border: 1px solid #ececec; border-radius: 10px; padding: 8px 12px; flex: 1 1 30%; min-width: 130px; }
-    .stat b { display: block; font-size: 17px; color: #b5482e; }
-    .stat span { font-size: 11.5px; color: #6b6b66; line-height: 1.3; display: block; margin-top: 2px; }
+    /* ---------- Info: stat cards ---------- */
+    .stats { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 4px; }
+    .stat { border: 1px solid #ececec; border-radius: 10px; padding: 9px 12px; flex: 1 1 30%; min-width: 128px; }
+    .stat b { display: block; font-size: 19px; color: #b5482e; }
+    .stat span { font-size: 12px; color: #6b6b66; line-height: 1.35; display: block; margin-top: 2px; }
+    .stat a { color: inherit; }
 
-    /* radar profile toggles */
-    .chart-controls { display: flex; gap: 8px; justify-content: center; margin: 4px 0 8px; flex-wrap: wrap; }
-    .chart-controls button {
-      font: 12.5px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      padding: 5px 12px; border: 1px solid #ececec; border-radius: 14px;
-      background: #fff; color: #6b6b66; cursor: pointer;
-    }
-    .chart-controls button.on { background: #1b1b1a; color: #fff; border-color: #1b1b1a; }
-    .chart-controls button.on.alt { background: #2f6f7a; border-color: #2f6f7a; }
-
-    /* stage card + chips (road screen) */
-    .card {
+    /* ---------- Info: vertical funnel (HTML, reflows) ---------- */
+    .vfunnel { max-width: 430px; margin: 4px auto 0; }
+    .vf {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+      margin: 0 auto 7px; padding: 11px 16px; cursor: pointer;
       border: 1px solid #ececec; border-radius: 10px; background: #f6f6f4;
-      padding: 12px 14px; font-size: 13.5px; line-height: 1.5; margin-top: 10px;
+      font: 14px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1b1b1a; width: 100%; text-align: left;
     }
-    .card h4 { margin: 0; font-size: 14.5px; }
-    .card .sub { color: #6b6b66; font-size: 12.5px; margin: 2px 0 6px; }
-    .card .chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0 2px; }
-    .card .chip { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid #ececec; background: #fff; }
-    .card .chip.b { border-color: #b5482e; color: #b5482e; }
-    .card .ready { margin: 8px 0 0; padding-top: 7px; border-top: 1px solid #ececec; font-size: 12.5px; }
-    .card .ready b { color: #b5482e; }
-
-    /* quiz wizard */
-    .quiz { max-width: 480px; margin: 0 auto; }
-    .quiz .qhead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-    .quiz .qhead b { font-size: 14.5px; }
-    .quiz .qhead span { font-size: 12px; color: #6b6b66; }
-    .quiz .steps { display: flex; gap: 5px; margin-bottom: 14px; }
-    .quiz .steps i { flex: 1; height: 4px; border-radius: 99px; background: #ececec; }
-    .quiz .steps i.done { background: #b5482e; }
-    .quiz label {
-      display: flex; gap: 10px; align-items: baseline; padding: 11px 12px; margin-bottom: 8px;
-      border: 1px solid #ececec; border-radius: 10px; font-size: 14px; cursor: pointer;
+    .vf b { font-weight: 700; }
+    .vf span { font-size: 12px; color: #6b6b66; white-space: nowrap; }
+    .vf.hot { border-color: #b5482e; background: #fdf0ec; }
+    .vf.hot b { color: #b5482e; }
+    .vf-offer {
+      width: 34%; min-width: 120px; margin: 4px auto 0; text-align: center;
+      background: #b5482e; color: #fff; font-size: 13.5px; font-weight: 700;
+      padding: 9px 0; border-radius: 999px;
     }
-    .quiz label:has(input:checked) { border-color: #b5482e; background: #fdf5f3; }
-    .quiz input { accent-color: #b5482e; }
-    .qnav { display: flex; justify-content: space-between; margin-top: 14px; }
-    .qnav button {
-      font: 13.5px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      padding: 9px 18px; border-radius: 999px; cursor: pointer; border: 1px solid #ececec; background: #fff; color: #1b1b1a;
-    }
-    .qnav button.primary { background: #b5482e; border-color: #b5482e; color: #fff; }
-    .qnav button:disabled { opacity: .35; cursor: default; }
-    .qresult { text-align: center; padding: 8px 0 4px; }
-    .qresult .big { font-size: 17px; font-weight: 700; margin: 4px 0 2px; }
-    .qresult .big b { color: #b5482e; }
-    .qresult p { font-size: 13.5px; color: #6b6b66; margin: 4px 0 12px; }
-
-    /* project cards (more screen) */
-    .projects { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 12px 0; }
-    .proj { border: 1px solid #ececec; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.5; }
-    .proj h4 { margin: 0 0 4px; font-size: 13.5px; }
-    .proj .sig { color: #6b6b66; display: block; margin-top: 5px; font-size: 12px; }
-    .proj .sig b { color: #b5482e; }
-
-    .refs-mini { font-size: 12.5px; line-height: 1.55; color: #6b6b66; padding-left: 18px; margin: 8px 0 0; }
+    .figcap { text-align: center; color: #6b6b66; font-size: 12.5px; max-width: 560px; margin: 8px auto 0; line-height: 1.5; }
+    .refs-mini { font-size: 13px; line-height: 1.55; color: #6b6b66; padding-left: 18px; margin: 8px 0 0; }
     .refs-mini a { color: #1b1b1a; }
-    .swipe-hint { text-align: center; color: #6b6b66; font-size: 12px; margin-top: 14px; }
-    .figcap { text-align: center; color: #6b6b66; font-size: 12px; max-width: 560px; margin: 8px auto 0; line-height: 1.5; }
-    .jump { color: #b5482e; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+    .panel-t { font-size: 14.5px; font-weight: 700; margin: 2px 0 10px; }
+
+    /* ---------- Lessons: accordion cards ---------- */
+    .lessons { max-width: 520px; margin: 0 auto; }
+    .lesson { border: 1px solid #ececec; border-radius: 12px; margin-bottom: 9px; overflow: hidden; }
+    .lesson.open { border-color: #b5482e; }
+    .lhead {
+      display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+      background: #fff; border: none; cursor: pointer; padding: 12px 14px;
+      font: 14.5px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1b1b1a;
+    }
+    .lnum {
+      flex: 0 0 30px; width: 30px; height: 30px; border-radius: 50%;
+      background: #f6f6f4; border: 1px solid #ececec; color: #6b6b66;
+      font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    }
+    .lesson.open .lnum { background: #b5482e; border-color: #b5482e; color: #fff; }
+    .lhead b { display: block; font-size: 14.5px; }
+    .lhead .lsub { display: block; font-size: 12.5px; color: #6b6b66; margin-top: 1px; }
+    .lhead .rec {
+      margin-left: auto; flex: 0 0 auto; font-size: 10.5px; font-weight: 700; letter-spacing: .04em;
+      color: #b5482e; border: 1px solid #b5482e; border-radius: 999px; padding: 2px 8px;
+    }
+    .ldetail { display: none; padding: 0 14px 14px 56px; font-size: 13.5px; line-height: 1.55; color: #1b1b1a; }
+    .lesson.open .ldetail { display: block; }
+    .ldetail p { margin: 0 0 8px; }
+    .ldetail ul { margin: 0 0 8px; padding-left: 18px; }
+    .ldetail li { margin: 3px 0; }
+    .lchips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+    .lchips i {
+      font-style: normal; font-size: 12px; padding: 3px 10px; border-radius: 999px;
+      border: 1px solid #ececec; background: #f6f6f4; color: #1b1b1a;
+    }
+    @media (max-width: 460px) { .ldetail { padding-left: 14px; } }
+
+    /* ---------- Videos ---------- */
+    .vgroup { font-size: 13px; font-weight: 700; color: #6b6b66; text-transform: uppercase; letter-spacing: .05em; margin: 16px 0 8px; }
+    .vgroup:first-of-type { margin-top: 4px; }
+    .article a.vid, .article a.vid:visited {
+      display: flex; gap: 12px; align-items: flex-start; text-decoration: none; color: #1b1b1a;
+      border: 1px solid #ececec; border-radius: 12px; padding: 10px; margin-bottom: 9px;
+    }
+    .vid:hover { border-color: #b5482e; }
+    .vid img { width: 120px; border-radius: 8px; display: block; flex: 0 0 120px; aspect-ratio: 16/9; object-fit: cover; background: #f6f6f4; }
+    .vid b { display: block; font-size: 13.5px; line-height: 1.35; }
+    .vid span { display: block; font-size: 12px; color: #6b6b66; margin-top: 3px; }
+    .vid em { display: block; font-size: 12px; color: #6b6b66; margin-top: 4px; font-style: normal; }
+    @media (max-width: 420px) { .vid img { width: 96px; flex-basis: 96px; } }
+
+    /* ---------- Chat ---------- */
+    .appjs .screen.chatscreen { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+    .chat-top { padding: 12px 16px 10px; border-bottom: 1px solid #ececec; background: #fcfcfb; }
+    .chat-top .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .chat-top input[type=password] {
+      flex: 1; min-width: 150px; padding: 8px 10px; border: 1px solid #ececec; border-radius: 8px;
+      font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .chat-top select {
+      padding: 8px 6px; border: 1px solid #ececec; border-radius: 8px; background: #fff;
+      font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1b1b1a;
+    }
+    .chat-top button {
+      padding: 8px 14px; border-radius: 999px; border: 1px solid #ececec; background: #fff; cursor: pointer;
+      font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1b1b1a;
+    }
+    .chat-top button.primary { background: #b5482e; border-color: #b5482e; color: #fff; }
+    .chat-note { font-size: 11.5px; color: #6b6b66; margin: 7px 0 0; line-height: 1.45; }
+    .chat-note b { color: #b5482e; }
+    .chat-log { flex: 1; overflow-y: auto; padding: 14px 16px; }
+    .msg { max-width: 82%; padding: 9px 13px; border-radius: 14px; margin-bottom: 8px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+    .msg.user { margin-left: auto; background: #1b1b1a; color: #fff; border-bottom-right-radius: 4px; }
+    .msg.bot { margin-right: auto; background: #f6f6f4; border: 1px solid #ececec; border-bottom-left-radius: 4px; }
+    .msg.err { margin-right: auto; background: #fdf0ec; border: 1px solid #b5482e; color: #b5482e; font-size: 13px; }
+    .msg.thinking { color: #6b6b66; font-style: italic; }
+    .chat-inrow { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid #ececec; background: #fff; }
+    .chat-inrow input {
+      flex: 1; padding: 10px 13px; border: 1px solid #ececec; border-radius: 999px;
+      font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .chat-inrow button {
+      padding: 10px 18px; border-radius: 999px; border: none; background: #b5482e; color: #fff;
+      font: 600 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; cursor: pointer;
+    }
+    .chat-inrow button:disabled { opacity: .4; cursor: default; }
   </style>
 </head>
 <body class="wide">
@@ -144,150 +192,98 @@
       <h1>From zero to forward deployed</h1>
       <p class="meta"><time datetime="2026-07-01">July 1, 2026</time> · interactive app · <span class="status">Draft — role data as of mid-2026</span></p>
 
-      <p class="dek">The forward deployed engineer job as a small app: six screens, tap through them —
-        what the job is, the skills it takes, the road from zero, and where you are on it.</p>
+      <p class="dek">Becoming a forward deployed engineer, as a small app: what the job is, seven
+        lessons from zero, videos worth your time, and a tutor to chat with.</p>
 
       <div class="frame" id="frame" tabindex="0" aria-label="Interactive article: use the tab bar or arrow keys to change screens">
         <div class="apphead">
-          <span class="t" id="apphead-title">The job</span>
+          <span class="t" id="apphead-title">Info</span>
           <span class="dots" id="apphead-dots"></span>
         </div>
 
         <div class="screens" id="screens">
 
-          <!-- ========== screen 1: the job ========== -->
-          <section class="screen" data-title="The job">
-            <h3>The gap is the job</h3>
-            <p class="lead">Every AI product exists twice: in the demo, and inside the customer's stack.
-              An MIT-affiliated study found <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">~95%
-              of enterprise AI pilots</a> never reach measurable impact. The forward deployed engineer is
-              the vendor's answer: <a href="https://nabeelqu.co/reflections-on-palantir">embedded with the
-              customer</a>, part engineer, part consultant, part account owner.</p>
-            <svg viewBox="0 0 640 240" role="img" aria-label="The gap between demo and production, bridged by the FDE">
-              <path d="M25 105 L235 105 L235 226 L25 226 Z" fill="#f6f6f4" stroke="#ececec"/>
-              <path d="M405 86 L615 86 L615 226 L405 226 Z" fill="#f6f6f4" stroke="#ececec"/>
-              <text x="130" y="93" font-size="13" fill="#1b1b1a" font-weight="700" text-anchor="middle">THE DEMO</text>
-              <text x="130" y="128" font-size="11.5" fill="#6b6b66" text-anchor="middle">clean data · no auth · lab Wi-Fi</text>
-              <text x="130" y="146" font-size="11.5" fill="#6b6b66" text-anchor="middle">"it works!"</text>
-              <text x="510" y="74" font-size="13" fill="#1b1b1a" font-weight="700" text-anchor="middle">PRODUCTION AT ACME</text>
-              <text x="510" y="110" font-size="11.5" fill="#6b6b66" text-anchor="middle">their data · their rules · their VPC</text>
-              <text x="510" y="128" font-size="11.5" fill="#6b6b66" text-anchor="middle">"it works <tspan font-style="italic">here</tspan>."</text>
-              <text x="320" y="162" font-size="11" fill="#6b6b66" text-anchor="middle">legacy systems · SSO · compliance</text>
-              <text x="320" y="179" font-size="11" fill="#6b6b66" text-anchor="middle">data governance · unowned evals</text>
-              <text x="320" y="196" font-size="11" fill="#6b6b66" text-anchor="middle">org politics · the last mile</text>
-              <path d="M235 105 C 275 78, 365 70, 405 86" fill="none" stroke="#b5482e" stroke-width="3"/>
-              <circle cx="320" cy="76" r="9" fill="#b5482e"/>
-              <text x="320" y="58" font-size="12" fill="#b5482e" font-weight="700" text-anchor="middle" stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">the FDE</text>
-            </svg>
+          <!-- ========== screen 1: Info ========== -->
+          <section class="screen" data-title="Info">
+            <h3>What is an FDE?</h3>
+            <p class="lead">A forward deployed engineer is a hybrid of consultant and engineer.
+              Half the job is writing code; the other half is sitting with the customer —
+              understanding their problem, building on their systems, and explaining the result
+              to their team. The title <a href="https://nabeelqu.co/reflections-on-palantir">started
+              at Palantir</a>, and it exploded with the rise of AI tools: every company wants AI
+              in their workflow, but <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">~95%
+              of enterprise AI pilots fail</a> when the demo meets real systems. So AI companies
+              send out people who can do both the coding and the people part. That's the FDE.</p>
+
             <div class="stats">
               <div class="stat"><b>224</b><span>open FDE roles across 39 AI companies, <a href="https://jobsbyculture.com/blog/forward-deployed-engineer-boom-2026">May 2026</a></span></div>
               <div class="stat"><b>+800%</b><span>year-over-year growth in <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">FDE postings</a></span></div>
-              <div class="stat"><b>$1B</b><span><a href="https://www.cnbc.com/2026/06/30/aws-amazon-ai-forward-deployed-engineers.html">AWS's new unit</a> embedding engineers with customers, June 2026</span></div>
-            </div>
-            <p class="swipe-hint">swipe or use the tabs below — 6 screens →</p>
-          </section>
-
-          <!-- ========== screen 2: skills ========== -->
-          <section class="screen" data-title="Skills">
-            <h3>The skill radar</h3>
-            <p class="lead">Six axes repeat in every 2026 FDE job post. Toggle the profiles; <b>tap any
-              axis label</b> for the concrete skills and the interview round that probes them. The gap
-              between the two shapes is the curriculum.</p>
-            <div class="chart-controls" id="radar-controls"></div>
-            <div id="radar"></div>
-          </section>
-
-          <!-- ========== screen 3: the road ========== -->
-          <section class="screen" data-title="Road">
-            <h3>The road from zero</h3>
-            <p class="lead">Five stages, each ending in something shipped. <b>Tap a station.</b>
-              The <b style="color:#b5482e">pin</b> is placed by the quiz on the next screen —
-              <span class="jump" data-go="3">take it</span>.</p>
-            <div id="road"></div>
-            <div class="card" id="stage-card"></div>
-          </section>
-
-          <!-- ========== screen 4: quiz ========== -->
-          <section class="screen" data-title="Quiz">
-            <h3>Where do you start?</h3>
-            <p class="lead">Twelve honest checks, four rounds. Nothing is stored or sent — your browser
-              talking to itself.</p>
-            <div class="quiz" id="quiz"></div>
-          </section>
-
-          <!-- ========== screen 5: the loop ========== -->
-          <section class="screen" data-title="Loop">
-            <h3>The interview funnel</h3>
-            <p class="lead"><a href="https://www.tryexponent.com/blog/forward-deployed-engineer-interview-the-definitive-2026-guide-fde">5–8
-              stages over 3–6 weeks</a>, roughly half of it not coding. <b>Tap a gate.</b> The red one
-              decides more than the rest combined.</p>
-            <div id="funnel"></div>
-            <p class="figcap">Coding rounds are practical — messy CSVs, small pipelines, rate limiters —
-              so LeetCode grinding is misallocated prep. Some companies swap a round for a 24–48h build
-              against a mock customer dataset.</p>
-          </section>
-
-          <!-- ========== screen 6: more ========== -->
-          <section class="screen" data-title="More">
-            <h3>The market, in two panels</h3>
-            <svg viewBox="0 0 640 260" role="img" aria-label="Top FDE hirers and reported compensation by level">
-              <text x="20" y="20" font-size="12.5" fill="#1b1b1a" font-weight="700">Open roles, top hirers (May 2026)</text>
-              <g font-size="11.5" fill="#1b1b1a">
-                <text x="92" y="50" text-anchor="end">Palantir</text>   <rect x="100" y="41" width="170" height="11" rx="2" fill="#b5482e"/><text x="276" y="50" fill="#6b6b66">51</text>
-                <text x="92" y="75" text-anchor="end">OpenAI</text>     <rect x="100" y="66" width="103" height="11" rx="2" fill="#b5482e" opacity=".85"/><text x="209" y="75" fill="#6b6b66">31</text>
-                <text x="92" y="100" text-anchor="end">Databricks</text><rect x="100" y="91" width="40" height="11" rx="2" fill="#b5482e" opacity=".7"/><text x="146" y="100" fill="#6b6b66">12</text>
-                <text x="92" y="125" text-anchor="end">Mistral</text>   <rect x="100" y="116" width="37" height="11" rx="2" fill="#b5482e" opacity=".7"/><text x="143" y="125" fill="#6b6b66">11</text>
-                <text x="92" y="150" text-anchor="end">Cohere</text>    <rect x="100" y="141" width="33" height="11" rx="2" fill="#b5482e" opacity=".7"/><text x="139" y="150" fill="#6b6b66">10</text>
-                <text x="92" y="175" text-anchor="end">Scale AI</text>  <rect x="100" y="166" width="27" height="11" rx="2" fill="#b5482e" opacity=".7"/><text x="133" y="175" fill="#6b6b66">8</text>
-              </g>
-              <text x="20" y="212" font-size="11" fill="#6b6b66">+ Anthropic &amp; Google under adjacent titles;</text>
-              <text x="20" y="228" font-size="11" fill="#6b6b66">most YC AI app companies</text>
-              <text x="352" y="20" font-size="12.5" fill="#1b1b1a" font-weight="700">Reported US total comp (top of market)</text>
-              <g font-size="11.5" fill="#1b1b1a">
-                <line x1="352" y1="180" x2="620" y2="180" stroke="#ececec"/>
-                <text x="352" y="198" font-size="10.5" fill="#6b6b66">$250K</text>
-                <text x="475" y="198" font-size="10.5" fill="#6b6b66">$500K</text>
-                <text x="600" y="198" font-size="10.5" fill="#6b6b66" text-anchor="end">$750K</text>
-                <text x="352" y="60">Mid</text>     <rect x="377" y="51" width="74" height="11" rx="5" fill="#2f6f7a"/><text x="459" y="60" fill="#6b6b66" font-size="11">300–450</text>
-                <text x="352" y="103">Senior</text> <rect x="451" y="94" width="49" height="11" rx="5" fill="#2f6f7a"/><text x="508" y="103" fill="#6b6b66" font-size="11">450–550</text>
-                <text x="352" y="146">Staff+</text> <rect x="525" y="137" width="74" height="11" rx="5" fill="#2f6f7a"/><text x="607" y="146" fill="#6b6b66" font-size="11" text-anchor="start">600+</text>
-              </g>
-            </svg>
-            <p class="figcap">Counts from <a href="https://jobsbyculture.com/blog/forward-deployed-engineer-boom-2026">JobsByCulture</a>;
-              comp from <a href="https://www.recruitingfromscratch.com/blog/what-does-a-forward-deployed-engineer-do-role-salary-guide">2026 salary guides</a> —
-              AI-lab / Palantir tier; startups pay meaningfully less, and
-              <a href="https://getperspective.ai/blog/forward-deployed-engineer-interview-questions-2026-prep-guide">trackers disagree</a>. Directional, not audited.</p>
-
-            <hr />
-            <h3>Three projects that signal</h3>
-            <div class="projects">
-              <div class="proj"><h4>RAG over hostile data</h4>Scanned PDFs, an old wiki export, inconsistent CSVs — retrieval plus a scored eval set with a regression gate.<span class="sig"><b>signal:</b> eval engineering — the #1 hand-wave interviewers punish</span></div>
-              <div class="proj"><h4>An agent with a paper trail</h4>A tool-calling workflow doing something real, with traces, cost/latency budgets, guardrails, a failure-mode table.<span class="sig"><b>signal:</b> "here's how I know when it breaks" — operator thinking</span></div>
-              <div class="proj"><h4>An integration you didn't control</h4>Ship into a system you don't own — their SSO, their review, their constraints — then write the war story.<span class="sig"><b>signal:</b> the actual job, miniaturized</span></div>
+              <div class="stat"><b>$1B</b><span><a href="https://www.cnbc.com/2026/06/30/aws-amazon-ai-forward-deployed-engineers.html">AWS's new unit</a>, June 2026</span></div>
             </div>
 
             <hr />
-            <h3>Fine print</h3>
-            <p class="lead"><b>The title is having a moment</b> — some "FDE" posts are rebadged solutions
-              engineering; the tells that it's real are embedded customer time, code ownership, and a
-              product feedback loop. <b>The job is travel and tension</b> — the same embedded model that
-              makes it a founder factory makes it a grind. <b>This is a snapshot</b> — mid-2026 numbers
-              will drift; the six radar axes drift much slower.</p>
+
+            <h3>What the FDE interview looks like</h3>
+            <p class="lead">Usually <a href="https://www.tryexponent.com/blog/forward-deployed-engineer-interview-the-definitive-2026-guide-fde">5–8
+              stages over 3–6 weeks</a> — but strip away the recruiter screens and the generic
+              rounds, and three skill tests decide it. <b>Tap a gate.</b></p>
+            <div class="vfunnel" id="vfunnel"></div>
+            <p class="figcap">Which extras wrap these varies by company — a behavioral round,
+              sometimes an LLM system-design round. Coding gets you in the door; the red gates
+              decide the offer: the case study's #1 rejection reason is <i>solving before
+              scoping</i>, and the client sim quietly filters most candidates who pass coding.</p>
 
             <hr />
-            <h3>References</h3>
+            <p class="panel-t">Sources</p>
             <ol class="refs-mini">
               <li>Nabeel S. Qureshi, <a href="https://nabeelqu.co/reflections-on-palantir">Reflections on Palantir</a> (2024).</li>
               <li>Andrew Ng, <a href="https://x.com/AndrewYNg/status/2061477558693384395">on the AI FDE</a> (2026).</li>
-              <li><a href="https://jobsbyculture.com/blog/forward-deployed-engineer-boom-2026">JobsByCulture FDE tracker</a>; <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">KORE1 hiring guide</a> (incl. MIT NANDA statistic).</li>
-              <li><a href="https://www.cnbc.com/2026/06/30/aws-amazon-ai-forward-deployed-engineers.html">CNBC on AWS's $1B unit</a>; <a href="https://www.aboutamazon.com/news/aws/aws-1-billion-forward-deployed-ai-engineers">Amazon announcement</a>.</li>
-              <li><a href="https://www.tryexponent.com/blog/forward-deployed-engineer-interview-the-definitive-2026-guide-fde">Exponent FDE interview guide</a>; <a href="https://getperspective.ai/blog/forward-deployed-engineer-interview-questions-2026-prep-guide">Perspective AI prep guide</a>; <a href="https://fde.academy/blog/forward-deployed-engineer-interview-questions">FDE Academy</a>.</li>
-              <li><a href="https://www.paraform.com/blog/forward-deployed-ai-engineer">Paraform role guides</a>; <a href="https://www.marktechpost.com/2026/05/20/what-is-a-forward-deployed-engineer-the-ai-role-openai-anthropic-and-google-are-hiring-in-2026/">MarkTechPost</a>.</li>
-              <li><a href="https://www.recruitingfromscratch.com/blog/what-does-a-forward-deployed-engineer-do-role-salary-guide">Salary guide</a>; <a href="https://skillscouter.com/how-to-become-a-forward-deployed-engineer/">SkillScouter 90-day estimate</a>.</li>
+              <li><a href="https://jobsbyculture.com/blog/forward-deployed-engineer-boom-2026">JobsByCulture FDE tracker</a>; <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">KORE1 hiring guide</a> (incl. the MIT NANDA statistic).</li>
+              <li><a href="https://www.cnbc.com/2026/06/30/aws-amazon-ai-forward-deployed-engineers.html">CNBC on AWS's $1B unit</a> (June 2026).</li>
+              <li><a href="https://www.tryexponent.com/blog/forward-deployed-engineer-interview-the-definitive-2026-guide-fde">Exponent FDE interview guide</a>; <a href="https://www.tryexponent.com/guides/anthropic-forward-deployed-engineer-interview">Exponent on the Anthropic FDE loop</a>; <a href="https://getperspective.ai/blog/forward-deployed-engineer-interview-questions-2026-prep-guide">Perspective AI prep guide</a>.</li>
+              <li><a href="https://www.tryexponent.com/blog/google-ai-coding-interview">Exponent on AI-assisted coding rounds</a> (Meta, Shopify, Rippling &amp; others now run them).</li>
             </ol>
-            <p class="figcap" style="margin-top:14px">Draft note: numbers are directional, not audited.
-              If you're an FDE and a screen here doesn't match the job from the inside, I'd genuinely
-              like to hear it.</p>
+            <p class="hint">swipe or use the tabs below — lessons are next →</p>
+          </section>
+
+          <!-- ========== screen 2: Lessons ========== -->
+          <section class="screen" data-title="Lessons">
+            <h3>Seven lessons, from zero</h3>
+            <p class="lead">Each lesson ends with something working. Do them in order — the early ones
+              build intuition the later ones spend. <b>Tap a lesson to expand.</b></p>
+            <div class="lessons" id="lessons"></div>
+            <p class="hint">finish lesson 6 and you've built the thing you're reading</p>
+          </section>
+
+          <!-- ========== screen 3: Videos ========== -->
+          <section class="screen" data-title="Videos">
+            <h3>Videos worth your time</h3>
+            <p class="lead">Curated picks from YouTube, grouped by lesson. Each link opens in a new tab.</p>
+            <div id="videos"></div>
+          </section>
+
+          <!-- ========== screen 4: Chat ========== -->
+          <section class="screen chatscreen" data-title="Chat">
+            <div class="chat-top">
+              <div class="row">
+                <input type="password" id="chat-key" placeholder="Anthropic API key (sk-ant-…)" autocomplete="off" />
+                <select id="chat-model">
+                  <option value="claude-opus-4-8">Opus 4.8</option>
+                  <option value="claude-sonnet-5">Sonnet 5</option>
+                  <option value="claude-haiku-4-5">Haiku 4.5</option>
+                </select>
+                <button class="primary" id="chat-save">Save</button>
+                <button id="chat-clear">Clear</button>
+              </div>
+              <p class="chat-note" id="chat-note">Bring your own key: it's stored <b>only in this
+                browser</b> (localStorage) and requests go directly to Anthropic — nothing touches this
+                site's server, because there isn't one. Use a key with a spend limit.</p>
+            </div>
+            <div class="chat-log" id="chat-log"></div>
+            <div class="chat-inrow">
+              <input id="chat-in" placeholder="Ask about the FDE job, the interview, or the lessons…" />
+              <button id="chat-send">Send</button>
+            </div>
           </section>
         </div>
 
@@ -296,7 +292,7 @@
       </div>
 
       <p class="figcap" style="margin-top:10px">Built like the rest of this site — plain HTML, one file,
-        no framework. If JavaScript is off, the six screens read top-to-bottom as a normal post.</p>
+        no framework. If JavaScript is off, the four screens read top-to-bottom as a normal post.</p>
     </article>
   </main>
 
@@ -306,19 +302,16 @@
 
   <script>
   document.getElementById('year').textContent = new Date().getFullYear();
-  const NS = 'http://www.w3.org/2000/svg';
 
   // ---------- app shell ----------
   const frame = document.getElementById('frame');
   frame.classList.add('appjs');
   const screens = [...document.querySelectorAll('.screen')];
   const ICONS = {
-    "The job": '<path d="M3 16V9h4v7M13 16V7h4v9M7 11c2.5-3 3.5-3 6-1.5"/>',
-    "Skills":  '<path d="M10 2l7 4v8l-7 4-7-4V6z"/><circle cx="10" cy="10" r="1.6"/>',
-    "Road":    '<path d="M2 16c5 0 5-6 9-6s3 6 7-2"/><circle cx="6" cy="13" r="1.4"/><circle cx="15" cy="9" r="1.4"/>',
-    "Quiz":    '<rect x="3" y="3" width="14" height="14" rx="3"/><path d="M6.5 10l2.5 2.5 4.5-5"/>',
-    "Loop":    '<path d="M3 4h14l-5 6v5l-4 2v-7z"/>',
-    "More":    '<circle cx="4" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="16" cy="10" r="1.5"/>'
+    "Info":    '<circle cx="10" cy="10" r="8"/><path d="M10 9v5M10 6.2v.2"/>',
+    "Lessons": '<path d="M3 4.5C5 3.5 7.5 3.5 10 5c2.5-1.5 5-1.5 7-.5V15c-2-1-4.5-1-7 .5-2.5-1.5-5-1.5-7-.5z"/><path d="M10 5v10.5"/>',
+    "Videos":  '<rect x="2.5" y="4" width="15" height="12" rx="3"/><path d="M8.5 7.5l4 2.5-4 2.5z"/>',
+    "Chat":    '<path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v6a2.5 2.5 0 0 1-2.5 2.5H8l-4 3v-3H5.5A2.5 2.5 0 0 1 3 11.5z"/>'
   };
   const tabbar = document.getElementById('tabbar');
   const dots = document.getElementById('apphead-dots');
@@ -336,14 +329,12 @@
     screens.forEach((s, j) => {
       s.classList.toggle('on', j === i);
       s.classList.toggle('past', j < i);
-      if (j === i) s.scrollTop = s.scrollTop; // keep internal scroll
     });
     [...tabbar.children].forEach((b, j) => b.classList.toggle('on', j === i));
     [...dots.children].forEach((d, j) => d.classList.toggle('on', j === i));
     document.getElementById('apphead-title').textContent = screens[i].dataset.title;
     closeSheet();
   }
-  // swipe + keys
   let tx = null, ty = null;
   frame.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
   frame.addEventListener('touchend', e => {
@@ -353,251 +344,232 @@
     tx = ty = null;
   }, { passive: true });
   frame.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
     if (e.key === 'ArrowRight') go(cur + 1);
     if (e.key === 'ArrowLeft') go(cur - 1);
   });
-  document.querySelectorAll('.jump').forEach(el => el.addEventListener('click', () => go(+el.dataset.go)));
 
   // ---------- bottom sheet ----------
   const sheet = document.getElementById('sheet'), sheetBody = document.getElementById('sheet-body');
   function openSheet(html) { sheetBody.innerHTML = html; sheet.classList.add('open'); }
   function closeSheet() { sheet.classList.remove('open'); }
   document.getElementById('sheet-x').onclick = closeSheet;
-  function wireSheets(root) {
-    root.querySelectorAll('[data-sheet]').forEach(el => {
-      el.style.cursor = 'pointer';
-      el.addEventListener('click', () => openSheet(el.dataset.sheet));
-    });
-  }
 
-  // ---------- screen 2: radar ----------
-  const AXES = [
-    ["Software craft", "<h5>Software craft</h5><b>Python/TS fluency · git flow · debugging unfamiliar code.</b><br>Probed in the practical coding round — messy parsing, small pipelines. Not LeetCode."],
-    ["Data & SQL", "<h5>Data &amp; SQL</h5><b>Joins &amp; aggregations on schemas you didn't design; Spark at data-heavy shops.</b><br>Probed via live SQL on a mock customer warehouse."],
-    ["Cloud & infra", "<h5>Cloud &amp; infra</h5><b>Deploy on AWS/GCP · Docker · SSO/OAuth · VPC constraints.</b><br>Probed in system design: 'it must live inside their network.'"],
-    ["LLM systems", "<h5>LLM systems</h5><b>RAG on messy data · tool-calling agents · token/cost/latency budgets.</b><br>Probed in design rounds and 24–48h take-home builds."],
-    ["Evals & obs.", "<h5>Evals &amp; observability</h5><b>Question sets · regression gates · traces · failure taxonomies.</b><br>The #1 hand-wave interviewers punish — bring numbers."],
-    ["Customer skills", "<h5>Customer skills</h5><b>Scoping before solving · tradeoffs in business language · de-escalation.</b><br>Probed in the case study + client sim — the weight-bearing rounds."]
-  ];
-  const PROFILES = [
-    { name: "Typical backend SWE", vals: [4.2, 3.4, 3.6, 1.6, 1.1, 1.4], color: "#6b6b66" },
-    { name: "FDE-ready",           vals: [4.2, 3.8, 4.0, 4.0, 3.9, 4.4], color: "#b5482e" }
-  ];
-  (function radar() {
-    const W = 640, H = 400, cx = W / 2, cy = 198, R = 138;
-    const svg = document.createElementNS(NS, 'svg');
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', 'Skill radar: typical backend SWE versus FDE-ready across six axes');
-    const pt = (i, v) => {
-      const a = -Math.PI / 2 + i * Math.PI / 3, r = R * v / 5;
-      return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
-    };
-    let g = '';
-    for (let ring = 1; ring <= 5; ring++) {
-      const pts = AXES.map((_, i) => pt(i, ring).join(',')).join(' ');
-      g += `<polygon points="${pts}" fill="none" stroke="#ececec" stroke-width="${ring === 5 ? 1.4 : 1}"/>`;
-    }
-    AXES.forEach((_, i) => { const [x, y] = pt(i, 5); g += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#ececec"/>`; });
-    PROFILES.forEach((p, k) => {
-      const pts = p.vals.map((v, i) => pt(i, v).join(',')).join(' ');
-      g += `<g id="prof${k}"><polygon points="${pts}" fill="${p.color}" opacity="0.13" stroke="${p.color}" stroke-width="2.2"/>`;
-      p.vals.forEach((v, i) => { const [x, y] = pt(i, v); g += `<circle cx="${x}" cy="${y}" r="3.2" fill="${p.color}"/>`; });
-      g += `</g>`;
-    });
-    AXES.forEach(([name, sheetHtml], i) => {
-      const [x, y] = pt(i, 6.25);
-      const anchor = Math.abs(x - cx) < 12 ? 'middle' : (x > cx ? 'start' : 'end');
-      g += `<text x="${x}" y="${y + 4}" font-size="12.5" font-weight="600" fill="#1b1b1a" text-anchor="${anchor}"
-             data-sheet="${sheetHtml.replace(/"/g, '&quot;')}"
-             stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">${name}</text>`;
-    });
-    svg.innerHTML = g;
-    document.getElementById('radar').appendChild(svg);
-    const rc = document.getElementById('radar-controls');
-    PROFILES.forEach((p, k) => {
-      const b = document.createElement('button');
-      b.textContent = p.name; b.classList.add('on'); if (k === 0) b.classList.add('alt');
-      b.onclick = () => {
-        b.classList.toggle('on');
-        document.getElementById('prof' + k).style.display = b.classList.contains('on') ? '' : 'none';
-      };
-      rc.appendChild(b);
-    });
-    wireSheets(svg);
-  })();
-
-  // ---------- screen 3: road ----------
-  const STAGES = [
-    { lbl: "Foundations", t: "3–6 mo", goal: "Make a computer do things.",
-      learn: ["Python or TS", "git + PRs", "SQL joins", "the terminal"],
-      build: ["a CLI tool you use", "one real automation"],
-      ready: "You build a small tool from a blank folder, no tutorial open." },
-    { lbl: "Ship full-stack", t: "4–8 mo", goal: "Learn what 'production' means by touching it.",
-      learn: ["HTTP/APIs/auth", "one cloud + Docker", "real databases", "reading logs"],
-      build: ["2–3 deployed services", "break one in prod, fix it"],
-      ready: "A stranger used your deploy — and you debugged it when it broke." },
-    { lbl: "The AI layer", t: "2–4 mo", goal: "LLMs as system components, not chat windows.",
-      learn: ["structured output + tools", "RAG on messy data", "agents + guardrails", "eval engineering"],
-      build: ["RAG w/ scored eval set", "agent w/ traces + budgets"],
-      ready: "'How do you know it works?' gets numbers, not vibes." },
-    { lbl: "Deployment reps", t: "3–6 mo", goal: "Work inside systems you don't control.",
-      learn: ["SSO/VPC/compliance-speak", "scoping vague asks", "writing war stories"],
-      build: ["freelance/internal AI gigs", "an integration that passed someone else's review"],
-      ready: "You have stories where the hard part wasn't the code." },
-    { lbl: "The hunt", t: "1–3 mo", goal: "Convert the stack into an offer.",
-      learn: ["the funnel (next screen)", "five 'I' stories", "target-company stacks"],
-      build: ["live mock case studies", "applications: startups first, then tier-1"],
-      ready: "You scope a vague problem aloud for 45 minutes without solving early." }
-  ];
-  const roadEl = document.getElementById('road');
-  const rsvg = document.createElementNS(NS, 'svg');
-  rsvg.setAttribute('viewBox', `0 0 640 235`);
-  rsvg.setAttribute('role', 'img');
-  rsvg.setAttribute('aria-label', 'A five-stage road from zero to forward deployed, with a movable you-are-here pin');
-  const ROAD_D = "M28 196 C 145 196 145 88 290 88 C 418 88 408 180 505 180 C 573 180 600 118 620 70";
-  rsvg.innerHTML = `
-    <path d="${ROAD_D}" fill="none" stroke="#ececec" stroke-width="7" stroke-linecap="round" id="road-base"/>
-    <path d="${ROAD_D}" fill="none" stroke="#b5482e" stroke-width="7" stroke-linecap="round" id="road-done" stroke-dasharray="0 9999"/>
-    <g id="road-stops"></g>
-    <g id="pin" style="transition: transform .35s ease">
-      <path d="M0 0 C -7 -12 -9 -16 -9 -21 A 9 9 0 1 1 9 -21 C 9 -16 7 -12 0 0 Z" fill="#b5482e"/>
-      <circle cx="0" cy="-21" r="3.2" fill="#fff"/>
-      <text x="0" y="-35" font-size="11" font-weight="700" fill="#b5482e" text-anchor="middle"
-            stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">you are here</text>
-    </g>`;
-  roadEl.appendChild(rsvg);
-  const roadPath = rsvg.querySelector('#road-base');
-  const roadLen = roadPath.getTotalLength();
-  const FR = [0.02, 0.26, 0.50, 0.74, 0.97];
-  const stationPts = FR.map(f => roadPath.getPointAtLength(roadLen * f));
-  const stopsG = rsvg.querySelector('#road-stops');
-  STAGES.forEach((s, i) => {
-    const p = stationPts[i];
-    const above = (i % 2 === 0);
-    const g = document.createElementNS(NS, 'g');
-    g.style.cursor = 'pointer';
-    g.innerHTML = `
-      <circle cx="${p.x}" cy="${p.y}" r="13" fill="#fff" stroke="#ececec" stroke-width="2" class="halo"/>
-      <text x="${p.x}" y="${p.y + 4.5}" font-size="12.5" font-weight="700" text-anchor="middle" fill="#6b6b66" class="num">${i}</text>
-      <text x="${p.x}" y="${p.y + (above ? -24 : 33)}" font-size="11.5" font-weight="600" fill="#1b1b1a" text-anchor="middle"
-            stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">${s.lbl}</text>
-      <text x="${p.x}" y="${p.y + (above ? -39 : 47)}" font-size="10.5" fill="#6b6b66" text-anchor="middle"
-            stroke="#fff" stroke-width="3" paint-order="stroke" stroke-linejoin="round">${s.t}</text>`;
-    g.addEventListener('click', () => renderStage(i));
-    stopsG.appendChild(g);
-  });
-  const scard = document.getElementById('stage-card');
-  function renderStage(i) {
-    [...stopsG.children].forEach((g, j) => {
-      g.querySelector('.halo').setAttribute('stroke', j === i ? '#b5482e' : '#ececec');
-      g.querySelector('.halo').setAttribute('fill', j === i ? '#b5482e' : '#fff');
-      g.querySelector('.num').setAttribute('fill', j === i ? '#fff' : '#6b6b66');
-    });
-    const s = STAGES[i];
-    scard.innerHTML = `<h4>Stage ${i} — ${s.lbl}</h4><p class="sub">${s.t} · ${s.goal}</p>
-      <div class="chips">${s.learn.map(x => `<span class="chip">${x}</span>`).join('')}</div>
-      <div class="chips">${s.build.map(x => `<span class="chip b">build: ${x}</span>`).join('')}</div>
-      <p class="ready"><b>You're ready when:</b> ${s.ready}</p>`;
-  }
-  renderStage(0);
-  const pin = rsvg.querySelector('#pin');
-  const done = rsvg.querySelector('#road-done');
-  function placePin(stage) {
-    const p = stationPts[stage];
-    pin.setAttribute('transform', `translate(${p.x}, ${p.y - 6})`);
-    done.setAttribute('stroke-dasharray', `${roadLen * FR[stage]} ${roadLen}`);
-  }
-  placePin(0);
-
-  // ---------- screen 4: quiz wizard ----------
-  const QUIZ = [
-    { name: "Round 1 · Foundations", items: ["fluent in Python or TypeScript", "git + PRs without thinking", "SQL joins on unseen schemas"] },
-    { name: "Round 2 · Production", items: ["deployed a real service to a cloud", "can containerize an app", "debugged production via logs"] },
-    { name: "Round 3 · The AI layer", items: ["built RAG on messy data", "written a scored eval set", "built a traced tool-calling agent"] },
-    { name: "Round 4 · Deployment", items: ["integrated with a system I didn't build", "explained a tradeoff to a non-engineer", "shipped something strangers use"] }
-  ];
-  const EST = ["~12–24 months out", "~9–18 months out", "~4–9 months out", "~3–6 months out", "~1–3 months out"];
-  const state = QUIZ.map(t => t.items.map(() => false));
-  let qstep = 0;
-  const quizEl = document.getElementById('quiz');
-  function renderQuiz() {
-    if (qstep < QUIZ.length) {
-      const t = QUIZ[qstep];
-      quizEl.innerHTML = `
-        <div class="qhead"><b>${t.name}</b><span>${qstep + 1} / 4 · check what's true today</span></div>
-        <div class="steps">${QUIZ.map((_, i) => `<i class="${i < qstep ? 'done' : ''}"></i>`).join('')}</div>
-        ${t.items.map((x, i) => `<label><input type="checkbox" data-i="${i}" ${state[qstep][i] ? 'checked' : ''}><span>${x}</span></label>`).join('')}
-        <div class="qnav">
-          <button id="q-back" ${qstep === 0 ? 'disabled' : ''}>← Back</button>
-          <button id="q-next" class="primary">${qstep === 3 ? 'See my result' : 'Next →'}</button>
-        </div>`;
-      quizEl.querySelectorAll('input').forEach(inp =>
-        inp.addEventListener('change', () => { state[qstep][+inp.dataset.i] = inp.checked; }));
-      quizEl.querySelector('#q-back').onclick = () => { qstep--; renderQuiz(); };
-      quizEl.querySelector('#q-next').onclick = () => { qstep++; renderQuiz(); };
-    } else {
-      const nDone = state.flat().filter(Boolean).length;
-      let gap = null;
-      for (let t = 0; t < 4; t++) if (state[t].some(v => !v)) { gap = t; break; }
-      const entry = (gap === null) ? 4 : (nDone === 0 ? 0 : gap);
-      placePin(entry); renderStage(entry);
-      const headline = (gap === null)
-        ? `You're not starting — <b>you're applying.</b>`
-        : `Enter at <b>Stage ${entry} — ${STAGES[entry].lbl}</b>`;
-      const sub = (gap === null)
-        ? `Stage 4 this month: mock the case study, write your five stories.`
-        : `${nDone}/12 checked · interview-ready ${EST[entry]}.`;
-      quizEl.innerHTML = `
-        <div class="steps">${QUIZ.map(() => `<i class="done"></i>`).join('')}</div>
-        <div class="qresult">
-          <div class="big">${headline}</div>
-          <p>${sub}</p>
-          <div class="qnav" style="justify-content:center; gap:10px">
-            <button id="q-redo">Retake</button>
-            <button id="q-road" class="primary">See your pin on the road →</button>
-          </div>
-        </div>`;
-      quizEl.querySelector('#q-redo').onclick = () => { qstep = 0; renderQuiz(); };
-      quizEl.querySelector('#q-road').onclick = () => go(2);
-    }
-  }
-  renderQuiz();
-
-  // ---------- screen 5: funnel ----------
+  // ---------- Info: interview funnel ----------
   const ROUNDS = [
-    ["Practical coding", "60 min", false, "<h5>Practical coding</h5><b>Messy CSV parsing, a small pipeline, a rate limiter.</b><br>Scored on tests, error handling, narration — clean-and-working beats clever. Not LeetCode."],
-    ["System design", "60 min", false, "<h5>System design</h5><b>An LLM system under enterprise constraints.</b><br>SSO, compliance, data that can't leave the building — evals and observability from day one."],
-    ["Case study", "45–60 min", true, "<h5>Decomposition case study</h5><b>A vague customer problem — you scope it.</b><br>Lowest pass rate, highest weight. #1 rejection: solving before scoping. Clarify → stakeholders → constraints → plan → risks."],
-    ["Client sim", "45 min", false, "<h5>Client simulation</h5><b>Role-play with a skeptical 'customer.'</b><br>De-escalation, expectation-setting, and saying 'I don't know — here's how I'll find out' without flinching."],
-    ["Behavioral", "45 min", false, "<h5>Behavioral</h5><b>Five stories, told with 'I' not 'we.'</b><br>Ambiguity, a failure, a disagreement, cross-functional work, impact without authority."]
+    ["Coding", "60 min", 100, false, "<h5>Coding</h5><b>Practical and LLM-flavored — not LeetCode.</b><br>Messy CSVs, a rate limiter, API scaffolding around a model. A growing set of companies run it AI-assisted: you get a codebase and a coding agent like Claude Code, and they watch whether you direct and verify it — or just accept whatever it writes. OpenAI adds a take-home: build something real on their API, like a small RAG system or agent. Silence while you work is the #1 rejection here; narrate."],
+    ["Case study", "45–60 min", 74, true, "<h5>Decomposition case study</h5><b>A vague customer problem — you scope it.</b><br>'A city wants faster 911 response using call data, traffic data, and ambulance GPS. Go.' The single biggest filter in the loop, and the #1 rejection is solving before scoping. Clarify the goal → stakeholders &amp; metrics → what data exists → decompose → thin MVP first."],
+    ["Client sim", "45 min", 48, true, "<h5>Client simulation</h5><b>Present your product to a role-played customer.</b><br>You demo, defend trade-offs, and deliver bad news: 'the deployment slipped three weeks — tell the CTO,' or explain to a non-technical VP why RAG can't promise 100% accuracy. Say 'I will,' never 'the team is looking into it.' At Anthropic this round quietly filters ~60% of candidates who pass coding."]
   ];
-  (function funnel() {
-    const W = 640, H = 230, x0 = 16, gap = 9, segW = 106;
-    const hs = [172, 144, 114, 90, 72, 58];
-    const svg = document.createElementNS(NS, 'svg');
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', 'The FDE interview funnel: five rounds narrowing to an offer');
-    const cy = 112;
-    let g = '';
-    ROUNDS.forEach(([name, dur, hot, sheetHtml], i) => {
-      const x = x0 + i * (segW + gap);
-      const h1 = hs[i], h2 = hs[i + 1];
-      const fill = hot ? '#fdf0ec' : '#f6f6f4', stroke = hot ? '#b5482e' : '#ececec';
-      g += `<path d="M${x} ${cy - h1 / 2} L${x + segW} ${cy - h2 / 2} L${x + segW} ${cy + h2 / 2} L${x} ${cy + h1 / 2} Z"
-              fill="${fill}" stroke="${stroke}" stroke-width="${hot ? 2 : 1.2}"
-              data-sheet="${sheetHtml.replace(/"/g, '&quot;')}"/>`;
-      g += `<text x="${x + segW / 2}" y="${cy - 2}" font-size="12" font-weight="700" text-anchor="middle" fill="${hot ? '#b5482e' : '#1b1b1a'}" pointer-events="none">${name}</text>`;
-      g += `<text x="${x + segW / 2}" y="${cy + 14}" font-size="10.5" text-anchor="middle" fill="#6b6b66" pointer-events="none">${dur}</text>`;
+  (function vfunnel() {
+    const box = document.getElementById('vfunnel');
+    ROUNDS.forEach(([name, dur, w, hot, sheetHtml]) => {
+      const b = document.createElement('button');
+      b.className = 'vf' + (hot ? ' hot' : '');
+      b.style.width = w + '%';
+      b.innerHTML = `<b>${name}</b><span>${dur}</span>`;
+      b.onclick = () => openSheet(sheetHtml);
+      box.appendChild(b);
     });
-    const xe = x0 + 5 * (segW + gap);
-    g += `<path d="M${xe} ${cy - hs[5] / 2} L${xe + 24} ${cy} L${xe} ${cy + hs[5] / 2} Z" fill="#b5482e"/>`;
-    g += `<text x="${xe + 4}" y="${cy + 38}" font-size="12" font-weight="700" fill="#b5482e">offer</text>`;
-    svg.innerHTML = g;
-    document.getElementById('funnel').appendChild(svg);
-    wireSheets(svg);
+    const offer = document.createElement('div');
+    offer.className = 'vf-offer'; offer.textContent = 'offer';
+    box.appendChild(offer);
   })();
+
+  // ---------- Lessons ----------
+  const LESSONS = [
+    { t: "Set up Claude Cowork", rec: "start here", sub: "Feel what an agent does — before writing any code",
+      goal: "Get an AI agent doing real work for you, zero code. This builds the intuition every later lesson spends.",
+      dos: ["Install Claude and set up Cowork", "Connect it to your browser", "Have it filter your email inbox — archive noise, surface what matters", "Or: have it order your food. Watch how it navigates, clicks, recovers"],
+      tools: ["Claude Cowork"] },
+    { t: "Agentic coding tools", rec: "Claude Code recommended", sub: "Learn the prompt → diff → run loop",
+      goal: "Ship something tiny with an AI coding agent. You're learning how to direct an agent — the core FDE motion.",
+      dos: ["Install Claude Code (recommended), Cursor, or Gemini CLI", "Build a small script or tool with it end to end", "Practice reviewing diffs before accepting them"],
+      tools: ["Claude Code", "Cursor", "Gemini CLI"] },
+    { t: "Build a simple website", rec: null, sub: "HTML, CSS, a little JS — then put it on the internet",
+      goal: "Something a stranger can visit. Deployment is the point, not the design.",
+      dos: ["Build a small site: plain HTML/CSS/JS is enough", "Deploy it on GitHub Pages (free, no servers)", "Change something and redeploy — feel the loop"],
+      tools: ["HTML/CSS/JS", "GitHub Pages"] },
+    { t: "Learn a cloud platform", rec: null, sub: "GCP or AWS — where customer systems actually live",
+      goal: "Deploy something to real cloud infrastructure and understand what you did.",
+      dos: ["Pick one: GCP or AWS (free tier)", "Deploy your site or a small API there", "Learn the basics you'll meet everywhere: IAM, storage buckets, a VM or Cloud Run/Lambda", "Optional but valuable: containerize it with Docker"],
+      tools: ["GCP", "AWS", "Docker"] },
+    { t: "Build a simple ChatGPT", rec: null, sub: "LLM API calls, then RAG or MCP",
+      goal: "A chat UI that answers questions about YOUR documents — the demo every customer asks for first.",
+      dos: ["Call an LLM API directly (Anthropic or OpenAI) from your own code", "Add RAG: retrieve from your notes/files before answering", "Or wire MCP servers to give the model tools and data", "Bonus: an eval set — 10 questions, scored, so you can say 'how do I know it works'"],
+      tools: ["LLM APIs", "RAG", "MCP"] },
+    { t: "Build agentic AI", rec: null, sub: "ReAct loop + tool calling",
+      goal: "An agent that reasons, picks tools, observes results, and retries — the loop behind everything in lessons 0–1.",
+      dos: ["Implement a ReAct loop: reason → act → observe → repeat", "Give it 2–3 real tools via tool calling (search, calculator, your API)", "Watch where it fails; add guardrails and a stop condition", "Log every step — traces are how you debug agents"],
+      tools: ["ReAct", "Tool calling", "Tracing"] },
+    { t: "Build this demo", rec: "capstone", sub: "Rebuild the app you're reading right now",
+      goal: "One HTML file, no framework: tab shell, bottom sheets, and a working AI chat tab. Ship it on your own site as a portfolio piece.",
+      dos: ["Recreate the four-tab app shell (tabs, swipe, screens) in one file", "Add a bottom-sheet detail panel", "Wire the Chat tab to the Anthropic API with a bring-your-own-key box", "Deploy it on the GitHub Pages site from lesson 2 — then put it on your resume"],
+      tools: ["Everything above"] }
+  ];
+  (function lessons() {
+    const box = document.getElementById('lessons');
+    LESSONS.forEach((l, i) => {
+      const d = document.createElement('div');
+      d.className = 'lesson';
+      d.innerHTML = `
+        <button class="lhead">
+          <span class="lnum">${i}</span>
+          <span style="min-width:0"><b>${l.t}</b><span class="lsub">${l.sub}</span></span>
+          ${l.rec ? `<span class="rec">${l.rec}</span>` : ''}
+        </button>
+        <div class="ldetail">
+          <p>${l.goal}</p>
+          <ul>${l.dos.map(x => `<li>${x}</li>`).join('')}</ul>
+          <div class="lchips">${l.tools.map(x => `<i>${x}</i>`).join('')}</div>
+        </div>`;
+      d.querySelector('.lhead').onclick = () => {
+        const wasOpen = d.classList.contains('open');
+        [...box.children].forEach(c => c.classList.remove('open'));
+        if (!wasOpen) d.classList.add('open');
+      };
+      box.appendChild(d);
+    });
+    box.children[0].classList.add('open');
+  })();
+
+  // ---------- Videos (verified via YouTube oEmbed during curation) ----------
+  const VIDEOS = [
+    { topic: "fde-role", id: "Zyw-YA0k3xo", title: "The FDE Playbook for AI Startups with Bob McGrew", channel: "Y Combinator", why: "Ex-Palantir/OpenAI leader on why AI companies hire FDEs" },
+    { topic: "fde-role", id: "5OYy_UtINo4", title: "The Role of a Forward Deployed Software Engineer", channel: "Palantir", why: "The canonical day-in-the-life, from the company that invented the job" },
+    { topic: "fde-role", id: "yLTSqBzKG2s", title: "Inside OpenAI Enterprise: Forward Deployed Engineering, GPT-5, and More", channel: "Bg2 Pod", why: "How OpenAI adopted the FDE model for enterprise" },
+    { topic: "claude-cowork", id: "UAmKyyZ-b9E", title: "Introducing Cowork: Claude Code for the rest of your work", channel: "Anthropic", why: "Official launch demo" },
+    { topic: "claude-cowork", id: "z9rdrNrkvDY", title: "Learn 80% of Claude Cowork in Under 20 Minutes", channel: "Jeff Su", why: "Fast setup-to-daily-workflows walkthrough" },
+    { topic: "claude-cowork", id: "-tdNsYi8AXs", title: "How the engineer behind Claude Cowork actually uses Claude", channel: "How I AI", why: "The Cowork engineering lead demos real agentic workflows" },
+    { topic: "claude-code-tools", id: "gv0WHhKelSE", title: "Claude Code best practices | Code w/ Claude", channel: "Anthropic", why: "Official best-practices talk" },
+    { topic: "claude-code-tools", id: "IecXj2WFkLs", title: "Getting started with Gemini CLI", channel: "Google Cloud Tech", why: "Official install-and-first-workflows session" },
+    { topic: "claude-code-tools", id: "ocMOZpuAMw4", title: "Cursor Tutorial for Beginners (AI Code Editor)", channel: "Tech With Tim", why: "Beginner tour of Cursor's core features" },
+    { topic: "webdev-basics", id: "916GWv2Qs08", title: "HTML Tutorial — Website Crash Course for Beginners", channel: "freeCodeCamp.org", why: "A first website, from scratch" },
+    { topic: "webdev-basics", id: "UB1O30fR-EE", title: "HTML Crash Course For Absolute Beginners", channel: "Traversy Media", why: "The classic beginner crash course" },
+    { topic: "webdev-basics", id: "b2r9Cdvssi0", title: "Getting started with GitHub Pages for beginners", channel: "GitHub", why: "Official guide to free static deploys" },
+    { topic: "cloud-basics", id: "7HKot-brXFE", title: "AWS Certified Cloud Practitioner Course 2026 (CLF-C02)", channel: "freeCodeCamp.org", why: "The flagship AWS fundamentals course" },
+    { topic: "cloud-basics", id: "jpno8FSqpc8", title: "Google Cloud Associate Cloud Engineer Course", channel: "freeCodeCamp.org", why: "Full GCP fundamentals: IAM, compute, storage" },
+    { topic: "cloud-basics", id: "3c-iBn73dDE", title: "Docker Tutorial for Beginners [FULL COURSE in 3 Hours]", channel: "TechWorld with Nana", why: "The most-recommended Docker intro" },
+    { topic: "rag-llm-api", id: "sVcwVQRHIc8", title: "Learn RAG From Scratch", channel: "freeCodeCamp.org", why: "2.5-hour RAG course by a LangChain engineer" },
+    { topic: "rag-llm-api", id: "kQmXtrmQ5Zg", title: "Building Agents with Model Context Protocol — Full Workshop", channel: "AI Engineer", why: "The definitive MCP intro, taught by Anthropic" },
+    { topic: "rag-llm-api", id: "98bGwOYoEGg", title: "ChatGPT Clone — OpenAI API and React Tutorial", channel: "freeCodeCamp.org", why: "Build a chat app end-to-end on an LLM API" },
+    { topic: "agents-react", id: "7xTGNNLPyMI", title: "Deep Dive into LLMs like ChatGPT", channel: "Andrej Karpathy", why: "The definitive 3.5-hour deep dive on how LLMs work" },
+    { topic: "agents-react", id: "YtHdaXuOAks", title: "Guide to Agentic AI — Build a Python Coding Agent", channel: "freeCodeCamp.org", why: "A from-scratch agent loop with real tool calling" },
+    { topic: "agents-react", id: "D7_ipDqhtwk", title: "How We Build Effective Agents: Barry Zhang, Anthropic", channel: "AI Engineer", why: "Agent-loop and tool-design patterns, distilled" }
+  ].map(v => ({ ...v, url: "https://www.youtube.com/watch?v=" + v.id }));
+  const TOPIC_LABEL = {
+    'fde-role': 'The job', 'claude-cowork': 'Lesson 0 · Claude Cowork',
+    'claude-code-tools': 'Lesson 1 · Coding tools', 'webdev-basics': 'Lesson 2 · Web basics',
+    'cloud-basics': 'Lesson 3 · Cloud', 'rag-llm-api': 'Lesson 4 · RAG & LLM APIs',
+    'agents-react': 'Lesson 5 · Agents'
+  };
+  (function videos() {
+    const box = document.getElementById('videos');
+    if (!VIDEOS.length) {
+      box.innerHTML = '<p class="lead" style="color:#6b6b66">Video picks are being curated — check back shortly.</p>';
+      return;
+    }
+    const order = Object.keys(TOPIC_LABEL);
+    order.forEach(topic => {
+      const vids = VIDEOS.filter(v => v.topic === topic);
+      if (!vids.length) return;
+      const h = document.createElement('div');
+      h.className = 'vgroup'; h.textContent = TOPIC_LABEL[topic];
+      box.appendChild(h);
+      vids.forEach(v => {
+        const a = document.createElement('a');
+        a.className = 'vid'; a.href = v.url; a.target = '_blank'; a.rel = 'noopener';
+        a.innerHTML = `<img loading="lazy" src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt="">
+          <div style="min-width:0"><b>${v.title}</b><span>${v.channel}</span><em>${v.why}</em></div>`;
+        box.appendChild(a);
+      });
+    });
+  })();
+
+  // ---------- Chat (bring-your-own-key, direct to Anthropic) ----------
+  const LS_KEY = 'fde-chat-key', LS_MODEL = 'fde-chat-model';
+  const SYS = "You are a concise, friendly tutor embedded in a blog post titled 'From zero to forward deployed' " +
+    "about becoming a Forward Deployed Engineer (FDE) at AI companies. You help with: what the FDE job is " +
+    "(vendor engineer embedded with customers, bridging demo and production), the interview loop (practical " +
+    "coding, system design, the decomposition case study — where most fail by solving before scoping — client " +
+    "simulation, behavioral), and the post's seven lessons: 0) set up Claude Cowork and automate a real task, " +
+    "1) agentic coding tools (Claude Code, Cursor, Gemini CLI), 2) build and deploy a simple website, 3) learn " +
+    "GCP or AWS, 4) build a simple ChatGPT with RAG or MCP, 5) build agentic AI with a ReAct loop and tool " +
+    "calling, 6) rebuild this demo app. Keep answers short, practical, and encouraging. If asked something " +
+    "unrelated, answer briefly and steer back to the path.";
+  const chatKey = document.getElementById('chat-key');
+  const chatModel = document.getElementById('chat-model');
+  const chatLog = document.getElementById('chat-log');
+  const chatIn = document.getElementById('chat-in');
+  const chatSend = document.getElementById('chat-send');
+  const hist = [];
+  chatKey.value = localStorage.getItem(LS_KEY) || '';
+  chatModel.value = localStorage.getItem(LS_MODEL) || 'claude-opus-4-8';
+  document.getElementById('chat-save').onclick = () => {
+    localStorage.setItem(LS_KEY, chatKey.value.trim());
+    localStorage.setItem(LS_MODEL, chatModel.value);
+    bubble('bot', chatKey.value.trim() ? 'Key saved in this browser. Ask me anything about the FDE path.' : 'Key cleared.');
+  };
+  document.getElementById('chat-clear').onclick = () => {
+    localStorage.removeItem(LS_KEY); chatKey.value = '';
+    bubble('bot', 'Key removed from this browser.');
+  };
+  chatModel.onchange = () => localStorage.setItem(LS_MODEL, chatModel.value);
+  function bubble(kind, text) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + kind;
+    d.textContent = text;
+    chatLog.appendChild(d);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    return d;
+  }
+  bubble('bot', "Hi! I'm the tutor for this post. Add your Anthropic API key above to activate me, then ask about the FDE job, the interview, or any lesson.");
+  async function sendChat() {
+    const text = chatIn.value.trim();
+    if (!text) return;
+    const key = (localStorage.getItem(LS_KEY) || '').trim();
+    bubble('user', text);
+    chatIn.value = '';
+    if (!key) { bubble('err', 'No API key yet — paste one above and hit Save. Keys stay in your browser.'); return; }
+    hist.push({ role: 'user', content: text });
+    chatSend.disabled = true;
+    const wait = bubble('bot', '…');
+    wait.classList.add('thinking');
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: localStorage.getItem(LS_MODEL) || 'claude-opus-4-8',
+          max_tokens: 4096,
+          system: SYS,
+          messages: hist
+        })
+      });
+      const data = await resp.json().catch(() => null);
+      wait.remove();
+      if (!resp.ok) {
+        hist.pop();
+        const m = data && data.error ? `${data.error.type}: ${data.error.message}` : `HTTP ${resp.status}`;
+        bubble('err', m + (resp.status === 401 ? ' — check your key.' : ''));
+      } else {
+        const out = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+        hist.push({ role: 'assistant', content: out || '(empty response)' });
+        bubble('bot', out || '(empty response)');
+      }
+    } catch (e) {
+      wait.remove(); hist.pop();
+      bubble('err', 'Network error — ' + (e && e.message ? e.message : 'request failed') + '. Check your connection (or an ad blocker).');
+    }
+    chatSend.disabled = false;
+  }
+  chatSend.onclick = sendChat;
+  chatIn.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
 
   // boot
   go(0);
