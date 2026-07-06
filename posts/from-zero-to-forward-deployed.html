@@ -4,184 +4,212 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>From zero to forward deployed — Bat</title>
-  <meta name="description" content="A four-tab app about becoming a forward deployed engineer: what the job and interview look like, a seven-lesson path from Claude Cowork to building agents, curated videos, and a bring-your-own-key chat tutor." />
+  <meta name="description" content="A one-page app about becoming a forward deployed engineer: what the job and interview look like, a seven-lesson path from Claude Cowork to building agents, curated videos, and a bring-your-own-key chat tutor." />
   <link rel="stylesheet" href="../style.css?v=9" />
   <style>
-    /* ---------- app frame (post-local) — palette matches style.css ---------- */
-    .frame {
-      border: 1px solid #ececec; border-radius: 18px; background: #fff;
-      margin: 24px 0 8px; overflow: hidden;
+    /* ---------- post-local theme: this article runs blue ---------- */
+    :root {
+      --acc: #2b6cb0;        /* article accent (site-wide accent stays #b5482e) */
+      --acc-soft: #eaf2fb;   /* hot-gate fill */
+      --acc-tint: #f3f8fd;   /* inline callout fill */
     }
-    /* Without JS the screens stack like a normal article. With JS (.appjs) it becomes an app. */
-    .appjs { display: flex; flex-direction: column; height: min(92vh, 940px); min-height: 560px; position: relative;
-      box-shadow: 0 1px 2px rgba(27,27,26,.04), 0 8px 28px rgba(27,27,26,.06); }
-    .apphead {
-      display: none; align-items: center; justify-content: space-between;
-      padding: 12px 18px 10px; border-bottom: 1px solid #ececec;
-    }
-    .appjs .apphead { display: flex; }
-    .apphead .t { font-size: 15px; font-weight: 700; }
-    .apphead .dots { display: flex; gap: 5px; }
-    .apphead .dots i { width: 6px; height: 6px; border-radius: 50%; background: #ececec; }
-    .apphead .dots i.on { background: #b5482e; }
 
-    .screens { position: relative; flex: 1; }
-    .screen { padding: 18px 20px 24px; }
-    .screen h3 { margin: 0 0 6px; font-size: 18px; }
-    .screen .lead { color: #1b1b1a; font-size: 15px; line-height: 1.55; margin: 0 0 14px; }
-    .screen .lead a { color: inherit; }
-    .hint { color: #6b6b66; font-size: 12.5px; text-align: center; margin: 8px 0 0; }
-    .appjs .screens { overflow: hidden; }
-    .appjs .screen {
-      position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
-      transform: translateX(102%); opacity: 0; pointer-events: none;
-      transition: transform .32s ease, opacity .32s ease;
-    }
-    .appjs .screen.past { transform: translateX(-102%); }
-    .appjs .screen.on { transform: none; opacity: 1; pointer-events: auto; }
-    .screen svg { width: 100%; height: auto; display: block; }
-    .screen hr { border: none; border-top: 1px solid #ececec; margin: 20px 0; }
-    @media (max-width: 460px) { .screen { padding: 14px 14px 20px; } }
+    /* One page scroll; the fixed mobile tab bar needs room at the bottom. */
+    body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+    [id] { scroll-margin-top: 14px; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
-    .tabbar { display: none; border-top: 1px solid #ececec; background: #fcfcfb; position: relative; z-index: 6; }
-    .appjs .tabbar { display: flex; }
-    .tabbar button {
-      flex: 1; background: none; border: none; cursor: pointer;
-      padding: 8px 2px 9px; color: #6b6b66;
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      font: 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    .sr {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
     }
-    .tabbar button svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-    .tabbar button.on { color: #b5482e; font-weight: 600; }
 
-    /* bottom sheet (in-frame detail panel) */
-    .sheet {
-      position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
-      background: #1b1b1a; color: #fff; border-radius: 14px 14px 0 0;
-      padding: 14px 18px 72px; font-size: 14px; line-height: 1.55;
-      transform: translateY(105%); transition: transform .28s ease;
-      max-height: 66%; overflow-y: auto;
+    /* ---------- tab bar: fixed bottom on phones, sticky top on desktop ---------- */
+    .tabbar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+      display: flex; background: #fff; border-top: 1px solid var(--rule);
+      padding-bottom: env(safe-area-inset-bottom);
     }
-    .sheet.open { transform: none; }
-    .sheet b { color: #ffd9cf; }
-    .sheet .x {
-      position: absolute; top: 8px; right: 12px; background: none; border: none;
-      color: #fff; font-size: 18px; cursor: pointer; line-height: 1; padding: 4px;
+    .tabbar a, .tabbar a:visited {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 8px 2px 9px; min-height: 44px;
+      color: var(--muted); text-decoration: none; font: 11px/1 var(--font);
     }
-    .sheet h5 { margin: 0 26px 5px 0; font-size: 14.5px; color: #fff; }
+    .tabbar a svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .tabbar a.on, .tabbar a.on:visited { color: var(--acc); font-weight: 600; }
+    @media (min-width: 640px) {
+      body { padding-bottom: 0; }
+      [id] { scroll-margin-top: 66px; }
+      .tabbar {
+        position: sticky; top: 0; bottom: auto; margin: 4px -24px 0;
+        border-top: none; border-bottom: 1px solid var(--rule);
+        justify-content: center; gap: 30px; padding: 0;
+      }
+      .tabbar a {
+        flex: 0 0 auto; flex-direction: row; gap: 7px; min-height: 0;
+        font-size: 13.5px; padding: 13px 2px 11px;
+        border-bottom: 2px solid transparent; margin-bottom: -1px;
+      }
+      .tabbar a.on { border-bottom-color: var(--acc); }
+      .tabbar a svg { width: 16px; height: 16px; }
+    }
+
+    /* ---------- sections ---------- */
+    .article section { margin-top: 44px; }
+    .article section + section { border-top: 1px solid var(--rule); padding-top: 36px; }
+    .shead { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
+    .shead svg { width: 22px; height: 22px; flex: none; stroke: var(--acc); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .shead h2 { margin: 0; }
+    .lead { color: var(--fg); font-size: 15px; line-height: 1.55; margin: 0 0 14px; }
+    .lead a { color: inherit; }
+    .hint { color: var(--muted); font-size: 12.5px; text-align: center; margin: 8px 0 0; }
 
     /* ---------- Info: stat cards ---------- */
     .stats { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 4px; }
-    .stat { border: 1px solid #ececec; border-radius: 10px; padding: 9px 12px; flex: 1 1 30%; min-width: 128px; }
-    .stat b { display: block; font-size: 19px; color: #b5482e; }
-    .stat span { font-size: 12px; color: #6b6b66; line-height: 1.35; display: block; margin-top: 2px; }
+    .stat { border: 1px solid var(--rule); border-radius: 10px; padding: 9px 12px; flex: 1 1 30%; min-width: 128px; }
+    .stat b { display: block; font-size: 19px; color: var(--acc); }
+    .stat span { font-size: 12px; color: var(--muted); line-height: 1.35; display: block; margin-top: 2px; }
     .stat a { color: inherit; }
 
-    /* ---------- Info: vertical funnel (HTML, reflows) ---------- */
+    /* ---------- Info: interview funnel (details/summary, no JS needed) ---------- */
     .vfunnel { max-width: 430px; margin: 4px auto 0; }
-    .vf {
+    .vfd { margin-bottom: 8px; }
+    .vfd > summary { list-style: none; cursor: pointer; display: block; }
+    .vfd > summary::-webkit-details-marker { display: none; }
+    .gate {
       display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
-      margin: 0 auto 7px; padding: 11px 16px; cursor: pointer;
-      border: 1px solid #ececec; border-radius: 10px; background: #f6f6f4;
-      font: 14px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      color: #1b1b1a; width: 100%; text-align: left;
+      margin: 0 auto; padding: 11px 16px;
+      border: 1px solid var(--rule); border-radius: 10px; background: #f6f6f4;
+      font: 14px/1.3 var(--font); color: var(--fg);
     }
-    .vf b { font-weight: 700; }
-    .vf span { font-size: 12px; color: #6b6b66; white-space: nowrap; }
-    .vf.hot { border-color: #b5482e; background: #fdf0ec; }
-    .vf.hot b { color: #b5482e; }
+    .gate b { font-weight: 700; }
+    .gate span { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .vfd.hot .gate { border-color: var(--acc); background: var(--acc-soft); }
+    .vfd.hot .gate b { color: var(--acc); }
+    .vfbody {
+      margin: 7px 0 10px; padding: 10px 14px;
+      background: var(--acc-tint); border-left: 3px solid var(--acc);
+      font-size: 13.5px; line-height: 1.55;
+    }
+    .vfbody p { margin: 0 0 8px; }
+    .vfbody p:last-child { margin-bottom: 0; }
     .vf-offer {
-      width: 34%; min-width: 120px; margin: 4px auto 0; text-align: center;
-      background: #b5482e; color: #fff; font-size: 13.5px; font-weight: 700;
+      width: 34%; min-width: 120px; margin: 6px auto 0; text-align: center;
+      background: var(--acc); color: #fff; font-size: 13.5px; font-weight: 700;
       padding: 9px 0; border-radius: 999px;
     }
-    .figcap { text-align: center; color: #6b6b66; font-size: 12.5px; max-width: 560px; margin: 8px auto 0; line-height: 1.5; }
-    .refs-mini { font-size: 13px; line-height: 1.55; color: #6b6b66; padding-left: 18px; margin: 8px 0 0; }
-    .refs-mini a { color: #1b1b1a; }
+    .figcap { text-align: center; color: var(--muted); font-size: 12.5px; max-width: 560px; margin: 8px auto 0; line-height: 1.5; }
+    .refs-mini { font-size: 13px; line-height: 1.55; color: var(--muted); padding-left: 18px; margin: 8px 0 0; }
+    .refs-mini a { color: var(--fg); }
     .panel-t { font-size: 14.5px; font-weight: 700; margin: 2px 0 10px; }
 
-    /* ---------- Lessons: accordion cards ---------- */
-    .lessons { max-width: 520px; margin: 0 auto; }
-    .lesson { border: 1px solid #ececec; border-radius: 12px; margin-bottom: 9px; overflow: hidden; }
-    .lesson.open { border-color: #b5482e; }
-    .lhead {
-      display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
-      background: #fff; border: none; cursor: pointer; padding: 12px 14px;
-      font: 14.5px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1b1b1a;
+    /* ---------- Lessons: native details accordions ---------- */
+    .xall {
+      display: block; margin: 0 0 10px auto; padding: 0;
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font: 12.5px var(--font); text-decoration: underline;
     }
+    .xall:hover { color: var(--acc); }
+    .xall[hidden] { display: none; }
+    .lesson { border: 1px solid var(--rule); border-radius: 12px; margin-bottom: 9px; overflow: hidden; background: #fff; }
+    .lesson[open] { border-color: var(--acc); }
+    .lhead {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      cursor: pointer; list-style: none;
+      font: 14.5px/1.35 var(--font); color: var(--fg);
+    }
+    .lhead::-webkit-details-marker { display: none; }
     .lnum {
       flex: 0 0 30px; width: 30px; height: 30px; border-radius: 50%;
-      background: #f6f6f4; border: 1px solid #ececec; color: #6b6b66;
+      background: #f6f6f4; border: 1px solid var(--rule); color: var(--muted);
       font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center;
     }
-    .lesson.open .lnum { background: #b5482e; border-color: #b5482e; color: #fff; }
+    .lesson[open] .lnum { background: var(--acc); border-color: var(--acc); color: #fff; }
+    .lt { min-width: 0; }
     .lhead b { display: block; font-size: 14.5px; }
-    .lhead .lsub { display: block; font-size: 12.5px; color: #6b6b66; margin-top: 1px; }
+    .lhead .lsub { display: block; font-size: 12.5px; color: var(--muted); margin-top: 1px; }
     .lhead .rec {
       margin-left: auto; flex: 0 0 auto; font-size: 10.5px; font-weight: 700; letter-spacing: .04em;
-      color: #b5482e; border: 1px solid #b5482e; border-radius: 999px; padding: 2px 8px;
+      color: var(--acc); border: 1px solid var(--acc); border-radius: 999px; padding: 2px 8px;
     }
-    .ldetail { display: none; padding: 0 14px 14px 56px; font-size: 13.5px; line-height: 1.55; color: #1b1b1a; }
-    .lesson.open .ldetail { display: block; }
+    .ldetail { padding: 0 14px 14px 56px; font-size: 13.5px; line-height: 1.55; color: var(--fg); }
     .ldetail p { margin: 0 0 8px; }
     .ldetail ul { margin: 0 0 8px; padding-left: 18px; }
     .ldetail li { margin: 3px 0; }
     .lchips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
     .lchips i {
       font-style: normal; font-size: 12px; padding: 3px 10px; border-radius: 999px;
-      border: 1px solid #ececec; background: #f6f6f4; color: #1b1b1a;
+      border: 1px solid var(--rule); background: #f6f6f4; color: var(--fg);
     }
     @media (max-width: 460px) { .ldetail { padding-left: 14px; } }
 
-    /* ---------- Videos ---------- */
-    .vgroup { font-size: 13px; font-weight: 700; color: #6b6b66; text-transform: uppercase; letter-spacing: .05em; margin: 16px 0 8px; }
-    .vgroup:first-of-type { margin-top: 4px; }
-    .article a.vid, .article a.vid:visited {
-      display: flex; gap: 12px; align-items: flex-start; text-decoration: none; color: #1b1b1a;
-      border: 1px solid #ececec; border-radius: 12px; padding: 10px; margin-bottom: 9px;
+    /* ---------- Videos: rows on phones, grid from 480px up ---------- */
+    .article h3.vgroup { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 18px 0 8px; }
+    .article a.lback {
+      font-size: 11.5px; font-weight: 400; letter-spacing: 0; text-transform: none;
+      color: var(--muted); text-decoration: none; margin-left: 8px;
     }
-    .vid:hover { border-color: #b5482e; }
+    .article a.lback:hover { color: var(--acc); text-decoration: underline; }
+    .article a.vid, .article a.vid:visited {
+      display: flex; gap: 12px; align-items: flex-start; text-decoration: none; color: var(--fg);
+      border: 1px solid var(--rule); border-radius: 12px; padding: 10px; margin-bottom: 9px;
+    }
+    .vid:hover { border-color: var(--acc); }
     .vid img { width: 120px; border-radius: 8px; display: block; flex: 0 0 120px; aspect-ratio: 16/9; object-fit: cover; background: #f6f6f4; }
+    .vtxt { min-width: 0; }
     .vid b { display: block; font-size: 13.5px; line-height: 1.35; }
-    .vid span { display: block; font-size: 12px; color: #6b6b66; margin-top: 3px; }
-    .vid em { display: block; font-size: 12px; color: #6b6b66; margin-top: 4px; font-style: normal; }
+    .vid span span, .vtxt > span { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .vid em { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; font-style: normal; }
     @media (max-width: 420px) { .vid img { width: 96px; flex-basis: 96px; } }
+    @media (min-width: 480px) {
+      .vgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+      .article a.vid { flex-direction: column; gap: 8px; margin-bottom: 0; }
+      .vid img { width: 100%; flex: none; }
+    }
 
-    /* ---------- Chat ---------- */
-    .appjs .screen.chatscreen { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
-    .chat-top { padding: 12px 16px 10px; border-bottom: 1px solid #ececec; background: #fcfcfb; }
+    /* ---------- Chat: an in-flow card with the page's only inner scroll ---------- */
+    .chat-card {
+      border: 1px solid var(--rule); border-radius: 14px; overflow: hidden;
+      display: flex; flex-direction: column; background: #fff;
+      box-shadow: 0 1px 2px rgba(27,27,26,.04), 0 8px 28px rgba(27,27,26,.06);
+    }
+    .chat-top { padding: 12px 16px 10px; border-bottom: 1px solid var(--rule); background: #fcfcfb; }
     .chat-top .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .chat-top input[type=password] {
-      flex: 1; min-width: 150px; padding: 8px 10px; border: 1px solid #ececec; border-radius: 8px;
-      font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      flex: 1; min-width: 150px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px;
+      font: 13px var(--font);
     }
     .chat-top select {
-      padding: 8px 6px; border: 1px solid #ececec; border-radius: 8px; background: #fff;
-      font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1b1b1a;
+      padding: 8px 6px; border: 1px solid var(--rule); border-radius: 8px; background: #fff;
+      font: 13px var(--font); color: var(--fg);
     }
     .chat-top button {
-      padding: 8px 14px; border-radius: 999px; border: 1px solid #ececec; background: #fff; cursor: pointer;
-      font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1b1b1a;
+      padding: 8px 14px; border-radius: 999px; border: 1px solid var(--rule); background: #fff; cursor: pointer;
+      font: 13px var(--font); color: var(--fg);
     }
-    .chat-top button.primary { background: #b5482e; border-color: #b5482e; color: #fff; }
-    .chat-note { font-size: 11.5px; color: #6b6b66; margin: 7px 0 0; line-height: 1.45; }
-    .chat-note b { color: #b5482e; }
-    .chat-log { flex: 1; overflow-y: auto; padding: 14px 16px; }
+    .chat-top button.primary { background: var(--acc); border-color: var(--acc); color: #fff; }
+    .chat-note { font-size: 11.5px; color: var(--muted); margin: 7px 0 0; line-height: 1.45; }
+    .chat-note b { color: var(--acc); }
+    .chat-log { height: min(60vh, 420px); overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px; }
     .msg { max-width: 82%; padding: 9px 13px; border-radius: 14px; margin-bottom: 8px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
-    .msg.user { margin-left: auto; background: #1b1b1a; color: #fff; border-bottom-right-radius: 4px; }
-    .msg.bot { margin-right: auto; background: #f6f6f4; border: 1px solid #ececec; border-bottom-left-radius: 4px; }
+    .msg.user { margin-left: auto; background: var(--fg); color: #fff; border-bottom-right-radius: 4px; }
+    .msg.bot { margin-right: auto; background: #f6f6f4; border: 1px solid var(--rule); border-bottom-left-radius: 4px; }
     .msg.err { margin-right: auto; background: #fdf0ec; border: 1px solid #b5482e; color: #b5482e; font-size: 13px; }
-    .msg.thinking { color: #6b6b66; font-style: italic; }
-    .chat-inrow { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid #ececec; background: #fff; }
+    .msg.thinking { color: var(--muted); font-style: italic; }
+    .chat-inrow { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--rule); background: #fff; }
     .chat-inrow input {
-      flex: 1; padding: 10px 13px; border: 1px solid #ececec; border-radius: 999px;
-      font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      flex: 1; padding: 10px 13px; border: 1px solid var(--rule); border-radius: 999px;
+      font: 14px var(--font);
     }
     .chat-inrow button {
-      padding: 10px 18px; border-radius: 999px; border: none; background: #b5482e; color: #fff;
-      font: 600 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; cursor: pointer;
+      padding: 10px 18px; border-radius: 999px; border: none; background: var(--acc); color: #fff;
+      font: 600 14px var(--font); cursor: pointer;
     }
     .chat-inrow button:disabled { opacity: .4; cursor: default; }
+
+    @media print {
+      .tabbar, .backlink, .chat-top, .chat-inrow, .hint, .xall { display: none !important; }
+    }
   </style>
 </head>
 <body class="wide">
@@ -190,109 +218,421 @@
 
     <article class="article">
       <h1>From zero to forward deployed</h1>
-      <p class="meta"><time datetime="2026-07-01">July 1, 2026</time> · interactive app · <span class="status">Draft — role data as of mid-2026</span></p>
+      <p class="meta"><time datetime="2026-07-01">July 1, 2026</time> · one-page app · <span class="status">Draft — role data as of mid-2026</span></p>
 
-      <p class="dek">Becoming a forward deployed engineer, as a small app: what the job is, seven
+      <p class="dek">Becoming a forward deployed engineer, as a one-page app: what the job is, seven
         lessons from zero, videos worth your time, and a tutor to chat with.</p>
 
-      <div class="frame" id="frame" tabindex="0" aria-label="Interactive article: use the tab bar or arrow keys to change screens">
-        <div class="apphead">
-          <span class="t" id="apphead-title">Info</span>
-          <span class="dots" id="apphead-dots"></span>
+      <details class="toc">
+        <summary>Contents</summary>
+        <div class="inner">
+          <ol>
+            <li><a href="#info">The job &amp; the interview</a>
+              <ol>
+                <li><a href="#round-coding">Coding</a></li>
+                <li><a href="#round-case-study">Decomposition case study</a></li>
+                <li><a href="#round-client-sim">Client simulation</a></li>
+              </ol>
+            </li>
+            <li><a href="#lessons">Seven lessons, from zero</a>
+              <ol>
+                <li><a href="#lesson-0">Set up Claude Cowork</a></li>
+                <li><a href="#lesson-1">Agentic coding tools</a></li>
+                <li><a href="#lesson-2">Build a simple website</a></li>
+                <li><a href="#lesson-3">Learn a cloud platform</a></li>
+                <li><a href="#lesson-4">Build a simple ChatGPT</a></li>
+                <li><a href="#lesson-5">Build agentic AI</a></li>
+                <li><a href="#lesson-6">Build this demo</a></li>
+              </ol>
+            </li>
+            <li><a href="#videos">Videos worth your time</a></li>
+            <li><a href="#chat">Chat with the tutor</a></li>
+          </ol>
+        </div>
+      </details>
+
+      <nav class="tabbar" aria-label="Sections">
+        <a href="#info" class="on" aria-current="true"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="M10 9v5M10 6.2v.2"/></svg><span>Info</span></a>
+        <a href="#lessons"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.5C5 3.5 7.5 3.5 10 5c2.5-1.5 5-1.5 7-.5V15c-2-1-4.5-1-7 .5-2.5-1.5-5-1.5-7-.5z"/><path d="M10 5v10.5"/></svg><span>Lessons</span></a>
+        <a href="#videos"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="4" width="15" height="12" rx="3"/><path d="M8.5 7.5l4 2.5-4 2.5z"/></svg><span>Videos</span></a>
+        <a href="#chat"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v6a2.5 2.5 0 0 1-2.5 2.5H8l-4 3v-3H5.5A2.5 2.5 0 0 1 3 11.5z"/></svg><span>Chat</span></a>
+      </nav>
+
+      <!-- ========== section 1: Info ========== -->
+      <section id="info">
+        <div class="shead">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="M10 9v5M10 6.2v.2"/></svg>
+          <h2>What is an FDE?</h2>
+        </div>
+        <p class="lead">A forward deployed engineer is a hybrid of consultant and engineer.
+          Half the job is writing code; the other half is sitting with the customer —
+          understanding their problem, building on their systems, and explaining the result
+          to their team. The title <a href="https://nabeelqu.co/reflections-on-palantir">started
+          at Palantir</a>, and it exploded with the rise of AI tools: every company wants AI
+          in their workflow, but <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">~95%
+          of enterprise AI pilots fail</a> when the demo meets real systems. So AI companies
+          send out people who can do both the coding and the people part. That's the FDE.</p>
+
+        <div class="stats">
+          <div class="stat"><b>224</b><span>open FDE roles across 39 AI companies, <a href="https://jobsbyculture.com/blog/forward-deployed-engineer-boom-2026">May 2026</a></span></div>
+          <div class="stat"><b>+800%</b><span>year-over-year growth in <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">FDE postings</a></span></div>
+          <div class="stat"><b>$1B</b><span><a href="https://www.cnbc.com/2026/06/30/aws-amazon-ai-forward-deployed-engineers.html">AWS's new unit</a>, June 2026</span></div>
         </div>
 
-        <div class="screens" id="screens">
+        <hr />
 
-          <!-- ========== screen 1: Info ========== -->
-          <section class="screen" data-title="Info">
-            <h3>What is an FDE?</h3>
-            <p class="lead">A forward deployed engineer is a hybrid of consultant and engineer.
-              Half the job is writing code; the other half is sitting with the customer —
-              understanding their problem, building on their systems, and explaining the result
-              to their team. The title <a href="https://nabeelqu.co/reflections-on-palantir">started
-              at Palantir</a>, and it exploded with the rise of AI tools: every company wants AI
-              in their workflow, but <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">~95%
-              of enterprise AI pilots fail</a> when the demo meets real systems. So AI companies
-              send out people who can do both the coding and the people part. That's the FDE.</p>
+        <h2>What the FDE interview looks like</h2>
+        <p class="lead">Usually <a href="https://www.tryexponent.com/blog/forward-deployed-engineer-interview-the-definitive-2026-guide-fde">5–8
+          stages over 3–6 weeks</a> — but strip away the recruiter screens and the generic
+          rounds, and three skill tests decide it. <b>Each gate expands below — tap one to collapse it.</b></p>
 
-            <div class="stats">
-              <div class="stat"><b>224</b><span>open FDE roles across 39 AI companies, <a href="https://jobsbyculture.com/blog/forward-deployed-engineer-boom-2026">May 2026</a></span></div>
-              <div class="stat"><b>+800%</b><span>year-over-year growth in <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">FDE postings</a></span></div>
-              <div class="stat"><b>$1B</b><span><a href="https://www.cnbc.com/2026/06/30/aws-amazon-ai-forward-deployed-engineers.html">AWS's new unit</a>, June 2026</span></div>
+        <div class="vfunnel">
+          <details class="vfd" id="round-coding" open>
+            <summary><span class="gate" style="width:100%"><b>Coding</b><span>60 min</span></span></summary>
+            <div class="vfbody">
+              <p><b>Practical and LLM-flavored — not LeetCode.</b> Messy CSVs, a rate limiter,
+                API scaffolding around a model. A growing set of companies run it AI-assisted:
+                you get a codebase and a coding agent like Claude Code, and they watch whether
+                you direct and verify it — or just accept whatever it writes. OpenAI adds a
+                take-home: build something real on their API, like a small RAG system or agent.
+                Silence while you work is the #1 rejection here; narrate.</p>
             </div>
-
-            <hr />
-
-            <h3>What the FDE interview looks like</h3>
-            <p class="lead">Usually <a href="https://www.tryexponent.com/blog/forward-deployed-engineer-interview-the-definitive-2026-guide-fde">5–8
-              stages over 3–6 weeks</a> — but strip away the recruiter screens and the generic
-              rounds, and three skill tests decide it. <b>Tap a gate.</b></p>
-            <div class="vfunnel" id="vfunnel"></div>
-            <p class="figcap">Which extras wrap these varies by company — a behavioral round,
-              sometimes an LLM system-design round. Coding gets you in the door; the red gates
-              decide the offer: the case study's #1 rejection reason is <i>solving before
-              scoping</i>, and the client sim quietly filters most candidates who pass coding.</p>
-
-            <hr />
-            <p class="panel-t">Sources</p>
-            <ol class="refs-mini">
-              <li>Nabeel S. Qureshi, <a href="https://nabeelqu.co/reflections-on-palantir">Reflections on Palantir</a> (2024).</li>
-              <li>Andrew Ng, <a href="https://x.com/AndrewYNg/status/2061477558693384395">on the AI FDE</a> (2026).</li>
-              <li><a href="https://jobsbyculture.com/blog/forward-deployed-engineer-boom-2026">JobsByCulture FDE tracker</a>; <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">KORE1 hiring guide</a> (incl. the MIT NANDA statistic).</li>
-              <li><a href="https://www.cnbc.com/2026/06/30/aws-amazon-ai-forward-deployed-engineers.html">CNBC on AWS's $1B unit</a> (June 2026).</li>
-              <li><a href="https://www.tryexponent.com/blog/forward-deployed-engineer-interview-the-definitive-2026-guide-fde">Exponent FDE interview guide</a>; <a href="https://www.tryexponent.com/guides/anthropic-forward-deployed-engineer-interview">Exponent on the Anthropic FDE loop</a>; <a href="https://getperspective.ai/blog/forward-deployed-engineer-interview-questions-2026-prep-guide">Perspective AI prep guide</a>.</li>
-              <li><a href="https://www.tryexponent.com/blog/google-ai-coding-interview">Exponent on AI-assisted coding rounds</a> (Meta, Shopify, Rippling &amp; others now run them).</li>
-            </ol>
-            <p class="hint">swipe or use the tabs below — lessons are next →</p>
-          </section>
-
-          <!-- ========== screen 2: Lessons ========== -->
-          <section class="screen" data-title="Lessons">
-            <h3>Seven lessons, from zero</h3>
-            <p class="lead">Each lesson ends with something working. Do them in order — the early ones
-              build intuition the later ones spend. <b>Tap a lesson to expand.</b></p>
-            <div class="lessons" id="lessons"></div>
-            <p class="hint">finish lesson 6 and you've built the thing you're reading</p>
-          </section>
-
-          <!-- ========== screen 3: Videos ========== -->
-          <section class="screen" data-title="Videos">
-            <h3>Videos worth your time</h3>
-            <p class="lead">Curated picks from YouTube, grouped by lesson. Each link opens in a new tab.</p>
-            <div id="videos"></div>
-          </section>
-
-          <!-- ========== screen 4: Chat ========== -->
-          <section class="screen chatscreen" data-title="Chat">
-            <div class="chat-top">
-              <div class="row">
-                <input type="password" id="chat-key" placeholder="Anthropic API key (sk-ant-…)" autocomplete="off" />
-                <select id="chat-model">
-                  <option value="claude-opus-4-8">Opus 4.8</option>
-                  <option value="claude-sonnet-5">Sonnet 5</option>
-                  <option value="claude-haiku-4-5">Haiku 4.5</option>
-                </select>
-                <button class="primary" id="chat-save">Save</button>
-                <button id="chat-clear">Clear</button>
-              </div>
-              <p class="chat-note" id="chat-note">Bring your own key: it's stored <b>only in this
-                browser</b> (localStorage) and requests go directly to Anthropic — nothing touches this
-                site's server, because there isn't one. Use a key with a spend limit.</p>
+          </details>
+          <details class="vfd hot" id="round-case-study" open>
+            <summary><span class="gate" style="width:74%"><b>Case study</b><span>45–60 min</span></span></summary>
+            <div class="vfbody">
+              <p><b>A vague customer problem — you scope it.</b> 'A city wants faster 911
+                response using call data, traffic data, and ambulance GPS. Go.' The single
+                biggest filter in the loop, and the #1 rejection is solving before scoping.
+                Clarify the goal → stakeholders &amp; metrics → what data exists → decompose →
+                thin MVP first.</p>
             </div>
-            <div class="chat-log" id="chat-log"></div>
-            <div class="chat-inrow">
-              <input id="chat-in" placeholder="Ask about the FDE job, the interview, or the lessons…" />
-              <button id="chat-send">Send</button>
+          </details>
+          <details class="vfd hot" id="round-client-sim" open>
+            <summary><span class="gate" style="width:48%"><b>Client sim</b><span>45 min</span></span></summary>
+            <div class="vfbody">
+              <p><b>Present your product to a role-played customer.</b> You demo, defend
+                trade-offs, and deliver bad news: 'the deployment slipped three weeks — tell
+                the CTO,' or explain to a non-technical VP why RAG can't promise 100% accuracy.
+                Say 'I will,' never 'the team is looking into it.' At Anthropic this round
+                quietly filters ~60% of candidates who pass coding.</p>
             </div>
-          </section>
+          </details>
+          <div class="vf-offer">offer</div>
         </div>
+        <p class="figcap">Which extras wrap these varies by company — a behavioral round,
+          sometimes an LLM system-design round. Coding gets you in the door; the blue gates
+          decide the offer: the case study's #1 rejection reason is <i>solving before
+          scoping</i>, and the client sim quietly filters most candidates who pass coding.</p>
 
-        <div class="sheet" id="sheet"><button class="x" id="sheet-x" aria-label="Close">✕</button><div id="sheet-body"></div></div>
-        <nav class="tabbar" id="tabbar" aria-label="Screens"></nav>
-      </div>
+        <hr />
+        <p class="panel-t">Sources</p>
+        <ol class="refs-mini">
+          <li>Nabeel S. Qureshi, <a href="https://nabeelqu.co/reflections-on-palantir">Reflections on Palantir</a> (2024).</li>
+          <li>Andrew Ng, <a href="https://x.com/AndrewYNg/status/2061477558693384395">on the AI FDE</a> (2026).</li>
+          <li><a href="https://jobsbyculture.com/blog/forward-deployed-engineer-boom-2026">JobsByCulture FDE tracker</a>; <a href="https://www.kore1.com/hire-ai-forward-deployed-engineers-2026/">KORE1 hiring guide</a> (incl. the MIT NANDA statistic).</li>
+          <li><a href="https://www.cnbc.com/2026/06/30/aws-amazon-ai-forward-deployed-engineers.html">CNBC on AWS's $1B unit</a> (June 2026).</li>
+          <li><a href="https://www.tryexponent.com/blog/forward-deployed-engineer-interview-the-definitive-2026-guide-fde">Exponent FDE interview guide</a>; <a href="https://www.tryexponent.com/guides/anthropic-forward-deployed-engineer-interview">Exponent on the Anthropic FDE loop</a>; <a href="https://getperspective.ai/blog/forward-deployed-engineer-interview-questions-2026-prep-guide">Perspective AI prep guide</a>.</li>
+          <li><a href="https://www.tryexponent.com/blog/google-ai-coding-interview">Exponent on AI-assisted coding rounds</a> (Meta, Shopify, Rippling &amp; others now run them).</li>
+        </ol>
+      </section>
 
-      <p class="figcap" style="margin-top:10px">Built like the rest of this site — plain HTML, one file,
-        no framework. If JavaScript is off, the four screens read top-to-bottom as a normal post.</p>
+      <!-- ========== section 2: Lessons ========== -->
+      <section id="lessons">
+        <div class="shead">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.5C5 3.5 7.5 3.5 10 5c2.5-1.5 5-1.5 7-.5V15c-2-1-4.5-1-7 .5-2.5-1.5-5-1.5-7-.5z"/><path d="M10 5v10.5"/></svg>
+          <h2>Seven lessons, from zero</h2>
+        </div>
+        <p class="lead">Each lesson ends with something working. Do them in order — the early ones
+          build intuition the later ones spend. <b>Tap a lesson to expand.</b></p>
+
+        <button class="xall" id="lessons-toggle" hidden>expand all seven</button>
+
+        <div class="lessons">
+          <details class="lesson" id="lesson-0" open>
+            <summary class="lhead">
+              <span class="lnum">0</span>
+              <span class="lt"><b>Set up Claude Cowork</b><span class="lsub">Feel what an agent does — before writing any code</span></span>
+              <span class="rec">start here</span>
+            </summary>
+            <div class="ldetail">
+              <p>Get an AI agent doing real work for you, zero code. This builds the intuition every later lesson spends.</p>
+              <ul>
+                <li>Install Claude and set up Cowork</li>
+                <li>Connect it to your browser</li>
+                <li>Have it filter your email inbox — archive noise, surface what matters</li>
+                <li>Or: have it order your food. Watch how it navigates, clicks, recovers</li>
+              </ul>
+              <div class="lchips"><i>Claude Cowork</i></div>
+            </div>
+          </details>
+
+          <details class="lesson" id="lesson-1">
+            <summary class="lhead">
+              <span class="lnum">1</span>
+              <span class="lt"><b>Agentic coding tools</b><span class="lsub">Learn the prompt → diff → run loop</span></span>
+              <span class="rec">Claude Code recommended</span>
+            </summary>
+            <div class="ldetail">
+              <p>Ship something tiny with an AI coding agent. You're learning how to direct an agent — the core FDE motion.</p>
+              <ul>
+                <li>Install Claude Code (recommended), Cursor, or Gemini CLI</li>
+                <li>Build a small script or tool with it end to end</li>
+                <li>Practice reviewing diffs before accepting them</li>
+              </ul>
+              <div class="lchips"><i>Claude Code</i><i>Cursor</i><i>Gemini CLI</i></div>
+            </div>
+          </details>
+
+          <details class="lesson" id="lesson-2">
+            <summary class="lhead">
+              <span class="lnum">2</span>
+              <span class="lt"><b>Build a simple website</b><span class="lsub">HTML, CSS, a little JS — then put it on the internet</span></span>
+            </summary>
+            <div class="ldetail">
+              <p>Something a stranger can visit. Deployment is the point, not the design.</p>
+              <ul>
+                <li>Build a small site: plain HTML/CSS/JS is enough</li>
+                <li>Deploy it on GitHub Pages (free, no servers)</li>
+                <li>Change something and redeploy — feel the loop</li>
+              </ul>
+              <div class="lchips"><i>HTML/CSS/JS</i><i>GitHub Pages</i></div>
+            </div>
+          </details>
+
+          <details class="lesson" id="lesson-3">
+            <summary class="lhead">
+              <span class="lnum">3</span>
+              <span class="lt"><b>Learn a cloud platform</b><span class="lsub">GCP or AWS — where customer systems actually live</span></span>
+            </summary>
+            <div class="ldetail">
+              <p>Deploy something to real cloud infrastructure and understand what you did.</p>
+              <ul>
+                <li>Pick one: GCP or AWS (free tier)</li>
+                <li>Deploy your site or a small API there</li>
+                <li>Learn the basics you'll meet everywhere: IAM, storage buckets, a VM or Cloud Run/Lambda</li>
+                <li>Optional but valuable: containerize it with Docker</li>
+              </ul>
+              <div class="lchips"><i>GCP</i><i>AWS</i><i>Docker</i></div>
+            </div>
+          </details>
+
+          <details class="lesson" id="lesson-4">
+            <summary class="lhead">
+              <span class="lnum">4</span>
+              <span class="lt"><b>Build a simple ChatGPT</b><span class="lsub">LLM API calls, then RAG or MCP</span></span>
+            </summary>
+            <div class="ldetail">
+              <p>A chat UI that answers questions about YOUR documents — the demo every customer asks for first.</p>
+              <ul>
+                <li>Call an LLM API directly (Anthropic or OpenAI) from your own code</li>
+                <li>Add RAG: retrieve from your notes/files before answering</li>
+                <li>Or wire MCP servers to give the model tools and data</li>
+                <li>Bonus: an eval set — 10 questions, scored, so you can say 'how do I know it works'</li>
+              </ul>
+              <div class="lchips"><i>LLM APIs</i><i>RAG</i><i>MCP</i></div>
+            </div>
+          </details>
+
+          <details class="lesson" id="lesson-5">
+            <summary class="lhead">
+              <span class="lnum">5</span>
+              <span class="lt"><b>Build agentic AI</b><span class="lsub">ReAct loop + tool calling</span></span>
+            </summary>
+            <div class="ldetail">
+              <p>An agent that reasons, picks tools, observes results, and retries — the loop behind everything in lessons 0–1.</p>
+              <ul>
+                <li>Implement a ReAct loop: reason → act → observe → repeat</li>
+                <li>Give it 2–3 real tools via tool calling (search, calculator, your API)</li>
+                <li>Watch where it fails; add guardrails and a stop condition</li>
+                <li>Log every step — traces are how you debug agents</li>
+              </ul>
+              <div class="lchips"><i>ReAct</i><i>Tool calling</i><i>Tracing</i></div>
+            </div>
+          </details>
+
+          <details class="lesson" id="lesson-6">
+            <summary class="lhead">
+              <span class="lnum">6</span>
+              <span class="lt"><b>Build this demo</b><span class="lsub">Rebuild the page you're reading right now</span></span>
+              <span class="rec">capstone</span>
+            </summary>
+            <div class="ldetail">
+              <p>One HTML file, no framework: four sections, a jump-nav tab bar, and a working
+                AI chat. The page you're reading is the spec, and view-source is the answer key.</p>
+              <ul>
+                <li>Build the four-section, one-file page with a tab bar that's fixed at the bottom on phones and sticky on top on desktop</li>
+                <li>Add scrollspy and deep links: highlight the active tab as the reader scrolls, and keep the URL hash current</li>
+                <li>Build the lesson accordions and interview-gate callouts with native <code>&lt;details&gt;</code>, so everything still works with JavaScript off</li>
+                <li>Wire the chat to the Anthropic API with a bring-your-own-key box, and ship it on the GitHub Pages site from lesson 2 — then put it on your resume</li>
+              </ul>
+              <figure>
+                <img src="../figures/fde-app-shell.svg" alt="Diagram: a phone-style app frame with four tabs and hidden screens, unrolled into one scrolling page with a jump-nav bar" />
+                <figcaption><b>Figure — the four-tab app this article used to be trapped inside.</b>
+                  Its screens are now the sections of the page you're scrolling.</figcaption>
+              </figure>
+              <div class="lchips"><i>Everything above</i></div>
+            </div>
+          </details>
+        </div>
+        <p class="hint">finish lesson 6 and you've built the page you're reading</p>
+      </section>
+
+      <!-- ========== section 3: Videos ========== -->
+      <section id="videos">
+        <div class="shead">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="4" width="15" height="12" rx="3"/><path d="M8.5 7.5l4 2.5-4 2.5z"/></svg>
+          <h2>Videos worth your time</h2>
+        </div>
+        <p class="lead">Curated picks from YouTube, grouped by lesson. Each link opens in a new tab.</p>
+          <h3 class="vgroup" id="videos-the-job">The job</h3>
+          <div class="vgrid">
+            <a class="vid" href="https://www.youtube.com/watch?v=Zyw-YA0k3xo" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/Zyw-YA0k3xo/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>The FDE Playbook for AI Startups with Bob McGrew</b><span>Y Combinator</span><em>Ex-Palantir/OpenAI leader on why AI companies hire FDEs</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=5OYy_UtINo4" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/5OYy_UtINo4/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>The Role of a Forward Deployed Software Engineer</b><span>Palantir</span><em>The canonical day-in-the-life, from the company that invented the job</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=yLTSqBzKG2s" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/yLTSqBzKG2s/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Inside OpenAI Enterprise: Forward Deployed Engineering, GPT-5, and More</b><span>Bg2 Pod</span><em>How OpenAI adopted the FDE model for enterprise</em></span>
+            </a>
+          </div>
+          <h3 class="vgroup" id="videos-lesson-0">Lesson 0 · Claude Cowork <a class="lback" href="#lesson-0">↳ lesson 0</a></h3>
+          <div class="vgrid">
+            <a class="vid" href="https://www.youtube.com/watch?v=UAmKyyZ-b9E" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/UAmKyyZ-b9E/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Introducing Cowork: Claude Code for the rest of your work</b><span>Anthropic</span><em>Official launch demo</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=z9rdrNrkvDY" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/z9rdrNrkvDY/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Learn 80% of Claude Cowork in Under 20 Minutes</b><span>Jeff Su</span><em>Fast setup-to-daily-workflows walkthrough</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=-tdNsYi8AXs" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/-tdNsYi8AXs/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>How the engineer behind Claude Cowork actually uses Claude</b><span>How I AI</span><em>The Cowork engineering lead demos real agentic workflows</em></span>
+            </a>
+          </div>
+          <h3 class="vgroup" id="videos-lesson-1">Lesson 1 · Coding tools <a class="lback" href="#lesson-1">↳ lesson 1</a></h3>
+          <div class="vgrid">
+            <a class="vid" href="https://www.youtube.com/watch?v=gv0WHhKelSE" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/gv0WHhKelSE/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Claude Code best practices | Code w/ Claude</b><span>Anthropic</span><em>Official best-practices talk</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=IecXj2WFkLs" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/IecXj2WFkLs/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Getting started with Gemini CLI</b><span>Google Cloud Tech</span><em>Official install-and-first-workflows session</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=ocMOZpuAMw4" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/ocMOZpuAMw4/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Cursor Tutorial for Beginners (AI Code Editor)</b><span>Tech With Tim</span><em>Beginner tour of Cursor&#x27;s core features</em></span>
+            </a>
+          </div>
+          <h3 class="vgroup" id="videos-lesson-2">Lesson 2 · Web basics <a class="lback" href="#lesson-2">↳ lesson 2</a></h3>
+          <div class="vgrid">
+            <a class="vid" href="https://www.youtube.com/watch?v=916GWv2Qs08" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/916GWv2Qs08/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>HTML Tutorial — Website Crash Course for Beginners</b><span>freeCodeCamp.org</span><em>A first website, from scratch</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=UB1O30fR-EE" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/UB1O30fR-EE/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>HTML Crash Course For Absolute Beginners</b><span>Traversy Media</span><em>The classic beginner crash course</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=b2r9Cdvssi0" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/b2r9Cdvssi0/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Getting started with GitHub Pages for beginners</b><span>GitHub</span><em>Official guide to free static deploys</em></span>
+            </a>
+          </div>
+          <h3 class="vgroup" id="videos-lesson-3">Lesson 3 · Cloud <a class="lback" href="#lesson-3">↳ lesson 3</a></h3>
+          <div class="vgrid">
+            <a class="vid" href="https://www.youtube.com/watch?v=7HKot-brXFE" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/7HKot-brXFE/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>AWS Certified Cloud Practitioner Course 2026 (CLF-C02)</b><span>freeCodeCamp.org</span><em>The flagship AWS fundamentals course</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=jpno8FSqpc8" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/jpno8FSqpc8/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Google Cloud Associate Cloud Engineer Course</b><span>freeCodeCamp.org</span><em>Full GCP fundamentals: IAM, compute, storage</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=3c-iBn73dDE" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/3c-iBn73dDE/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Docker Tutorial for Beginners [FULL COURSE in 3 Hours]</b><span>TechWorld with Nana</span><em>The most-recommended Docker intro</em></span>
+            </a>
+          </div>
+          <h3 class="vgroup" id="videos-lesson-4">Lesson 4 · RAG &amp; LLM APIs <a class="lback" href="#lesson-4">↳ lesson 4</a></h3>
+          <div class="vgrid">
+            <a class="vid" href="https://www.youtube.com/watch?v=sVcwVQRHIc8" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/sVcwVQRHIc8/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Learn RAG From Scratch</b><span>freeCodeCamp.org</span><em>2.5-hour RAG course by a LangChain engineer</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=kQmXtrmQ5Zg" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/kQmXtrmQ5Zg/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Building Agents with Model Context Protocol — Full Workshop</b><span>AI Engineer</span><em>The definitive MCP intro, taught by Anthropic</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=98bGwOYoEGg" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/98bGwOYoEGg/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>ChatGPT Clone — OpenAI API and React Tutorial</b><span>freeCodeCamp.org</span><em>Build a chat app end-to-end on an LLM API</em></span>
+            </a>
+          </div>
+          <h3 class="vgroup" id="videos-lesson-5">Lesson 5 · Agents <a class="lback" href="#lesson-5">↳ lesson 5</a></h3>
+          <div class="vgrid">
+            <a class="vid" href="https://www.youtube.com/watch?v=7xTGNNLPyMI" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/7xTGNNLPyMI/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Deep Dive into LLMs like ChatGPT</b><span>Andrej Karpathy</span><em>The definitive 3.5-hour deep dive on how LLMs work</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=YtHdaXuOAks" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/YtHdaXuOAks/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>Guide to Agentic AI — Build a Python Coding Agent</b><span>freeCodeCamp.org</span><em>A from-scratch agent loop with real tool calling</em></span>
+            </a>
+            <a class="vid" href="https://www.youtube.com/watch?v=D7_ipDqhtwk" target="_blank" rel="noopener">
+              <img loading="lazy" src="https://i.ytimg.com/vi/D7_ipDqhtwk/hqdefault.jpg" alt="" />
+              <span class="vtxt"><b>How We Build Effective Agents: Barry Zhang, Anthropic</b><span>AI Engineer</span><em>Agent-loop and tool-design patterns, distilled</em></span>
+            </a>
+          </div>
+      </section>
+
+      <!-- ========== section 4: Chat ========== -->
+      <section id="chat">
+        <div class="shead">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v6a2.5 2.5 0 0 1-2.5 2.5H8l-4 3v-3H5.5A2.5 2.5 0 0 1 3 11.5z"/></svg>
+          <h2>Chat with the tutor</h2>
+        </div>
+        <p class="lead">This is lesson 6's chat, running on this page. Bring your own key and
+          ask about the job, the interview, or any lesson.</p>
+
+        <div class="chat-card">
+          <div class="chat-top">
+            <div class="row">
+              <label class="sr" for="chat-key">Anthropic API key</label>
+              <input type="password" id="chat-key" placeholder="Anthropic API key (sk-ant-…)" autocomplete="off" />
+              <label class="sr" for="chat-model">Model</label>
+              <select id="chat-model">
+                <option value="claude-opus-4-8">Opus 4.8</option>
+                <option value="claude-sonnet-5">Sonnet 5</option>
+                <option value="claude-haiku-4-5">Haiku 4.5</option>
+              </select>
+              <button class="primary" id="chat-save">Save</button>
+              <button id="chat-clear">Clear</button>
+            </div>
+            <p class="chat-note" id="chat-note">Bring your own key: it's stored <b>only in this
+              browser</b> (localStorage) and requests go directly to Anthropic — nothing touches this
+              site's server, because there isn't one. Use a key with a spend limit.</p>
+          </div>
+          <div class="chat-log" id="chat-log" role="log" aria-live="polite" tabindex="0" aria-label="Chat history"></div>
+          <div class="chat-inrow">
+            <label class="sr" for="chat-in">Message</label>
+            <input id="chat-in" placeholder="Ask about the FDE job, the interview, or the lessons…" />
+            <button id="chat-send">Send</button>
+          </div>
+          <noscript><p class="chat-note" style="padding: 10px 16px;">The chat tutor needs JavaScript —
+            everything else on this page reads fine without it.</p></noscript>
+        </div>
+      </section>
+
+      <p class="figcap" style="margin-top:28px">Built like the rest of this site — plain HTML, one file,
+        no framework. With JavaScript off, everything still reads top to bottom and the tab bar
+        is plain links.</p>
     </article>
   </main>
 
@@ -303,188 +643,86 @@
   <script>
   document.getElementById('year').textContent = new Date().getFullYear();
 
-  // ---------- app shell ----------
-  const frame = document.getElementById('frame');
-  frame.classList.add('appjs');
-  const screens = [...document.querySelectorAll('.screen')];
-  const ICONS = {
-    "Info":    '<circle cx="10" cy="10" r="8"/><path d="M10 9v5M10 6.2v.2"/>',
-    "Lessons": '<path d="M3 4.5C5 3.5 7.5 3.5 10 5c2.5-1.5 5-1.5 7-.5V15c-2-1-4.5-1-7 .5-2.5-1.5-5-1.5-7-.5z"/><path d="M10 5v10.5"/>',
-    "Videos":  '<rect x="2.5" y="4" width="15" height="12" rx="3"/><path d="M8.5 7.5l4 2.5-4 2.5z"/>',
-    "Chat":    '<path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v6a2.5 2.5 0 0 1-2.5 2.5H8l-4 3v-3H5.5A2.5 2.5 0 0 1 3 11.5z"/>'
-  };
-  const tabbar = document.getElementById('tabbar');
-  const dots = document.getElementById('apphead-dots');
-  screens.forEach((s, i) => {
-    const b = document.createElement('button');
-    b.innerHTML = `<svg viewBox="0 0 20 20">${ICONS[s.dataset.title] || ''}</svg><span>${s.dataset.title}</span>`;
-    b.onclick = () => go(i);
-    tabbar.appendChild(b);
-    const d = document.createElement('i'); dots.appendChild(d);
-  });
-  let cur = 0;
-  function go(i) {
-    if (i < 0 || i >= screens.length) return;
-    cur = i;
-    screens.forEach((s, j) => {
-      s.classList.toggle('on', j === i);
-      s.classList.toggle('past', j < i);
-    });
-    [...tabbar.children].forEach((b, j) => b.classList.toggle('on', j === i));
-    [...dots.children].forEach((d, j) => d.classList.toggle('on', j === i));
-    document.getElementById('apphead-title').textContent = screens[i].dataset.title;
-    closeSheet();
+  // ---------- scrollspy: highlight the tab for the section you're reading ----------
+  const secs = ['info', 'lessons', 'videos', 'chat'].map(id => document.getElementById(id));
+  const tabs = [...document.querySelectorAll('.tabbar a')];
+  let active = 'info', ticking = false;
+  let deepEl = null, deepSeen = false;  // sub-anchor navigation in flight — don't clobber its hash
+  function noteDeep() {
+    deepEl = null; deepSeen = false;
+    if (!location.hash || secs.some(s => '#' + s.id === location.hash)) return;
+    try { deepEl = document.querySelector(location.hash); } catch (e) {}
   }
-  let tx = null, ty = null;
-  frame.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
-  frame.addEventListener('touchend', e => {
-    if (tx === null) return;
-    const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
-    if (Math.abs(dx) > 55 && Math.abs(dx) > 1.6 * Math.abs(dy)) go(cur + (dx < 0 ? 1 : -1));
-    tx = ty = null;
-  }, { passive: true });
-  frame.addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-    if (e.key === 'ArrowRight') go(cur + 1);
-    if (e.key === 'ArrowLeft') go(cur - 1);
+  function spy() {
+    ticking = false;
+    const line = window.innerHeight * 0.35;
+    let id = secs[0].id;
+    for (const s of secs) if (s.getBoundingClientRect().top <= line) id = s.id;
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) id = secs[secs.length - 1].id;
+    if (id === active) return;
+    active = id;
+    tabs.forEach(t => {
+      const on = t.getAttribute('href') === '#' + id;
+      t.classList.toggle('on', on);
+      if (on) t.setAttribute('aria-current', 'true'); else t.removeAttribute('aria-current');
+    });
+    if (deepEl) {
+      if (document.getElementById(id).contains(deepEl)) { deepSeen = true; return; }  // arrived — keep the deep link
+      if (!deepSeen) return;                            // still scrolling toward it — leave the hash alone
+      deepEl = null;                                    // scrolled away — resume tracking
+    }
+    if ('#' + id !== location.hash) history.replaceState(null, '', '#' + id);
+  }
+  const queueSpy = () => { if (!ticking) { ticking = true; requestAnimationFrame(spy); } };
+  addEventListener('scroll', queueSpy, { passive: true });
+  addEventListener('resize', queueSpy);
+
+  // ---------- deep links land expanded, not on a closed summary ----------
+  function openHash() {
+    let el = null;
+    try { el = location.hash && document.querySelector(location.hash); } catch (e) { return; }
+    if (!el) return;
+    for (let d = el.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) d.open = true;
+  }
+  addEventListener('hashchange', () => { openHash(); noteDeep(); });
+  openHash();
+  noteDeep();
+  spy();
+
+  // ---------- arrow keys jump between sections ----------
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const i = secs.findIndex(s => s.id === active);
+    const n = e.key === 'ArrowRight' ? i + 1 : i - 1;
+    if (n >= 0 && n < secs.length) secs[n].scrollIntoView({ block: 'start' });
   });
 
-  // ---------- bottom sheet ----------
-  const sheet = document.getElementById('sheet'), sheetBody = document.getElementById('sheet-body');
-  function openSheet(html) { sheetBody.innerHTML = html; sheet.classList.add('open'); }
-  function closeSheet() { sheet.classList.remove('open'); }
-  document.getElementById('sheet-x').onclick = closeSheet;
-
-  // ---------- Info: interview funnel ----------
-  const ROUNDS = [
-    ["Coding", "60 min", 100, false, "<h5>Coding</h5><b>Practical and LLM-flavored — not LeetCode.</b><br>Messy CSVs, a rate limiter, API scaffolding around a model. A growing set of companies run it AI-assisted: you get a codebase and a coding agent like Claude Code, and they watch whether you direct and verify it — or just accept whatever it writes. OpenAI adds a take-home: build something real on their API, like a small RAG system or agent. Silence while you work is the #1 rejection here; narrate."],
-    ["Case study", "45–60 min", 74, true, "<h5>Decomposition case study</h5><b>A vague customer problem — you scope it.</b><br>'A city wants faster 911 response using call data, traffic data, and ambulance GPS. Go.' The single biggest filter in the loop, and the #1 rejection is solving before scoping. Clarify the goal → stakeholders &amp; metrics → what data exists → decompose → thin MVP first."],
-    ["Client sim", "45 min", 48, true, "<h5>Client simulation</h5><b>Present your product to a role-played customer.</b><br>You demo, defend trade-offs, and deliver bad news: 'the deployment slipped three weeks — tell the CTO,' or explain to a non-technical VP why RAG can't promise 100% accuracy. Say 'I will,' never 'the team is looking into it.' At Anthropic this round quietly filters ~60% of candidates who pass coding."]
-  ];
-  (function vfunnel() {
-    const box = document.getElementById('vfunnel');
-    ROUNDS.forEach(([name, dur, w, hot, sheetHtml]) => {
-      const b = document.createElement('button');
-      b.className = 'vf' + (hot ? ' hot' : '');
-      b.style.width = w + '%';
-      b.innerHTML = `<b>${name}</b><span>${dur}</span>`;
-      b.onclick = () => openSheet(sheetHtml);
-      box.appendChild(b);
-    });
-    const offer = document.createElement('div');
-    offer.className = 'vf-offer'; offer.textContent = 'offer';
-    box.appendChild(offer);
-  })();
-
-  // ---------- Lessons ----------
-  const LESSONS = [
-    { t: "Set up Claude Cowork", rec: "start here", sub: "Feel what an agent does — before writing any code",
-      goal: "Get an AI agent doing real work for you, zero code. This builds the intuition every later lesson spends.",
-      dos: ["Install Claude and set up Cowork", "Connect it to your browser", "Have it filter your email inbox — archive noise, surface what matters", "Or: have it order your food. Watch how it navigates, clicks, recovers"],
-      tools: ["Claude Cowork"] },
-    { t: "Agentic coding tools", rec: "Claude Code recommended", sub: "Learn the prompt → diff → run loop",
-      goal: "Ship something tiny with an AI coding agent. You're learning how to direct an agent — the core FDE motion.",
-      dos: ["Install Claude Code (recommended), Cursor, or Gemini CLI", "Build a small script or tool with it end to end", "Practice reviewing diffs before accepting them"],
-      tools: ["Claude Code", "Cursor", "Gemini CLI"] },
-    { t: "Build a simple website", rec: null, sub: "HTML, CSS, a little JS — then put it on the internet",
-      goal: "Something a stranger can visit. Deployment is the point, not the design.",
-      dos: ["Build a small site: plain HTML/CSS/JS is enough", "Deploy it on GitHub Pages (free, no servers)", "Change something and redeploy — feel the loop"],
-      tools: ["HTML/CSS/JS", "GitHub Pages"] },
-    { t: "Learn a cloud platform", rec: null, sub: "GCP or AWS — where customer systems actually live",
-      goal: "Deploy something to real cloud infrastructure and understand what you did.",
-      dos: ["Pick one: GCP or AWS (free tier)", "Deploy your site or a small API there", "Learn the basics you'll meet everywhere: IAM, storage buckets, a VM or Cloud Run/Lambda", "Optional but valuable: containerize it with Docker"],
-      tools: ["GCP", "AWS", "Docker"] },
-    { t: "Build a simple ChatGPT", rec: null, sub: "LLM API calls, then RAG or MCP",
-      goal: "A chat UI that answers questions about YOUR documents — the demo every customer asks for first.",
-      dos: ["Call an LLM API directly (Anthropic or OpenAI) from your own code", "Add RAG: retrieve from your notes/files before answering", "Or wire MCP servers to give the model tools and data", "Bonus: an eval set — 10 questions, scored, so you can say 'how do I know it works'"],
-      tools: ["LLM APIs", "RAG", "MCP"] },
-    { t: "Build agentic AI", rec: null, sub: "ReAct loop + tool calling",
-      goal: "An agent that reasons, picks tools, observes results, and retries — the loop behind everything in lessons 0–1.",
-      dos: ["Implement a ReAct loop: reason → act → observe → repeat", "Give it 2–3 real tools via tool calling (search, calculator, your API)", "Watch where it fails; add guardrails and a stop condition", "Log every step — traces are how you debug agents"],
-      tools: ["ReAct", "Tool calling", "Tracing"] },
-    { t: "Build this demo", rec: "capstone", sub: "Rebuild the app you're reading right now",
-      goal: "One HTML file, no framework: tab shell, bottom sheets, and a working AI chat tab. Ship it on your own site as a portfolio piece.",
-      dos: ["Recreate the four-tab app shell (tabs, swipe, screens) in one file", "Add a bottom-sheet detail panel", "Wire the Chat tab to the Anthropic API with a bring-your-own-key box", "Deploy it on the GitHub Pages site from lesson 2 — then put it on your resume"],
-      tools: ["Everything above"] }
-  ];
-  (function lessons() {
-    const box = document.getElementById('lessons');
-    LESSONS.forEach((l, i) => {
-      const d = document.createElement('div');
-      d.className = 'lesson';
-      d.innerHTML = `
-        <button class="lhead">
-          <span class="lnum">${i}</span>
-          <span style="min-width:0"><b>${l.t}</b><span class="lsub">${l.sub}</span></span>
-          ${l.rec ? `<span class="rec">${l.rec}</span>` : ''}
-        </button>
-        <div class="ldetail">
-          <p>${l.goal}</p>
-          <ul>${l.dos.map(x => `<li>${x}</li>`).join('')}</ul>
-          <div class="lchips">${l.tools.map(x => `<i>${x}</i>`).join('')}</div>
-        </div>`;
-      d.querySelector('.lhead').onclick = () => {
-        const wasOpen = d.classList.contains('open');
-        [...box.children].forEach(c => c.classList.remove('open'));
-        if (!wasOpen) d.classList.add('open');
-      };
-      box.appendChild(d);
-    });
-    box.children[0].classList.add('open');
-  })();
-
-  // ---------- Videos (verified via YouTube oEmbed during curation) ----------
-  const VIDEOS = [
-    { topic: "fde-role", id: "Zyw-YA0k3xo", title: "The FDE Playbook for AI Startups with Bob McGrew", channel: "Y Combinator", why: "Ex-Palantir/OpenAI leader on why AI companies hire FDEs" },
-    { topic: "fde-role", id: "5OYy_UtINo4", title: "The Role of a Forward Deployed Software Engineer", channel: "Palantir", why: "The canonical day-in-the-life, from the company that invented the job" },
-    { topic: "fde-role", id: "yLTSqBzKG2s", title: "Inside OpenAI Enterprise: Forward Deployed Engineering, GPT-5, and More", channel: "Bg2 Pod", why: "How OpenAI adopted the FDE model for enterprise" },
-    { topic: "claude-cowork", id: "UAmKyyZ-b9E", title: "Introducing Cowork: Claude Code for the rest of your work", channel: "Anthropic", why: "Official launch demo" },
-    { topic: "claude-cowork", id: "z9rdrNrkvDY", title: "Learn 80% of Claude Cowork in Under 20 Minutes", channel: "Jeff Su", why: "Fast setup-to-daily-workflows walkthrough" },
-    { topic: "claude-cowork", id: "-tdNsYi8AXs", title: "How the engineer behind Claude Cowork actually uses Claude", channel: "How I AI", why: "The Cowork engineering lead demos real agentic workflows" },
-    { topic: "claude-code-tools", id: "gv0WHhKelSE", title: "Claude Code best practices | Code w/ Claude", channel: "Anthropic", why: "Official best-practices talk" },
-    { topic: "claude-code-tools", id: "IecXj2WFkLs", title: "Getting started with Gemini CLI", channel: "Google Cloud Tech", why: "Official install-and-first-workflows session" },
-    { topic: "claude-code-tools", id: "ocMOZpuAMw4", title: "Cursor Tutorial for Beginners (AI Code Editor)", channel: "Tech With Tim", why: "Beginner tour of Cursor's core features" },
-    { topic: "webdev-basics", id: "916GWv2Qs08", title: "HTML Tutorial — Website Crash Course for Beginners", channel: "freeCodeCamp.org", why: "A first website, from scratch" },
-    { topic: "webdev-basics", id: "UB1O30fR-EE", title: "HTML Crash Course For Absolute Beginners", channel: "Traversy Media", why: "The classic beginner crash course" },
-    { topic: "webdev-basics", id: "b2r9Cdvssi0", title: "Getting started with GitHub Pages for beginners", channel: "GitHub", why: "Official guide to free static deploys" },
-    { topic: "cloud-basics", id: "7HKot-brXFE", title: "AWS Certified Cloud Practitioner Course 2026 (CLF-C02)", channel: "freeCodeCamp.org", why: "The flagship AWS fundamentals course" },
-    { topic: "cloud-basics", id: "jpno8FSqpc8", title: "Google Cloud Associate Cloud Engineer Course", channel: "freeCodeCamp.org", why: "Full GCP fundamentals: IAM, compute, storage" },
-    { topic: "cloud-basics", id: "3c-iBn73dDE", title: "Docker Tutorial for Beginners [FULL COURSE in 3 Hours]", channel: "TechWorld with Nana", why: "The most-recommended Docker intro" },
-    { topic: "rag-llm-api", id: "sVcwVQRHIc8", title: "Learn RAG From Scratch", channel: "freeCodeCamp.org", why: "2.5-hour RAG course by a LangChain engineer" },
-    { topic: "rag-llm-api", id: "kQmXtrmQ5Zg", title: "Building Agents with Model Context Protocol — Full Workshop", channel: "AI Engineer", why: "The definitive MCP intro, taught by Anthropic" },
-    { topic: "rag-llm-api", id: "98bGwOYoEGg", title: "ChatGPT Clone — OpenAI API and React Tutorial", channel: "freeCodeCamp.org", why: "Build a chat app end-to-end on an LLM API" },
-    { topic: "agents-react", id: "7xTGNNLPyMI", title: "Deep Dive into LLMs like ChatGPT", channel: "Andrej Karpathy", why: "The definitive 3.5-hour deep dive on how LLMs work" },
-    { topic: "agents-react", id: "YtHdaXuOAks", title: "Guide to Agentic AI — Build a Python Coding Agent", channel: "freeCodeCamp.org", why: "A from-scratch agent loop with real tool calling" },
-    { topic: "agents-react", id: "D7_ipDqhtwk", title: "How We Build Effective Agents: Barry Zhang, Anthropic", channel: "AI Engineer", why: "Agent-loop and tool-design patterns, distilled" }
-  ].map(v => ({ ...v, url: "https://www.youtube.com/watch?v=" + v.id }));
-  const TOPIC_LABEL = {
-    'fde-role': 'The job', 'claude-cowork': 'Lesson 0 · Claude Cowork',
-    'claude-code-tools': 'Lesson 1 · Coding tools', 'webdev-basics': 'Lesson 2 · Web basics',
-    'cloud-basics': 'Lesson 3 · Cloud', 'rag-llm-api': 'Lesson 4 · RAG & LLM APIs',
-    'agents-react': 'Lesson 5 · Agents'
+  // ---------- lessons: expand/collapse all (JS-only nicety) ----------
+  const xall = document.getElementById('lessons-toggle');
+  const lessonsBox = document.querySelector('.lessons');
+  const syncXall = () => {
+    xall.textContent = [...lessonsBox.querySelectorAll('details.lesson')].some(d => !d.open) ? 'expand all seven' : 'collapse all';
   };
-  (function videos() {
-    const box = document.getElementById('videos');
-    if (!VIDEOS.length) {
-      box.innerHTML = '<p class="lead" style="color:#6b6b66">Video picks are being curated — check back shortly.</p>';
-      return;
-    }
-    const order = Object.keys(TOPIC_LABEL);
-    order.forEach(topic => {
-      const vids = VIDEOS.filter(v => v.topic === topic);
-      if (!vids.length) return;
-      const h = document.createElement('div');
-      h.className = 'vgroup'; h.textContent = TOPIC_LABEL[topic];
-      box.appendChild(h);
-      vids.forEach(v => {
-        const a = document.createElement('a');
-        a.className = 'vid'; a.href = v.url; a.target = '_blank'; a.rel = 'noopener';
-        a.innerHTML = `<img loading="lazy" src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt="">
-          <div style="min-width:0"><b>${v.title}</b><span>${v.channel}</span><em>${v.why}</em></div>`;
-        box.appendChild(a);
-      });
-    });
-  })();
+  xall.hidden = false;
+  xall.onclick = () => {
+    const open = [...lessonsBox.querySelectorAll('details.lesson')].some(d => !d.open);
+    lessonsBox.querySelectorAll('details.lesson').forEach(d => { d.open = open; });
+    syncXall();
+  };
+  lessonsBox.addEventListener('toggle', syncXall, true);
+
+  // ---------- print: nothing stays folded (and folds back after) ----------
+  let printOpened = null;
+  addEventListener('beforeprint', () => {
+    printOpened = [...document.querySelectorAll('details:not([open])')];
+    printOpened.forEach(d => { d.open = true; });
+  });
+  addEventListener('afterprint', () => {
+    if (printOpened) printOpened.forEach(d => { d.open = false; });
+    printOpened = null;
+  });
 
   // ---------- Chat (bring-your-own-key, direct to Anthropic) ----------
   const LS_KEY = 'fde-chat-key', LS_MODEL = 'fde-chat-model';
@@ -495,7 +733,7 @@
     "simulation, behavioral), and the post's seven lessons: 0) set up Claude Cowork and automate a real task, " +
     "1) agentic coding tools (Claude Code, Cursor, Gemini CLI), 2) build and deploy a simple website, 3) learn " +
     "GCP or AWS, 4) build a simple ChatGPT with RAG or MCP, 5) build agentic AI with a ReAct loop and tool " +
-    "calling, 6) rebuild this demo app. Keep answers short, practical, and encouraging. If asked something " +
+    "calling, 6) rebuild this demo. Keep answers short, practical, and encouraging. If asked something " +
     "unrelated, answer briefly and steer back to the path.";
   const chatKey = document.getElementById('chat-key');
   const chatModel = document.getElementById('chat-model');
@@ -569,10 +807,7 @@
     chatSend.disabled = false;
   }
   chatSend.onclick = sendChat;
-  chatIn.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
-
-  // boot
-  go(0);
+  chatIn.addEventListener('keydown', e => { if (e.key === 'Enter' && !chatSend.disabled) sendChat(); });
   </script>
 </body>
 </html>

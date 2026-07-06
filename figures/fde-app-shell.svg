@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 320" role="img" aria-label="The old four-tab app shell, unrolled into one scrolling page with a jump-nav bar" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <!-- ghost screens hidden behind the tabs -->
+  <g fill="#fcfcfb" stroke="#ececec">
+    <rect x="118" y="34" width="164" height="252" rx="16"/>
+    <rect x="103" y="27" width="164" height="252" rx="16"/>
+  </g>
+
+  <!-- the old phone frame -->
+  <rect x="88" y="20" width="164" height="266" rx="16" fill="#fff" stroke="#6b6b66" stroke-width="1.5"/>
+  <text x="104" y="46" font-size="13" font-weight="700" fill="#1b1b1a">Info</text>
+  <circle cx="206" cy="41" r="3" fill="#2b6cb0"/>
+  <circle cx="216" cy="41" r="3" fill="#ececec"/>
+  <circle cx="226" cy="41" r="3" fill="#ececec"/>
+  <circle cx="236" cy="41" r="3" fill="#ececec"/>
+  <line x1="89" y1="56" x2="251" y2="56" stroke="#ececec"/>
+
+  <g fill="#ececec">
+    <rect x="104" y="72" width="90" height="8" rx="4"/>
+    <rect x="104" y="90" width="130" height="6" rx="3"/>
+    <rect x="104" y="104" width="120" height="6" rx="3"/>
+    <rect x="104" y="118" width="126" height="6" rx="3"/>
+    <rect x="104" y="132" width="80" height="6" rx="3"/>
+  </g>
+  <g fill="#fff" stroke="#ececec">
+    <rect x="104" y="150" width="62" height="30" rx="6"/>
+    <rect x="174" y="150" width="62" height="30" rx="6"/>
+  </g>
+  <text x="112" y="170" font-size="11" font-weight="700" fill="#2b6cb0">224</text>
+  <text x="182" y="170" font-size="11" font-weight="700" fill="#2b6cb0">+800%</text>
+  <g fill="#ececec">
+    <rect x="104" y="194" width="128" height="6" rx="3"/>
+    <rect x="104" y="208" width="102" height="6" rx="3"/>
+  </g>
+
+  <!-- the inner scrollbar that made it hard to browse -->
+  <rect x="242" y="66" width="3" height="152" rx="1.5" fill="#ececec"/>
+  <rect x="242" y="66" width="3" height="26" rx="1.5" fill="#6b6b66"/>
+
+  <line x1="89" y1="246" x2="251" y2="246" stroke="#ececec"/>
+  <g font-size="11" text-anchor="middle" fill="#6b6b66">
+    <text x="108" y="270" fill="#2b6cb0" font-weight="600">Info</text>
+    <text x="147" y="270">Lessons</text>
+    <text x="190" y="270">Videos</text>
+    <text x="228" y="270">Chat</text>
+  </g>
+
+  <!-- unroll -->
+  <path d="M296 153h54" stroke="#6b6b66" stroke-width="1.5" fill="none"/>
+  <path d="M344 147l8 6-8 6" stroke="#6b6b66" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- the new one-scroll page -->
+  <rect x="384" y="20" width="140" height="266" rx="10" fill="#fff" stroke="#6b6b66" stroke-width="1.5"/>
+  <g fill="none" stroke="#ececec">
+    <line x1="385" y1="48" x2="523" y2="48"/>
+  </g>
+  <g font-size="11" fill="#6b6b66">
+    <text x="394" y="39" fill="#2b6cb0" font-weight="600">Info</text>
+    <rect x="394" y="42" width="22" height="2" fill="#2b6cb0" stroke="none"/>
+    <text x="424" y="39">Les</text>
+    <text x="450" y="39">Vid</text>
+    <text x="476" y="39">Chat</text>
+  </g>
+  <g font-size="11" fill="#1b1b1a" font-weight="600">
+    <text x="396" y="70">Info</text>
+    <text x="396" y="132">Lessons</text>
+    <text x="396" y="194">Videos</text>
+    <text x="396" y="256">Chat</text>
+  </g>
+  <g fill="#ececec">
+    <rect x="396" y="78" width="110" height="5" rx="2.5"/>
+    <rect x="396" y="89" width="96" height="5" rx="2.5"/>
+    <rect x="396" y="100" width="104" height="5" rx="2.5"/>
+    <rect x="396" y="140" width="110" height="5" rx="2.5"/>
+    <rect x="396" y="151" width="88" height="5" rx="2.5"/>
+    <rect x="396" y="162" width="100" height="5" rx="2.5"/>
+    <rect x="396" y="202" width="48" height="30" rx="4"/>
+    <rect x="452" y="202" width="48" height="30" rx="4"/>
+    <rect x="396" y="264" width="82" height="5" rx="2.5"/>
+  </g>
+  <g stroke="#ececec">
+    <line x1="392" y1="118" x2="516" y2="118"/>
+    <line x1="392" y1="180" x2="516" y2="180"/>
+    <line x1="392" y1="242" x2="516" y2="242"/>
+  </g>
+  <!-- one honest page scrollbar -->
+  <rect x="516" y="54" width="3" height="226" rx="1.5" fill="#ececec"/>
+  <rect x="516" y="54" width="3" height="42" rx="1.5" fill="#2b6cb0"/>
+
+  <g font-size="12" text-anchor="middle" fill="#6b6b66">
+    <text x="170" y="310">four screens behind tabs</text>
+    <text x="454" y="310">one scroll, tabs that jump</text>
+  </g>
+</svg>
