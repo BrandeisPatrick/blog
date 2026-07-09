@@ -45,43 +45,43 @@
 
       <h2 id="s2">Positional Encoding: RoPE for Local Order, NoPE for Long-Range Reach</h2>
 
-      <p>Almost every model today encodes position with <b>RoPE</b>, rotary position embedding
-        (<a href="https://arxiv.org/abs/2104.09864">Su et al., 2021</a>). Rather than add a position vector
-        to each token, RoPE rotates every query and key by an angle proportional to its position, so that
-        the attention score between two tokens depends only on how far apart they are — <i>relative</i>
-        position, not absolute. It
-        is parameter-free and, since LLaMA adopted it, effectively universal — Mistral, Qwen, DeepSeek, and
-        Gemma all use it.</p>
+      <p><b>Rotary Position Embedding (RoPE)</b> (<a href="https://arxiv.org/abs/2104.09864">Su et al.,
+        2021</a>) is the dominant positional encoding in current language models. Instead of adding a
+        learned position vector to each token, RoPE applies a position-dependent rotation to every query
+        and key, so that the attention score between a query at position <i>m</i> and a key at position
+        <i>n</i> depends only on the offset <i>m − n</i>: position enters attention as relative
+        displacement, at zero parameter cost. Since its adoption in LLaMA, RoPE has been effectively
+        universal — Llama, Mistral, Qwen, DeepSeek, and Gemma all use it.</p>
 
-      <p>RoPE has two properties, though, that are helpful up close and become liabilities at range. The
-        first is a built-in <b>long-term decay</b>: the rotation makes the query–key score fall off as two
-        tokens move farther apart — exactly what you want for local word order, and exactly what you do not
-        want when the useful information sits a million tokens back. The second is that RoPE's rotation
-        frequencies are effectively <b>calibrated to the training length</b>; feed it positions far beyond
-        what it saw in training and those angles are out of distribution, so attention degrades. RoPE is
-        both anchored to where it trained and biased toward the neighborhood — the two things that hurt most
+      <p>Two properties of RoPE are benign at short range but become liabilities at long range. First,
+        the rotation induces a built-in <b>long-term decay</b>: the expected query–key score falls as the
+        distance between two tokens grows — desirable for encoding local word order, but it suppresses
+        attention to information that sits far back in the context. Second, RoPE's rotation frequencies
+        are <b>calibrated to the training length</b>: positions far beyond those seen in training produce
+        out-of-distribution angles, and attention degrades. A RoPE model is therefore anchored to its
+        training length and biased toward the local neighborhood — the two failure modes that matter most
         at a million tokens.</p>
 
-      <figure>
-        <img src="../figures/fig5-rope-vs-nope.svg?v=2" alt="Plot contrasting RoPE and NoPE: RoPE's attention decays with token distance and scatters past the training-length wall, while NoPE stays flat across any distance." />
-        <figcaption><b>Figure 2 — RoPE vs NoPE.</b> RoPE's attention decays with distance and breaks down past its training length; a position-free (NoPE) layer stays flat and has no length cap. The newest models (iRoPE) keep RoPE layers for local order and add NoPE layers for the long-range reach.</figcaption>
-      </figure>
-
-      <p>You can stretch RoPE's range with a brief continued-pretraining pass — Position Interpolation
+      <p>RoPE's range can be extended with a brief continued-pretraining pass — Position Interpolation
         (<a href="https://arxiv.org/abs/2306.15595">Chen et al., 2023</a>) and YaRN
-        (<a href="https://arxiv.org/abs/2309.00071">Peng et al., 2023</a>) are the standard tricks, and
-        they are what carry most models to 128K and beyond — but they only push the training-length anchor
-        outward; they do nothing about the decay. A RoPE model stretched to a million tokens still
-        struggles to <i>attend</i> uniformly across them.</p>
+        (<a href="https://arxiv.org/abs/2309.00071">Peng et al., 2023</a>) are the standard methods, and
+        they are what carry most models to 128K and beyond. But interpolation only pushes the
+        training-length anchor outward; it does nothing about the decay. A RoPE model stretched to a
+        million tokens still struggles to <i>attend</i> uniformly across them.</p>
 
-      <p>The newest idea fixes both at once, and it is almost embarrassingly simple: on a fraction of the
-        layers, use <b>no positional encoding at all</b> (<b>NoPE</b>) and let them read order from the
-        causal mask alone (<a href="https://arxiv.org/abs/2305.19466">Kazemnejad et al., 2023</a>;
-        <a href="https://arxiv.org/abs/2501.18795">Yang et al., 2025</a>). A NoPE layer has no rotation, so
-        it has neither problem — no distance decay, so it can attend across the whole sequence, and no
-        training-length anchor, so nothing goes out of distribution as the context grows. The recipe is to
-        keep RoPE on most layers for sharp local order and let the position-free layers do the long-range
-        reaching.</p>
+      <p><b>NoPE</b> — <b>no positional encoding</b> — is the complementary construction: a layer
+        applies no rotation at all and recovers token order implicitly from the causal mask
+        (<a href="https://arxiv.org/abs/2305.19466">Kazemnejad et al., 2023</a>;
+        <a href="https://arxiv.org/abs/2501.18795">Yang et al., 2025</a>). A NoPE layer exhibits neither
+        of RoPE's failure modes: attention scores do not decay with distance, so it can attend across the
+        whole sequence, and no frequency is tied to a training length, so nothing moves out of
+        distribution as the context grows. The modern recipe combines the two — RoPE on most layers for
+        sharp local order, position-free layers for the long-range reach.</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig5-rope-vs-nope.svg?v=3" role="img" aria-label="Interactive plot contrasting RoPE and NoPE: RoPE's attention decays with token distance and scatters past the training-length wall, while NoPE stays flat across any distance. Hover a curve to isolate it." style="width:100%;height:auto;aspect-ratio:760/360;display:block;">Figure 2: RoPE vs NoPE (SVG).</object>
+        <figcaption><b>Figure 2 — RoPE vs NoPE attention reach (schematic).</b> Attention score available at increasing query–key distance. RoPE decays with distance and destabilizes beyond its training length (scatter); a position-free layer is distance-invariant with no length anchor. Hover a curve to isolate it.</figcaption>
+      </figure>
 
       <p>This is what the longest-context models actually do. Meta's Llama 4
         (<a href="https://huggingface.co/blog/llama4-release">2025</a>) calls it <b>iRoPE</b>: roughly
