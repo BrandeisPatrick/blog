@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 240" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="How RoPE encodes position: eight tokens in a sequence, each with an arrow rotated by omega times its position, so arrows advance steadily along the sequence. The query at position 2 and key at position 6 are highlighted; a detail circle shows that the attention score depends only on the angle between their arrows, omega times (m minus n).">
+<rect width="760" height="240" fill="#ffffff"/>
+<text x="290" y="34" font-size="12.5" fill="#1b1b1a" text-anchor="middle">each 2-D pair of a query / key is rotated by ω · position</text>
+<g transform="translate(76,110)"><circle r="22" fill="#fcfcfb" stroke="#ececec"/><g transform="rotate(0)"><line y2="-16" stroke="#6b6b66" stroke-width="1.8"/><polygon points="0,-19 -3,-13 3,-13" fill="#6b6b66"/></g></g>
+<g transform="translate(139,110)"><circle r="22" fill="#fcfcfb" stroke="#ececec"/><g transform="rotate(22.5)"><line y2="-16" stroke="#6b6b66" stroke-width="1.8"/><polygon points="0,-19 -3,-13 3,-13" fill="#6b6b66"/></g></g>
+<g transform="translate(202,110)"><circle r="22" fill="#fff" stroke="#1b1b1a" stroke-width="2.2"/><g transform="rotate(45)"><line y2="-16" stroke="#1b1b1a" stroke-width="2.2"/><polygon points="0,-19 -3,-13 3,-13" fill="#1b1b1a"/></g></g>
+<g transform="translate(265,110)"><circle r="22" fill="#fcfcfb" stroke="#ececec"/><g transform="rotate(67.5)"><line y2="-16" stroke="#6b6b66" stroke-width="1.8"/><polygon points="0,-19 -3,-13 3,-13" fill="#6b6b66"/></g></g>
+<g transform="translate(328,110)"><circle r="22" fill="#fcfcfb" stroke="#ececec"/><g transform="rotate(90)"><line y2="-16" stroke="#6b6b66" stroke-width="1.8"/><polygon points="0,-19 -3,-13 3,-13" fill="#6b6b66"/></g></g>
+<g transform="translate(391,110)"><circle r="22" fill="#fcfcfb" stroke="#ececec"/><g transform="rotate(112.5)"><line y2="-16" stroke="#6b6b66" stroke-width="1.8"/><polygon points="0,-19 -3,-13 3,-13" fill="#6b6b66"/></g></g>
+<g transform="translate(454,110)"><circle r="22" fill="#fff" stroke="#b5482e" stroke-width="2.2"/><g transform="rotate(135)"><line y2="-16" stroke="#b5482e" stroke-width="2.2"/><polygon points="0,-19 -3,-13 3,-13" fill="#b5482e"/></g></g>
+<g transform="translate(517,110)"><circle r="22" fill="#fcfcfb" stroke="#ececec"/><g transform="rotate(157.5)"><line y2="-16" stroke="#6b6b66" stroke-width="1.8"/><polygon points="0,-19 -3,-13 3,-13" fill="#6b6b66"/></g></g>
+<text x="76" y="148" font-size="11" fill="#6b6b66" text-anchor="middle">0</text>
+<text x="139" y="148" font-size="11" fill="#6b6b66" text-anchor="middle">1</text>
+<text x="202" y="148" font-size="11" fill="#6b6b66" text-anchor="middle">2</text>
+<text x="265" y="148" font-size="11" fill="#6b6b66" text-anchor="middle">3</text>
+<text x="328" y="148" font-size="11" fill="#6b6b66" text-anchor="middle">4</text>
+<text x="391" y="148" font-size="11" fill="#6b6b66" text-anchor="middle">5</text>
+<text x="454" y="148" font-size="11" fill="#6b6b66" text-anchor="middle">6</text>
+<text x="517" y="148" font-size="11" fill="#6b6b66" text-anchor="middle">7</text>
+<text x="202" y="163" font-size="10.5" fill="#1b1b1a" text-anchor="middle" font-weight="600">query (m = 2)</text>
+<text x="454" y="163" font-size="10.5" fill="#b5482e" text-anchor="middle" font-weight="600">key (n = 6)</text>
+<circle cx="655" cy="110" r="42" fill="#fcfcfb" stroke="#ececec"/>
+<g transform="translate(655,110)">
+  <g transform="rotate(45)"><line y2="-34" stroke="#1b1b1a" stroke-width="2.2"/><polygon points="0,-38 -3.5,-30 3.5,-30" fill="#1b1b1a"/></g>
+  <g transform="rotate(135)"><line y2="-34" stroke="#b5482e" stroke-width="2.2"/><polygon points="0,-38 -3.5,-30 3.5,-30" fill="#b5482e"/></g>
+</g>
+<path d="M673.4 91.6 A 26 26 0 0 1 673.4 128.4" fill="none" stroke="#6b6b66" stroke-width="1.4" stroke-dasharray="3 2"/>
+<text x="655" y="172" font-size="11" fill="#6b6b66" text-anchor="middle">the score sees only</text>
+<text x="655" y="186" font-size="11" fill="#6b6b66" text-anchor="middle">the angle ω·(m − n)</text>
+<text x="380" y="212" font-size="12" fill="#6b6b66" text-anchor="middle">shift both tokens by +k: every arrow advances by ω·k, and the angle between query and key is unchanged —</text>
+<text x="380" y="228" font-size="12" fill="#6b6b66" text-anchor="middle">position enters the score only as the offset m − n</text>
+</svg>

@@ -57,6 +57,11 @@
         displacement, at zero parameter cost. Since its adoption in LLaMA, RoPE has been effectively
         universal — Llama, Mistral, Qwen, DeepSeek, and Gemma all use it.</p>
 
+      <figure>
+        <img src="../figures/fig-rope-mechanism.svg" alt="How RoPE encodes position: eight tokens whose arrows advance by a fixed angle per position; the query at position 2 and key at position 6 are highlighted, and a detail circle shows the score depends only on the angle between their arrows." />
+        <figcaption><b>Figure 2 — How RoPE encodes position.</b> Each two-dimensional pair of a query or key is rotated by ω·position, so arrows advance steadily along the sequence (ω = 22.5°/token shown). The attention score between the query (m = 2) and the key (n = 6) sees only the angle between their arrows, ω·(m − n) — shifting both tokens leaves it unchanged.</figcaption>
+      </figure>
+
       <p>Two properties of RoPE are benign at short range but become liabilities at long range. First,
         the rotation induces a built-in <b>long-term decay</b>: the expected query–key score falls as the
         distance between two tokens grows — desirable for encoding local word order, but it suppresses
@@ -65,6 +70,11 @@
         out-of-distribution angles, and attention degrades. A RoPE model is therefore anchored to its
         training length and biased toward the local neighborhood — the two failure modes that matter most
         at a million tokens.</p>
+
+      <figure>
+        <img src="../figures/fig-rope-failure.svg" alt="RoPE's failure at range: attention score decays as token distance grows, and past the training length the curve gives way to scattered, unreliable points." />
+        <figcaption><b>Figure 3 — Where RoPE fails at range (schematic).</b> The two limitations, drawn: the rotation makes the query–key score decay as the offset grows (1), and offsets beyond the training length produce angles the model never saw, so attention past the wall is unreliable (2).</figcaption>
+      </figure>
 
       <p>RoPE's range can be extended with a brief continued-pretraining pass — Position Interpolation
         (<a href="https://arxiv.org/abs/2306.15595">Chen et al., 2023</a>) and YaRN
@@ -83,8 +93,8 @@
         sharp local order, position-free layers for the long-range reach.</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig5-rope-vs-nope.svg?v=6" role="img" aria-label="Interactive diagram of RoPE and NoPE mechanics: three RoPE frequency pairs rotate the key vector by an angle proportional to token offset, dephasing the query-key match as the offset grows; offsets beyond the training length produce angles unseen in training. A NoPE pair never rotates, so the match is unchanged at any offset. Drag along the token ruler to change the offset." style="width:100%;height:auto;aspect-ratio:760/404;display:block;">Figure 2: RoPE vs NoPE mechanism (SVG).</object>
-        <figcaption><b>Figure 2 — The two mechanisms (interactive).</b> RoPE rotates each two-dimensional pair of the key by ω·(m−n) — three of the <i>d</i>/2 frequency pairs shown. As the offset grows the pairs dephase and the query–key match falls; offsets beyond the training length produce rotation angles never seen in training. A NoPE layer applies no rotation, so the match is independent of offset. Drag the key token along the ruler.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig5-rope-vs-nope.svg?v=6" role="img" aria-label="Interactive diagram of RoPE and NoPE mechanics: three RoPE frequency pairs rotate the key vector by an angle proportional to token offset, dephasing the query-key match as the offset grows; offsets beyond the training length produce angles unseen in training. A NoPE pair never rotates, so the match is unchanged at any offset. Drag along the token ruler to change the offset." style="width:100%;height:auto;aspect-ratio:760/404;display:block;">Figure 4: RoPE vs NoPE interactive comparison (SVG).</object>
+        <figcaption><b>Figure 4 — RoPE vs NoPE, side by side (interactive).</b> RoPE rotates each two-dimensional pair of the key by ω·(m−n) — three of the <i>d</i>/2 frequency pairs shown. As the offset grows the pairs dephase and the query–key match falls; offsets beyond the training length produce rotation angles never seen in training. A NoPE layer applies no rotation, so the match is independent of offset. Drag the key token along the ruler.</figcaption>
       </figure>
 
       <p>This is what the longest-context models actually do. Meta's Llama 4
@@ -142,7 +152,7 @@
 
       <figure>
         <img src="../figures/fig2-kvcache.svg" alt="Bar chart of KV cache floats per token per layer for MHA, GQA, MLA, and MQA on a log scale, showing reductions of 1x, 16x, 57x, and 128x." />
-        <figcaption><b>Figure 3 — Shrinking the KV cache.</b> Floats cached per token per layer for a 128-head, 128-dim example (caching K and V). MLA's ~57× is the <i>per-head</i> compression ratio from these config numbers; end-to-end analyses of the full DeepSeek-V3 cache report a still-dramatic ~28× reduction. Orthogonally, <b>KV quantization</b> (FP8, or 2–3 bit schemes like KIVI and KVQuant) cuts bytes-per-element another 2–8×.</figcaption>
+        <figcaption><b>Figure 5 — Shrinking the KV cache.</b> Floats cached per token per layer for a 128-head, 128-dim example (caching K and V). MLA's ~57× is the <i>per-head</i> compression ratio from these config numbers; end-to-end analyses of the full DeepSeek-V3 cache report a still-dramatic ~28× reduction. Orthogonally, <b>KV quantization</b> (FP8, or 2–3 bit schemes like KIVI and KVQuant) cuts bytes-per-element another 2–8×.</figcaption>
       </figure>
 
       <h3>Compute Smarter: FlashAttention Makes Exact Attention Survivable</h3>
