@@ -19,7 +19,6 @@
         <summary>Table of Contents</summary>
         <nav class="inner">
           <ol>
-            <li><a href="#s1">Why Length Is Expensive: Attention Scales as N², Memory as N</a></li>
             <li><a href="#s2">Positional Encoding: RoPE for Local Order, NoPE for Long-Range Reach</a></li>
             <li><a href="#s3">Attention, Rebuilt: Full Attention Becomes a Minority Layer</a></li>
             <li><a href="#s4">Capability Isn’t Enough: You Have to Train on Long Sequences</a></li>
@@ -40,37 +39,6 @@
         <object type="image/svg+xml" data="../figures/fig1-context-growth.svg?v=10" role="img" aria-label="Staircase chart of the largest context window over time: the first model to reach each size, from GPT-3 (2K) through GPT-4 (8K), Claude 2 (100K), and Gemini 1.5 Pro (1M) up to Llama 4 Scout (10M). Hollow dots on the 1M line mark each model line's first million-token model — hover one for its name: Gemini 3 Pro, Claude Opus 4.6, GPT-5.5." style="width:100%;height:auto;aspect-ratio:760/440;display:block;">Figure 1: context-window growth chart (SVG).</object>
         <figcaption><b>Figure 1 — The frontier.</b> The largest context window available at any time (log scale); the red staircase marks the <i>first</i> model to reach each window — GPT-3 (2K) → GPT-3.5 (4K) → GPT-4 (8K) → Claude 2 (100K) → Claude 2.1 (200K) → Gemini 1.5 Pro (1M, then 2M) → MiniMax-01 (4M) → Llama 4 Scout (10M), where the record has held. But the <i>record</i> (10M) and the <i>default</i> are now different things: the hollow dots mark each model line's first million-token model — hover them for names: <a href="https://llm-stats.com/blog/research/gemini-3-pro-launch">Gemini 3 Pro</a> (Nov 2025), <a href="https://www.anthropic.com/news/claude-opus-4-6">Claude Opus 4.6</a> (Feb 2026), <a href="https://openai.com/index/introducing-gpt-5-5/">GPT-5.5</a> (Apr 2026). By 2026 the field has settled at 1M: the new normal, not the ceiling.</figcaption>
       </figure>
-
-      <hr />
-
-      <h2 id="s1">Why Length Is Expensive: Attention Scales as N², Memory as N</h2>
-
-      <p>Long context is expensive for two reasons, and the two scale very differently. The first is
-        attention itself. In a standard Transformer (<a href="https://arxiv.org/abs/1706.03762">Vaswani et al., 2017</a>)
-        every token attends to every other token, so the cost of the attention step grows with the square
-        of the sequence length, <i>O(N²)</i>. Go from 2,048 tokens to a million and that one step gets
-        roughly 250,000× more expensive. That alone is why training on long sequences stayed infeasible
-        for years.</p>
-
-      <p>The second reason is the KV cache — the working memory a model carries while it generates. For
-        every token it has seen, the model keeps that token's key and value vectors around so it never has
-        to recompute them, and that memory grows linearly with the length of the context. The slope is gentle, but the constant is large: a
-        70B model like Llama 3 (<a href="https://arxiv.org/abs/2407.21783">Dubey et al., 2024</a>) holds
-        roughly 40 GB of KV cache at 128K tokens, on top of its ~140 GB of weights. At a million tokens, the
-        cache alone outgrows a single GPU.</p>
-
-      <figure>
-        <img src="../figures/fig3-attention-wall.svg?v=2" alt="Log-log plot of relative cost versus sequence length, comparing O(N squared) standard attention against O(N) FlashAttention/linear methods." />
-        <figcaption><b>Figure 2 — The quadratic wall.</b> Relative cost versus sequence length (both axes log). Standard attention's <i>O(N²)</i> curve pulls decisively away from <i>O(N)</i> — which sub-quadratic methods achieve in compute, and IO-aware kernels like FlashAttention in memory.</figcaption>
-      </figure>
-
-      <p>These two costs are what make long context <i>expensive</i>, but cheap isn't the same as
-        <i>capable</i>. We start with position, because it came first: before cost was even the problem,
-        it set a hard ceiling on length. The biggest section belongs to attention itself, because both
-        costs live there and it is where the field has moved most since 2024. And a model that can
-        <i>afford</i> a million tokens still has to be taught to use them — by its training data, by an
-        optimizer that survives the run, and, the newest lesson, by reinforcement learning after
-        pretraining. Then we ask how you would know any of it worked.</p>
 
       <hr />
 
@@ -95,7 +63,7 @@
 
       <figure>
         <img src="../figures/fig5-rope-vs-nope.svg?v=2" alt="Plot contrasting RoPE and NoPE: RoPE's attention decays with token distance and scatters past the training-length wall, while NoPE stays flat across any distance." />
-        <figcaption><b>Figure 3 — RoPE vs NoPE.</b> RoPE's attention decays with distance and breaks down past its training length; a position-free (NoPE) layer stays flat and has no length cap. The newest models (iRoPE) keep RoPE layers for local order and add NoPE layers for the long-range reach.</figcaption>
+        <figcaption><b>Figure 2 — RoPE vs NoPE.</b> RoPE's attention decays with distance and breaks down past its training length; a position-free (NoPE) layer stays flat and has no length cap. The newest models (iRoPE) keep RoPE layers for local order and add NoPE layers for the long-range reach.</figcaption>
       </figure>
 
       <p>You can stretch RoPE's range with a brief continued-pretraining pass — Position Interpolation
@@ -130,9 +98,14 @@
 
       <h2 id="s3">Attention, Rebuilt: Full Attention Becomes a Minority Layer</h2>
 
-      <p>Both costs from the opening — the <i>O(N²)</i> compute and the <i>O(N)</i> cache — live inside
-        the attention layer, and for years the story here was conservative: keep attention exactly as it
-        is, just compute it smarter and cache it smaller. That era built the tools everything still runs
+      <p>Attention is where long context gets expensive, twice over. Compute grows with the square of
+        the sequence length, <i>O(N²)</i>, because every token attends to every other
+        (<a href="https://arxiv.org/abs/1706.03762">Vaswani et al., 2017</a>). And the <b>KV cache</b> —
+        the keys and values a model keeps for every past token so it never has to recompute them — grows
+        linearly, with a large constant: a 70B model like Llama 3
+        (<a href="https://arxiv.org/abs/2407.21783">Dubey et al., 2024</a>) holds roughly 40 GB of cache at
+        128K tokens, on top of its ~140 GB of weights. For years the story here was conservative: keep
+        attention exactly as it is, just compute it smarter and cache it smaller. That era built the tools everything still runs
         on. But the 2025–26 generation went further, and the field's question changed shape. It is no
         longer "how do we make every layer cheaper?" It is: <b>what fraction of layers keep full
         attention, and what cheap primitive fills the rest?</b> By mid-2026, no major open-weight model
@@ -164,7 +137,7 @@
 
       <figure>
         <img src="../figures/fig2-kvcache.svg" alt="Bar chart of KV cache floats per token per layer for MHA, GQA, MLA, and MQA on a log scale, showing reductions of 1x, 16x, 57x, and 128x." />
-        <figcaption><b>Figure 4 — Shrinking the KV cache.</b> Floats cached per token per layer for a 128-head, 128-dim example (caching K and V). MLA's ~57× is the <i>per-head</i> compression ratio from these config numbers; end-to-end analyses of the full DeepSeek-V3 cache report a still-dramatic ~28× reduction. Orthogonally, <b>KV quantization</b> (FP8, or 2–3 bit schemes like KIVI and KVQuant) cuts bytes-per-element another 2–8×.</figcaption>
+        <figcaption><b>Figure 3 — Shrinking the KV cache.</b> Floats cached per token per layer for a 128-head, 128-dim example (caching K and V). MLA's ~57× is the <i>per-head</i> compression ratio from these config numbers; end-to-end analyses of the full DeepSeek-V3 cache report a still-dramatic ~28× reduction. Orthogonally, <b>KV quantization</b> (FP8, or 2–3 bit schemes like KIVI and KVQuant) cuts bytes-per-element another 2–8×.</figcaption>
       </figure>
 
       <h3>Compute Smarter: FlashAttention Makes Exact Attention Survivable</h3>
