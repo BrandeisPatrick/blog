@@ -117,17 +117,9 @@ html { scroll-behavior: smooth; }
 .post-link a:hover h2 { color: var(--accent); }
 .post-link .excerpt { margin: 8px 0 0; color: var(--muted); }
 .meta { color: var(--muted); font-size: 14px; margin: 0; }
-.status {
-  display: inline-block;
-  padding: 1px 8px;
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  font-size: 12px;
-  color: var(--muted);
-  background: #f6f6f4;
-  vertical-align: 1px;
-}
-.status-review { color: var(--accent); border-color: currentColor; background: #fff; }
+/* Status notes: plain text, no pill chrome */
+.status { color: var(--muted); }
+.status-review { color: var(--accent); }
 
 /* ---- On the desk (work in progress, folded by default) ---- */
 .post-list.published { margin-bottom: 8px; }
