@@ -123,16 +123,16 @@
         128K tokens, on top of its ~140 GB of weights.</p>
 
       <figure>
-        <img src="../figures/fig-attn-mechanism.svg" alt="Where attention's two costs come from: a causal score matrix in which each new token scores against every earlier one (compute grows with N squared), and a KV cache in which every past token's key and value stay cached (memory grows with N)." />
-        <figcaption><b>Figure 5 — Where the two costs come from.</b> Left: each new token scores against every earlier one, so compute grows with the number of pairs, <i>N²</i>. Right: every past token's K and V stay cached for reuse, so memory grows with <i>N</i> — and never shrinks while generating.</figcaption>
+        <img src="../figures/fig-attn-mechanism.svg?v=2" alt="Doubling the tokens roughly quadruples the attention score matrix but only doubles the KV cache: 4 tokens give 10 pairs and 8 cached vectors, 8 tokens give 36 pairs and 16 cached vectors." />
+        <figcaption><b>Figure 5 — Where the two costs come from.</b> Attention scores one cell per token pair and caches two vectors per token — so doubling the tokens (4 → 8 here) roughly quadruples the compute (10 → 36 pairs, <i>N²</i>) but only doubles the memory (8 → 16 vectors, <i>N</i>).</figcaption>
       </figure>
 
       <p>For years the fixes were conservative: keep attention exactly as it is, just compute it smarter
         and cache it smaller. That era built the tools everything still runs on.</p>
 
       <figure>
-        <img src="../figures/fig-attn-failure.svg" alt="Log-log plot of relative cost versus sequence length: standard attention's O(N squared) curve pulls decisively away from the O(N) curve of FlashAttention and linear methods, with GPT-3's 2K and a 1M context marked." />
-        <figcaption><b>Figure 6 — The quadratic wall (schematic).</b> Relative cost against sequence length (log–log). Standard attention's <i>O(N²)</i> pulls decisively away from <i>O(N)</i>; at a million tokens that gap is why dense attention in every layer stopped being affordable.</figcaption>
+        <img src="../figures/fig-attn-failure.svg?v=2" alt="On a linear scale, quadratic attention cost rockets upward and crosses a fixed compute budget long before one million tokens, while sub-quadratic methods rise gently. Going from 2K to 1M tokens is 500 times the tokens but roughly 250,000 times the attention compute." />
+        <figcaption><b>Figure 6 — The quadratic wall (schematic).</b> Attention compute against context length, both on linear scales. Going from 2K to 1M is 500× the tokens but ~250,000× the compute: the quadratic exhausts any fixed budget long before a million tokens, while sub-quadratic methods stay affordable. Getting past this wall is what the rest of the attention story is about.</figcaption>
       </figure>
 
       <h3>Cache Less: MHA → MQA → GQA → MLA</h3>
