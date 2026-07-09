@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="What optimizer fragility looks like at long context: two identical training runs; the safeguarded one keeps its loss falling, while the unguarded one hits a logit explosion mid-run — a loss spike from which a bolted-on phase cannot recover.">
+<rect width="760" height="300" fill="#ffffff"/>
+<line x1="64" y1="250" x2="700" y2="250" stroke="#ececec"/>
+<line x1="64" y1="36" x2="64" y2="250" stroke="#ececec"/>
+<text x="382" y="286" font-size="12.5" fill="#1b1b1a" text-anchor="middle">steps into the long-context phase  →</text>
+<text x="24" y="143" font-size="12.5" fill="#1b1b1a" text-anchor="middle" transform="rotate(-90 24 143)">training loss</text>
+<path d="M64 110 C 180 150, 320 172, 470 186 S 640 200, 700 203" fill="none" stroke="#2f6f7a" stroke-width="2.5"/>
+<text x="640" y="224" font-size="12" fill="#2f6f7a" font-weight="700" text-anchor="end">with z-loss + QK-norm</text>
+<path d="M64 110 C 150 143, 260 164, 372 178" fill="none" stroke="#b5482e" stroke-width="2.5"/>
+<path d="M372 178 L388 64 L402 118 L416 70" fill="none" stroke="#b5482e" stroke-width="2.2"/>
+<path d="M416 70 L436 88 L452 58 L470 74 L488 52" fill="none" stroke="#b5482e" stroke-width="1.6" stroke-dasharray="3 3" opacity="0.55"/>
+<circle cx="502" cy="64" r="2.4" fill="#b5482e" opacity="0.5"/>
+<circle cx="518" cy="82" r="2.4" fill="#b5482e" opacity="0.5"/>
+<circle cx="534" cy="56" r="2.4" fill="#b5482e" opacity="0.5"/>
+<circle cx="552" cy="72" r="2.4" fill="#b5482e" opacity="0.5"/>
+<circle cx="570" cy="50" r="2.4" fill="#b5482e" opacity="0.5"/>
+<line x1="380" y1="36" x2="380" y2="250" stroke="#1b1b1a" stroke-dasharray="4 3" opacity="0.35"/>
+<text x="386" y="48" font-size="11.5" fill="#b5482e" font-weight="600" stroke="#ffffff" stroke-width="3" paint-order="stroke" stroke-linejoin="round">logit explosion — the run is corrupted</text>
+<text x="372" y="264" font-size="11" fill="#6b6b66" text-anchor="middle">spike</text>
+</svg>

@@ -24,7 +24,8 @@
         <nav class="inner">
           <ol>
             <li><a href="#s2">Positional Encoding: RoPE for Local Order, NoPE for Long-Range Reach</a></li>
-            <li><a href="#s3">Attention, Rebuilt: Full Attention Becomes a Minority Layer</a></li>
+            <li><a href="#s3">Attention, Rebuilt: Exact Attention Made Survivable</a></li>
+            <li><a href="#s3b">Attention, Replaced: Full Attention Becomes a Minority Layer</a></li>
             <li><a href="#s4">Capability Isn’t Enough: You Have to Train on Long Sequences</a></li>
             <li><a href="#s5">The Optimizer: Keeping a Bolt-On Second Training Run Alive</a></li>
             <li><a href="#s6">Post-Training: The Window Is Pretrained; Using It Is Reinforced</a></li>
@@ -111,7 +112,7 @@
 
       <hr />
 
-      <h2 id="s3">Attention, Rebuilt: Full Attention Becomes a Minority Layer</h2>
+      <h2 id="s3">Attention, Rebuilt: Exact Attention Made Survivable</h2>
 
       <p>Attention is where long context gets expensive, twice over. Compute grows with the square of
         the sequence length, <i>O(N²)</i>, because every token attends to every other
@@ -119,148 +120,107 @@
         the keys and values a model keeps for every past token so it never has to recompute them — grows
         linearly, with a large constant: a 70B model like Llama 3
         (<a href="https://arxiv.org/abs/2407.21783">Dubey et al., 2024</a>) holds roughly 40 GB of cache at
-        128K tokens, on top of its ~140 GB of weights. For years the story here was conservative: keep
-        attention exactly as it is, just compute it smarter and cache it smaller. That era built the tools everything still runs
-        on. But the 2025–26 generation went further, and the field's question changed shape. It is no
-        longer "how do we make every layer cheaper?" It is: <b>what fraction of layers keep full
-        attention, and what cheap primitive fills the rest?</b> By mid-2026, no major open-weight model
-        reaches 1M tokens with dense attention in every layer. This section walks the levers in order of
-        increasing radicalism — cache less, compute smarter, attend sparsely, replace the layer — and ends
-        with how they get composed.</p>
+        128K tokens, on top of its ~140 GB of weights.</p>
+
+      <figure>
+        <img src="../figures/fig-attn-mechanism.svg" alt="Where attention's two costs come from: a causal score matrix in which each new token scores against every earlier one (compute grows with N squared), and a KV cache in which every past token's key and value stay cached (memory grows with N)." />
+        <figcaption><b>Figure 5 — Where the two costs come from.</b> Left: each new token scores against every earlier one, so compute grows with the number of pairs, <i>N²</i>. Right: every past token's K and V stay cached for reuse, so memory grows with <i>N</i> — and never shrinks while generating.</figcaption>
+      </figure>
+
+      <p>For years the fixes were conservative: keep attention exactly as it is, just compute it smarter
+        and cache it smaller. That era built the tools everything still runs on.</p>
+
+      <figure>
+        <img src="../figures/fig-attn-failure.svg" alt="Log-log plot of relative cost versus sequence length: standard attention's O(N squared) curve pulls decisively away from the O(N) curve of FlashAttention and linear methods, with GPT-3's 2K and a 1M context marked." />
+        <figcaption><b>Figure 6 — The quadratic wall (schematic).</b> Relative cost against sequence length (log–log). Standard attention's <i>O(N²)</i> pulls decisively away from <i>O(N)</i>; at a million tokens that gap is why dense attention in every layer stopped being affordable.</figcaption>
+      </figure>
 
       <h3>Cache Less: MHA → MQA → GQA → MLA</h3>
 
-      <p>The KV cache's size is a per-token cost multiplied by the length of the context. The length is
-        the whole point, so the only lever left is what each token costs — and the history of attention
-        heads is largely a history of pulling that lever, by giving fewer heads their own keys and
-        values.</p>
-
-      <ul>
-        <li><b>Multi-Head Attention (MHA)</b> — the GPT-3 baseline, in which every head caches its own K and V.</li>
-        <li><b>Multi-Query Attention (MQA)</b> — all query heads share a single K/V head
-          (<a href="https://arxiv.org/abs/1911.02150">Shazeer, 2019</a>). With 128 heads that is a 128×
-          smaller cache, at some cost in quality.</li>
-        <li><b>Grouped-Query Attention (GQA)</b> — the pragmatic middle ground
-          (<a href="https://arxiv.org/abs/2305.13245">Ainslie et al., 2023</a>): split the heads into
-          <i>G</i> groups that each share one K/V pair. With 8 groups you get an 8–16× reduction while
-          keeping almost all of MHA's quality. Llama 2/3, Mistral, and most open models use it.</li>
-        <li><b>Multi-head Latent Attention (MLA)</b> — DeepSeek's approach
-          (<a href="https://arxiv.org/abs/2405.04434">DeepSeek-V2, 2024</a>): rather than use fewer heads,
-          compress K and V into a low-rank <i>latent</i> vector (plus a small decoupled RoPE component) and
-          cache only that. DeepSeek reported a 93.3% reduction in KV-cache size and 5.76× higher throughput.</li>
-      </ul>
+      <p>The cache's size is a per-token cost multiplied by the length of the context. The length is the
+        point, so the lever is what each token costs. <b>MHA</b>, the GPT-3 baseline, caches a key and
+        value per head. <b>MQA</b> (<a href="https://arxiv.org/abs/1911.02150">Shazeer, 2019</a>) shares
+        one K/V head across all query heads — a 128× smaller cache at 128 heads, at some cost in quality.
+        <b>GQA</b> (<a href="https://arxiv.org/abs/2305.13245">Ainslie et al., 2023</a>) shares within
+        groups — an 8–16× reduction at near-MHA quality, the open-model default. <b>MLA</b>
+        (<a href="https://arxiv.org/abs/2405.04434">DeepSeek-V2, 2024</a>) compresses K and V into a
+        low-rank latent and caches only that, for a reported 93.3% cache reduction.</p>
 
       <figure>
         <img src="../figures/fig2-kvcache.svg" alt="Bar chart of KV cache floats per token per layer for MHA, GQA, MLA, and MQA on a log scale, showing reductions of 1x, 16x, 57x, and 128x." />
-        <figcaption><b>Figure 5 — Shrinking the KV cache.</b> Floats cached per token per layer for a 128-head, 128-dim example (caching K and V). MLA's ~57× is the <i>per-head</i> compression ratio from these config numbers; end-to-end analyses of the full DeepSeek-V3 cache report a still-dramatic ~28× reduction. Orthogonally, <b>KV quantization</b> (FP8, or 2–3 bit schemes like KIVI and KVQuant) cuts bytes-per-element another 2–8×.</figcaption>
+        <figcaption><b>Figure 7 — Shrinking the KV cache.</b> Floats cached per token per layer for a 128-head, 128-dim example (caching K and V). MLA's ~57× is the <i>per-head</i> compression ratio from these config numbers; end-to-end analyses of the full DeepSeek-V3 cache report a still-dramatic ~28× reduction. Orthogonally, <b>KV quantization</b> (FP8, or 2–3 bit schemes like KIVI and KVQuant) cuts bytes-per-element another 2–8×.</figcaption>
       </figure>
 
-      <h3>Compute Smarter: FlashAttention Makes Exact Attention Survivable</h3>
+      <h3>Compute Smarter: FlashAttention</h3>
 
-      <p>On the compute side, the anchor is <b>FlashAttention</b>
-        (<a href="https://arxiv.org/abs/2205.14135">Dao et al., 2022</a>), the single most important piece
-        of plumbing here. It computes exact attention without ever writing the <i>N×N</i> matrix to
-        high-bandwidth memory: it tiles Q, K, and V into SRAM-sized blocks and keeps a running softmax. The
-        activation memory drops from <i>O(N²)</i> to <i>O(N)</i>, and HBM traffic falls by roughly 9× in
-        practice — the often-quoted "O(N²)→O(N)" is a simplification; the precise bound is <i>O(N²d²/M)</i>.
-        FlashAttention-2 (<a href="https://arxiv.org/abs/2307.08691">Dao, 2023</a>) and FlashAttention-3
-        (<a href="https://arxiv.org/abs/2407.08608">Shah et al., 2024</a>) then pushed hardware utilization
-        from roughly 25% to about 70% on A100 and 75% on H100, and almost every model since 2023 trains on
-        this kernel. But FlashAttention is an IO fix, not an algorithmic one — the quadratic is still
-        there, just fed efficiently. At a million tokens you eventually have to attack the exponent.</p>
+      <p>On the compute side the anchor is <b>FlashAttention</b>
+        (<a href="https://arxiv.org/abs/2205.14135">Dao et al., 2022</a>): exact attention computed
+        without ever writing the <i>N×N</i> matrix to high-bandwidth memory, by tiling Q, K, and V into
+        SRAM-sized blocks under a running softmax. FlashAttention-2 and -3
+        (<a href="https://arxiv.org/abs/2307.08691">Dao, 2023</a>;
+        <a href="https://arxiv.org/abs/2407.08608">Shah et al., 2024</a>) pushed hardware utilization
+        from roughly 25% to 75%, and nearly every model since 2023 trains on this kernel. But it is an IO
+        fix, not an algorithmic one — the quadratic is still there, just fed efficiently. At a million
+        tokens you have to attack the exponent.</p>
+
+      <hr />
+
+      <h2 id="s3b">Attention, Replaced: Full Attention Becomes a Minority Layer</h2>
+
+      <p>The 2025–26 generation went further, and the field's question changed shape: <b>what fraction
+        of layers keep full attention, and what cheap primitive fills the rest?</b> By mid-2026, no major
+        open-weight model reaches 1M tokens with dense attention in every layer.</p>
 
       <h3>Attend Sparsely: From Fixed Patterns to Trained Sparsity</h3>
 
-      <p>The first generation of sparse attention hand-designed the pattern. Sparse Transformers
+      <p>Hand-designed sparsity came first: Sparse Transformers
         (<a href="https://arxiv.org/abs/1904.10509">Child et al., 2019</a>) cut <i>O(N²)</i> to
         <i>O(N√N)</i>; Longformer (<a href="https://arxiv.org/abs/2004.05150">Beltagy et al., 2020</a>)
-        and BigBird (<a href="https://arxiv.org/abs/2007.14062">Zaheer et al., 2020</a>) used a sliding
-        window plus a few global tokens to reach <i>O(N)</i>; Mistral 7B
-        (<a href="https://arxiv.org/abs/2310.06825">Jiang et al., 2023</a>) shipped sliding-window
-        attention as a headline feature. StreamingLLM
-        (<a href="https://arxiv.org/abs/2309.17453">Xiao et al., 2023</a>) made a lovely observation —
-        models dump excess attention onto the first few "sink" tokens, so keeping just those sinks plus a
-        recent window lets a model generate indefinitely at fixed memory.</p>
-
-      <p>The second generation lets the model <i>learn</i> where to attend, and it arrived as a two-lab
-        movement in the same month: DeepSeek's Native Sparse Attention
-        (<a href="https://arxiv.org/abs/2502.11089">NSA, February 2025</a>) combines compressed, selected,
-        and local-window paths trained end-to-end, for roughly 11× faster decoding at 64K; Moonshot's
-        Mixture of Block Attention (<a href="https://arxiv.org/abs/2502.13189">MoBA, February 2025</a>)
-        routes queries to blocks of context MoE-style and went straight into production behind Kimi. The
-        decisive moment came that September, when <b>DeepSeek Sparse Attention</b> (DSA) shipped in
-        <a href="https://api-docs.deepseek.com/news/news250929">DeepSeek-V3.2-Exp</a>: a lightning indexer
-        picks top-k tokens per query under MLA, quality held at parity with the dense V3.1 — and DeepSeek
-        cut long-context API prices by more than half the same day. That price cut is the tell: sparse
-        attention stopped being a research demo and became an economic fact. By early 2026 GLM-5 had
-        adopted DSA directly, and the mechanism scaled to the flagship tier —
-        <a href="https://arxiv.org/abs/2606.19348">DeepSeek-V4 (2026)</a> reaches 1M tokens on a hybrid of
-        compressed-sparse and compressed-dense attention at roughly 27% of the FLOPs and 10% of the KV
-        cache of its predecessor.</p>
+        and BigBird (<a href="https://arxiv.org/abs/2007.14062">Zaheer et al., 2020</a>) reached
+        <i>O(N)</i> with a sliding window plus a few global tokens. The second generation lets the model
+        <i>learn</i> where to attend: DeepSeek's Native Sparse Attention
+        (<a href="https://arxiv.org/abs/2502.11089">NSA, February 2025</a>) and Moonshot's MoBA
+        (<a href="https://arxiv.org/abs/2502.13189">February 2025</a>) train the pattern end-to-end, and
+        that September <b>DeepSeek Sparse Attention</b> (DSA) shipped in
+        <a href="https://api-docs.deepseek.com/news/news250929">DeepSeek-V3.2-Exp</a> at quality parity
+        with the dense model — with a long-context API price cut of more than half the same day. The
+        price cut is the tell: sparse attention became an economic fact.
+        <a href="https://arxiv.org/abs/2606.19348">DeepSeek-V4 (2026)</a> reaches 1M tokens on the same
+        lineage at roughly 27% of the FLOPs and 10% of the KV cache of its predecessor.</p>
 
       <h3>Replace the Layer: Linear Attention and the SSM Lineage</h3>
 
       <p>The most radical lever drops softmax attention entirely. <b>State-space models</b> compress the
-        entire past into a fixed-size state — <i>O(N)</i> time, <i>O(1)</i> inference memory, in effect a
-        recurrent network that still trains in parallel. The line runs from S4
-        (<a href="https://arxiv.org/abs/2111.00396">Gu et al., 2021</a>) through Mamba
-        (<a href="https://arxiv.org/abs/2312.00752">Gu &amp; Dao, 2023</a>), whose selective mechanism
-        lets the state decide what to keep, to Mamba-2's formal duality with attention
-        (<a href="https://arxiv.org/abs/2405.21060">Dao &amp; Gu, 2024</a>). The catch, found early and
-        confirmed often: pure SSMs are weaker at <i>precise recall</i> — looking up an exact token far
-        back, where attention stays near 100%. So the survivors are hybrids — Jamba
-        (<a href="https://arxiv.org/abs/2403.19887">Lieber et al., 2024</a>) interleaved one attention
-        layer per seven Mamba layers and fit a 256K context in 4 GB of KV cache where a comparable
-        Transformer needs 32 GB; Samba (<a href="https://arxiv.org/abs/2406.07522">Ren et al., 2024</a>)
-        paired Mamba with sliding windows. Attention for exact retrieval, the cheap layer for everything
-        else.</p>
-
-      <p>What was a research pattern in 2024 became the production default in 2025. MiniMax-01
-        (<a href="https://arxiv.org/abs/2501.08313">January 2025</a>) was the first frontier-scale proof:
-        a 456B MoE with <i>lightning attention</i> in most layers, trained at 1M context and serving 4M.
-        Gemma 3 (<a href="https://arxiv.org/abs/2503.19786">March 2025</a>) applied the same logic inside
-        a "vanilla" transformer — five sliding-window layers per global layer, windows of just 1,024
-        tokens, explicitly to tame the KV cache. Qwen3-Next (September 2025) put Gated DeltaNet, a linear
-        attention, in three of every four layers for ~10× faster long-context inference, a design that
-        became the default for Qwen3.5's flagship in early 2026. Kimi Linear
-        (<a href="https://arxiv.org/abs/2510.26692">Moonshot, October 2025</a>) pushed the claim furthest:
-        a 3:1 hybrid of Kimi Delta Attention and MLA that Moonshot reports <i>beating</i> full attention
-        under matched comparisons — including through RL post-training — with a 75% smaller KV cache and
-        ~6× faster decoding at 1M. NVIDIA's Nemotron line and IBM's Granite 4 run the same play with
-        Mamba-2 layers, some with as little as ~8% of layers doing full attention.</p>
+        past into a fixed-size state — <i>O(N)</i> time, <i>O(1)</i> inference memory — in a line running
+        from S4 (<a href="https://arxiv.org/abs/2111.00396">Gu et al., 2021</a>) through Mamba
+        (<a href="https://arxiv.org/abs/2312.00752">Gu &amp; Dao, 2023</a>) to Mamba-2's formal duality
+        with attention (<a href="https://arxiv.org/abs/2405.21060">Dao &amp; Gu, 2024</a>). The catch,
+        found early and confirmed often: pure SSMs are weaker at <i>precise recall</i>, where attention
+        stays near 100%. So the survivors are hybrids — attention for exact retrieval, the cheap layer
+        for everything else. MiniMax-01 (<a href="https://arxiv.org/abs/2501.08313">January 2025</a>)
+        took <i>lightning attention</i> to frontier scale, trained at 1M context; Kimi Linear
+        (<a href="https://arxiv.org/abs/2510.26692">Moonshot, October 2025</a>) reports a 3:1 hybrid
+        <i>beating</i> full attention with a 75% smaller cache — and some production stacks leave as
+        little as ~8% of layers doing full attention.</p>
 
       <h3>The Composition Question — and the Holdout That Converted</h3>
 
-      <p>Notice that "sparse" and "linear" ended in the same place: a minority of full-attention layers
-        doing precise recall, with something cheap — a sliding window, a learned sparse pattern, a
-        recurrent state — filling the rest. The design question every lab now answers is the ratio and the
-        primitive, the same shape as iRoPE's three-RoPE-to-one-NoPE. It would be dishonest to present this
-        as uncontested: MiniMax itself published the field's best counterargument
-        (<a href="https://www.minimax.io/news/why-did-m2-end-up-as-a-full-attention-model">"Why did M2 end up
-        a full-attention model?", October 2025</a>), reporting that its hybrids fell short on multi-hop
-        reasoning at scale and that production infrastructure — numerical precision, prefix caching,
-        speculative decoding — wasn't ready. The essay aged into the strongest evidence for the trend: seven
-        months later MiniMax shipped M3 at 1M context on its own block-sparse mechanism
-        (<a href="https://arxiv.org/abs/2606.13392">MSA, June 2026</a>), citing ~9.7× faster prefill and
-        ~15.6× faster decoding than M2. Full attention in every layer still has defenders on reasoning
-        quality — but at 1M tokens, nobody is paying for it anymore.</p>
+      <p>"Sparse" and "linear" ended in the same place: a minority of full-attention layers doing precise
+        recall, something cheap filling the rest — the same shape as iRoPE. The honest counterpoint:
+        MiniMax kept M2 on full attention and published why its hybrids fell short on multi-hop reasoning
+        at scale (<a href="https://www.minimax.io/news/why-did-m2-end-up-as-a-full-attention-model">October
+        2025</a>) — then converted seven months later, shipping M3 at 1M context on its own block-sparse
+        mechanism (<a href="https://arxiv.org/abs/2606.13392">MSA, June 2026</a>). At a million tokens,
+        nobody is paying for dense attention in every layer anymore.</p>
 
-      <h3>Shard the Sequence: A Million Tokens Doesn't Fit on One GPU</h3>
+      <h3>Shard the Sequence</h3>
 
-      <p>However cheap each layer gets, a million-token sequence still doesn't fit on one device, so the
-        sequence itself gets sharded. Context parallelism splits the tokens across GPUs — Llama 3 used a
-        context-parallel degree of 16, each rank handling an 8K slice of a 128K sequence. The elegant
-        version is <b>Ring Attention</b> (<a href="https://arxiv.org/abs/2310.01889">Liu et al., 2023</a>),
-        which streams KV blocks around a ring of devices while overlapping communication with computation,
-        scaling context linearly with device count; together with sequence-parallel activation sharding
-        (<a href="https://arxiv.org/abs/2205.05198">Korthikanti et al., 2022</a>), it is the lineage behind
-        Gemini 1.5's million-token training (<a href="https://arxiv.org/abs/2403.05530">Gemini Team, 2024</a>).
-        On the serving side, PagedAttention (<a href="https://arxiv.org/abs/2309.06180">Kwon et al., 2023</a>)
-        borrowed virtual-memory paging to cut KV waste from 60–80% to under 4% — and has since grown into
-        KV-centric serving <i>systems</i>: Mooncake (<a href="https://arxiv.org/abs/2407.00079">Qin et al.,
-        FAST'25 best paper</a>) disaggregates prefill from decode and pools the cache across DRAM and SSD
-        to serve Kimi at 100B+ tokens a day. Serving cost is now a first-class design input — DSA's API
-        price cut made that explicit — but the systems story is a post of its own.</p>
+      <p>However cheap each layer gets, a million-token sequence still doesn't fit on one device.
+        <b>Ring Attention</b> (<a href="https://arxiv.org/abs/2310.01889">Liu et al., 2023</a>) streams KV
+        blocks around a ring of GPUs, overlapping communication with computation — the lineage behind
+        Gemini 1.5's million-token training. At serving time, PagedAttention
+        (<a href="https://arxiv.org/abs/2309.06180">Kwon et al., 2023</a>) cut KV-cache waste from 60–80%
+        to under 4%. The systems story is a post of its own.</p>
 
       <hr />
 
@@ -302,12 +262,19 @@
       <h2 id="s5">The Optimizer: Keeping a Bolt-On Second Training Run Alive</h2>
 
       <p>A long-context phase is, in effect, a second training run bolted onto a finished, expensive model
-        — and longer sequences make training more fragile, where a single loss spike partway through can
-        corrupt the investment. Most of the stability toolkit is general-purpose background by now
-        (Pre-LN placement and AdamW (<a href="https://arxiv.org/abs/1711.05101">Loshchilov &amp; Hutter,
-        2017</a>) are near-universal; newer optimizers like Muon, adopted as MuonClip in
+        — and longer sequences make training more fragile. Attention logits can grow with sequence
+        length, one collapsed attention distribution loses information across the entire window, and a
+        single loss spike partway through can corrupt the investment. Most of the stability toolkit is
+        general-purpose background by now (Pre-LN placement and AdamW
+        (<a href="https://arxiv.org/abs/1711.05101">Loshchilov &amp; Hutter, 2017</a>) are near-universal;
+        newer optimizers like Muon, adopted as MuonClip in
         <a href="https://arxiv.org/abs/2507.20534">Kimi K2, 2025</a>, chase raw efficiency). Three pieces
         matter specifically because the sequences are long and the phase is bolted on:</p>
+
+      <figure>
+        <img src="../figures/fig-opt-failure.svg" alt="Two identical long-context training runs: with z-loss and QK-norm the loss keeps falling; without them, attention logits explode mid-run and the loss spikes into scattered, unrecoverable territory." />
+        <figcaption><b>Figure 8 — What fragility looks like (schematic).</b> Two otherwise identical long-context runs. With logit-scale safeguards (z-loss, QK-norm) the loss keeps falling; without them, attention logits can explode mid-run — and a bolted-on phase has little budget left to recover.</figcaption>
+      </figure>
 
       <ul>
         <li><b>Warmup-Stable-Decay schedules</b> — the GPT-3-era linear-warmup-plus-cosine schedule fixed
@@ -322,6 +289,11 @@
           that keeps optimal hyperparameters stable as the model scales, so a multi-stage context-extension
           curriculum doesn't need re-tuning at every stage.</li>
       </ul>
+
+      <figure>
+        <img src="../figures/fig-opt-mechanism.svg" alt="Learning-rate schedules compared: a cosine schedule warms up and decays toward a horizon fixed in advance, while Warmup-Stable-Decay holds a stable plateau from which the decay can be triggered at any point, shown with dashed alternative decay branches." />
+        <figcaption><b>Figure 9 — Why WSD fits a bolt-on phase (schematic).</b> A cosine schedule commits to its horizon at step zero — by the end of pretraining it is spent. Warmup-Stable-Decay holds a stable plateau from which the decay can be triggered whenever the long-context phase ends (dashed alternatives) — exactly the freedom a staged context extension needs.</figcaption>
+      </figure>
 
       <hr />
 
