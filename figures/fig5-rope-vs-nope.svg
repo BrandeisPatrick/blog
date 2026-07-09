@@ -1,1 +1,93 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="RoPE vs NoPE attention reach: RoPE decays with distance and scatters past the training length; NoPE stays flat. Hover a curve to isolate it."><style>g.c{cursor:pointer;transition:opacity .15s}g.c .tip{opacity:0;transition:opacity .15s;pointer-events:none}g.c:hover .tip{opacity:1}svg:has(.rope:hover) .nope{opacity:.18}svg:has(.nope:hover) .rope{opacity:.18}</style><rect width="760" height="360" fill="#ffffff"/><line x1="64" y1="312" x2="640" y2="312" stroke="#ececec"/><line x1="64" y1="30" x2="64" y2="312" stroke="#ececec"/><text x="352" y="348" font-size="12.5" fill="#1b1b1a" text-anchor="middle">token distance from the query  →</text><text x="18" y="171" font-size="12.5" fill="#1b1b1a" text-anchor="middle" transform="rotate(-90 18 171)">attention it can give</text><line x1="398.1" y1="30" x2="398.1" y2="312" stroke="#1b1b1a" stroke-dasharray="4 3" opacity="0.45"/><text x="403.1" y="44" font-size="11.5" fill="#6b6b66">training length</text><g class="c nope"><line x1="64.0" y1="171.0" x2="640.0" y2="171.0" stroke="#2f6f7a" stroke-width="20" stroke-opacity="0"/><line x1="64.0" y1="171.0" x2="640.0" y2="171.0" stroke="#2f6f7a" stroke-width="2.6"/><text x="648.0" y="175.0" font-size="13" fill="#2f6f7a" font-weight="700">NoPE</text><text class="tip" x="634" y="74" font-size="12" fill="#2f6f7a" font-weight="600" text-anchor="end" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">NoPE — flat at any distance; no training-length anchor</text></g><g class="c rope"><path d="M64.0 41.3 L69.8 50.3 L75.5 58.9 L81.3 67.3 L87.0 75.3 L92.8 83.1 L98.6 90.6 L104.3 97.8 L110.1 104.8 L115.8 111.5 L121.6 118.0 L127.4 124.3 L133.1 130.3 L138.9 136.1 L144.6 141.8 L150.4 147.2 L156.2 152.4 L161.9 157.5 L167.7 162.3 L173.4 167.0 L179.2 171.5 L185.0 175.9 L190.7 180.1 L196.5 184.2 L202.2 188.1 L208.0 191.9 L213.8 195.5 L219.5 199.1 L225.3 202.5 L231.0 205.7 L236.8 208.9 L242.6 211.9 L248.3 214.9 L254.1 217.7 L259.8 220.4 L265.6 223.1 L271.4 225.6 L277.1 228.1 L282.9 230.5 L288.6 232.7 L294.4 234.9 L300.2 237.1 L305.9 239.1 L311.7 241.1 L317.4 243.0 L323.2 244.9 L329.0 246.6 L334.7 248.3 L340.5 250.0 L346.2 251.6 L352.0 253.1 L357.8 254.6 L363.5 256.0 L369.3 257.4 L375.0 258.8 L380.8 260.0 L386.6 261.3 L392.3 262.5 L398.1 263.6 " fill="none" stroke="#b5482e" stroke-width="22" stroke-opacity="0"/><path d="M398.1 263.6 L403.8 264.7 L409.6 265.8 L415.4 266.8 L421.1 267.8 L426.9 268.8 L432.6 269.7 L438.4 270.6 L444.2 271.5 L449.9 272.3 L455.7 273.1 L461.4 273.9 L467.2 274.7 L473.0 275.4 L478.7 276.1 L484.5 276.7 L490.2 277.4 L496.0 278.0 L501.8 278.6 L507.5 279.2 L513.3 279.8 L519.0 280.3 L524.8 280.8 L530.6 281.3 L536.3 281.8 L542.1 282.3 L547.8 282.7 L553.6 283.2 L559.4 283.6 L565.1 284.0 L570.9 284.4 L576.6 284.8 L582.4 285.1 L588.2 285.5 L593.9 285.8 L599.7 286.2 L605.4 286.5 L611.2 286.8 L617.0 287.1 L622.7 287.4 L628.5 287.6 L634.2 287.9 L640.0 288.1 " fill="none" stroke="#b5482e" stroke-width="22" stroke-opacity="0"/><path d="M64.0 41.3 L69.8 50.3 L75.5 58.9 L81.3 67.3 L87.0 75.3 L92.8 83.1 L98.6 90.6 L104.3 97.8 L110.1 104.8 L115.8 111.5 L121.6 118.0 L127.4 124.3 L133.1 130.3 L138.9 136.1 L144.6 141.8 L150.4 147.2 L156.2 152.4 L161.9 157.5 L167.7 162.3 L173.4 167.0 L179.2 171.5 L185.0 175.9 L190.7 180.1 L196.5 184.2 L202.2 188.1 L208.0 191.9 L213.8 195.5 L219.5 199.1 L225.3 202.5 L231.0 205.7 L236.8 208.9 L242.6 211.9 L248.3 214.9 L254.1 217.7 L259.8 220.4 L265.6 223.1 L271.4 225.6 L277.1 228.1 L282.9 230.5 L288.6 232.7 L294.4 234.9 L300.2 237.1 L305.9 239.1 L311.7 241.1 L317.4 243.0 L323.2 244.9 L329.0 246.6 L334.7 248.3 L340.5 250.0 L346.2 251.6 L352.0 253.1 L357.8 254.6 L363.5 256.0 L369.3 257.4 L375.0 258.8 L380.8 260.0 L386.6 261.3 L392.3 262.5 L398.1 263.6 " fill="none" stroke="#b5482e" stroke-width="2.6"/><path d="M398.1 263.6 L403.8 264.7 L409.6 265.8 L415.4 266.8 L421.1 267.8 L426.9 268.8 L432.6 269.7 L438.4 270.6 L444.2 271.5 L449.9 272.3 L455.7 273.1 L461.4 273.9 L467.2 274.7 L473.0 275.4 L478.7 276.1 L484.5 276.7 L490.2 277.4 L496.0 278.0 L501.8 278.6 L507.5 279.2 L513.3 279.8 L519.0 280.3 L524.8 280.8 L530.6 281.3 L536.3 281.8 L542.1 282.3 L547.8 282.7 L553.6 283.2 L559.4 283.6 L565.1 284.0 L570.9 284.4 L576.6 284.8 L582.4 285.1 L588.2 285.5 L593.9 285.8 L599.7 286.2 L605.4 286.5 L611.2 286.8 L617.0 287.1 L622.7 287.4 L628.5 287.6 L634.2 287.9 L640.0 288.1 " fill="none" stroke="#b5482e" stroke-width="1.6" stroke-dasharray="3 3" opacity="0.4"/><circle cx="415.4" cy="306.4" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="431.0" cy="212.6" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="446.6" cy="306.4" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="462.3" cy="271.9" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="477.9" cy="300.1" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="493.5" cy="289.8" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="509.2" cy="265.2" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="524.8" cy="306.4" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="540.4" cy="259.6" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="556.1" cy="292.9" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="571.7" cy="215.6" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="587.3" cy="306.4" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="603.0" cy="247.0" r="2.4" fill="#b5482e" opacity="0.5"/><circle cx="618.6" cy="220.5" r="2.4" fill="#b5482e" opacity="0.5"/><text x="648.0" y="292.1" font-size="13" fill="#b5482e" font-weight="700">RoPE</text><text x="75.5" y="43.3" font-size="11.5" fill="#b5482e">decays with distance…</text><text x="403.1" y="304.0" font-size="11.5" fill="#b5482e" opacity="0.8" stroke="#ffffff" stroke-width="3" paint-order="stroke" stroke-linejoin="round">…and breaks past training length</text><text class="tip" x="634" y="74" font-size="12" fill="#b5482e" font-weight="600" text-anchor="end" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">RoPE — decays with distance, scatters past the training length</text></g><text x="640" y="348" font-size="11" fill="#6b6b66" text-anchor="end">hover a curve</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 404" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive diagram of RoPE and NoPE mechanics. RoPE: three frequency pairs rotate the key vector by an angle proportional to token offset, so the query-key match dephases as the offset grows, and offsets beyond the training length produce angles unseen in training. NoPE: no rotation, match unchanged at any offset. Drag along the token ruler to change the offset.">
+<rect width="760" height="404" fill="#ffffff"/>
+<text x="64" y="62" font-size="13" fill="#1b1b1a" font-weight="700">RoPE — key rotated by ω·(m−n)</text>
+<text x="420" y="62" font-size="13" fill="#1b1b1a" font-weight="700">NoPE — no rotation</text>
+<g transform="translate(110,120)">
+  <circle r="34" fill="#fcfcfb" stroke="#ececec"/>
+  <line y2="-30" stroke="#1b1b1a" stroke-width="2"/>
+  <g id="k0" transform="rotate(18)"><line y2="-27" stroke="#b5482e" stroke-width="2.4"/><polygon points="0,-31 -4,-22 4,-22" fill="#b5482e"/></g>
+</g>
+<g transform="translate(218,120)">
+  <circle r="34" fill="#fcfcfb" stroke="#ececec"/>
+  <line y2="-30" stroke="#1b1b1a" stroke-width="2"/>
+  <g id="k1" transform="rotate(42)"><line y2="-27" stroke="#b5482e" stroke-width="2.4"/><polygon points="0,-31 -4,-22 4,-22" fill="#b5482e"/></g>
+</g>
+<g transform="translate(326,120)">
+  <circle r="34" fill="#fcfcfb" stroke="#ececec"/>
+  <line y2="-30" stroke="#1b1b1a" stroke-width="2"/>
+  <g id="k2" transform="rotate(90)"><line y2="-27" stroke="#b5482e" stroke-width="2.4"/><polygon points="0,-31 -4,-22 4,-22" fill="#b5482e"/></g>
+</g>
+<text x="110" y="172" font-size="11" fill="#6b6b66" text-anchor="middle">ω = 3°/token</text>
+<text x="218" y="172" font-size="11" fill="#6b6b66" text-anchor="middle">ω = 7°/token</text>
+<text x="326" y="172" font-size="11" fill="#6b6b66" text-anchor="middle">ω = 15°/token</text>
+<g transform="translate(474,120)">
+  <circle r="34" fill="#fcfcfb" stroke="#ececec"/>
+  <line y2="-30" stroke="#1b1b1a" stroke-width="2"/>
+  <line y2="-22" stroke="#2f6f7a" stroke-width="3.2"/>
+  <polygon points="0,-26 -4,-17 4,-17" fill="#2f6f7a"/>
+</g>
+<text x="530" y="106" font-size="11.5" fill="#6b6b66">query and key stay aligned</text>
+<text x="530" y="122" font-size="11.5" fill="#6b6b66">at any offset — token order</text>
+<text x="530" y="138" font-size="11.5" fill="#6b6b66">comes from the causal mask</text>
+<text x="64" y="198" font-size="11" fill="#6b6b66">query–key match (mean over pairs)</text>
+<rect x="64" y="206" width="240" height="9" fill="none" stroke="#ececec" rx="2"/>
+<rect id="bar" x="64" y="206" width="135.5" height="9" fill="#b5482e" rx="2"/>
+<text id="bv" x="312" y="215" font-size="12" fill="#b5482e" font-weight="700">56%</text>
+<text x="420" y="198" font-size="11" fill="#6b6b66">query–key match</text>
+<rect x="420" y="206" width="240" height="9" fill="none" stroke="#ececec" rx="2"/>
+<rect x="420" y="206" width="240" height="9" fill="#2f6f7a" rx="2"/>
+<text x="668" y="215" font-size="12" fill="#2f6f7a" font-weight="700">100%</text>
+<rect x="352" y="316" width="288" height="24" fill="#b5482e" opacity="0.05"/>
+<line x1="352" y1="308" x2="352" y2="346" stroke="#1b1b1a" stroke-dasharray="4 3" opacity="0.45"/>
+<text x="356" y="306" font-size="11" fill="#6b6b66">training length</text>
+<line x1="64" y1="340" x2="640" y2="340" stroke="#ececec" stroke-width="1.5"/>
+<line x1="64" y1="340" x2="64" y2="346" stroke="#ececec"/><line x1="208" y1="340" x2="208" y2="346" stroke="#ececec"/><line x1="352" y1="340" x2="352" y2="346" stroke="#ececec"/><line x1="496" y1="340" x2="496" y2="346" stroke="#ececec"/><line x1="640" y1="340" x2="640" y2="346" stroke="#ececec"/>
+<text x="64" y="358" font-size="11" fill="#6b6b66" text-anchor="middle">0</text>
+<text x="208" y="358" font-size="11" fill="#6b6b66" text-anchor="middle">8</text>
+<text x="352" y="358" font-size="11" fill="#6b6b66" text-anchor="middle">16</text>
+<text x="496" y="358" font-size="11" fill="#6b6b66" text-anchor="middle">24</text>
+<text x="640" y="358" font-size="11" fill="#6b6b66" text-anchor="middle">32</text>
+<circle cx="64" cy="328" r="5" fill="#1b1b1a"/>
+<text x="64" y="314" font-size="10.5" fill="#6b6b66" text-anchor="middle">query</text>
+<circle id="km" cx="172" cy="328" r="7" fill="#b5482e" stroke="#ffffff" stroke-width="1.6"/>
+<text x="352" y="374" font-size="12" fill="#6b6b66" text-anchor="middle">key token's distance from the query (tokens)</text>
+<text x="640" y="374" font-size="11" fill="#6b6b66" text-anchor="end">drag the key</text>
+<text id="ro" x="352" y="396" font-size="13" fill="#1b1b1a" font-weight="600" text-anchor="middle">offset m − n = 6 tokens — RoPE match 56% · NoPE match 100%</text>
+<rect id="ov" x="50" y="300" width="610" height="66" fill="#ffffff" fill-opacity="0" style="touch-action:pan-y;cursor:ew-resize"/>
+<script><![CDATA[
+(function () {
+  var svg = document.documentElement;
+  var W = [3, 7, 15];
+  var keys = [document.getElementById('k0'), document.getElementById('k1'), document.getElementById('k2')];
+  var bar = document.getElementById('bar'), bv = document.getElementById('bv');
+  var km = document.getElementById('km'), ro = document.getElementById('ro');
+  var ov = document.getElementById('ov');
+  var PX0 = 64, PPT = 18, MAXD = 32, WALL = 16;
+  function upd(d) {
+    d = Math.max(0, Math.min(MAXD, Math.round(d)));
+    var m = 0;
+    for (var i = 0; i < 3; i++) {
+      keys[i].setAttribute('transform', 'rotate(' + (W[i] * d) + ')');
+      m += Math.cos(W[i] * d * Math.PI / 180);
+    }
+    m = m / 3;
+    bar.setAttribute('width', Math.max(0, m) * 240);
+    var pct = Math.round(m * 100);
+    bv.textContent = pct + '%';
+    km.setAttribute('cx', PX0 + PPT * d);
+    ro.textContent = 'offset m − n = ' + d + ' tokens — RoPE match ' + pct + '% · NoPE match 100%' +
+      (d > WALL ? ' — angles unseen in training' : '');
+  }
+  function toX(e) {
+    var pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse()).x;
+  }
+  var drag = false;
+  ov.addEventListener('pointerdown', function (e) { drag = true; ov.setPointerCapture(e.pointerId); upd((toX(e) - PX0) / PPT); });
+  ov.addEventListener('pointermove', function (e) { if (drag || e.pointerType === 'mouse') upd((toX(e) - PX0) / PPT); });
+  addEventListener('pointerup', function () { drag = false; });
+  upd(6);
+})();
+]]></script>
+</svg>
