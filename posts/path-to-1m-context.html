@@ -17,7 +17,7 @@
 
     <article class="article">
       <h1>The path to 1M context window</h1>
-      <p class="meta"><time datetime="2026-07-05">July 5, 2026</time> · ~25 min read · <span class="status status-review">In final review</span></p>
+      <p class="meta"><time datetime="2026-07-05">July 5, 2026</time> · ~20 min read · <span class="status status-review">In final review</span></p>
 
       <details class="toc" open>
         <summary>Table of Contents</summary>
@@ -50,85 +50,78 @@
 
       <h2 id="s2">Positional Encoding: RoPE for Local Order, NoPE for Long-Range Reach</h2>
 
+      <p>Self-attention is order-blind: shuffle the tokens and every attention score is unchanged —
+        "dog bites man" and "man bites dog" read the same. A <b>positional encoding</b> is the signal
+        injected to tell the model where each token sits
+        (<a href="https://arxiv.org/abs/1706.03762">Vaswani et al., 2017</a>).</p>
+
       <p><b>Rotary Position Embedding (RoPE)</b> (<a href="https://arxiv.org/abs/2104.09864">Su et al.,
-        2021</a>) is the dominant positional encoding in current language models. Instead of adding a
-        learned position vector to each token, RoPE applies a position-dependent rotation to every query
-        and key, so that the attention score between a query at position <i>m</i> and a key at position
-        <i>n</i> depends only on the offset <i>m − n</i>: position enters attention as relative
-        displacement, at zero parameter cost. Since its adoption in LLaMA, RoPE has been effectively
-        universal — Llama, Mistral, Qwen, DeepSeek, and Gemma all use it.</p>
+        2021</a>) rotates every query and key by an angle proportional to position, so the score between
+        positions <i>m</i> and <i>n</i> depends only on the offset <i>m − n</i> — relative position, at
+        zero parameter cost. Since LLaMA adopted it, RoPE has been effectively universal — Llama,
+        Mistral, Qwen, DeepSeek, and Gemma all use it.</p>
 
       <figure>
         <img src="../figures/fig-rope-mechanism.svg" alt="How RoPE encodes position: eight tokens whose arrows advance by a fixed angle per position; the query at position 2 and key at position 6 are highlighted, and a detail circle shows the score depends only on the angle between their arrows." />
-        <figcaption><b>Figure 2 — How RoPE encodes position.</b> Each two-dimensional pair of a query or key is rotated by ω·position, so arrows advance steadily along the sequence (ω = 22.5°/token shown). The attention score between the query (m = 2) and the key (n = 6) sees only the angle between their arrows, ω·(m − n) — shifting both tokens leaves it unchanged.</figcaption>
+        <figcaption><b>Figure 2 — How RoPE encodes position.</b> Each two-dimensional pair of a query or key is rotated by ω·position, so arrows advance steadily along the sequence (ω = 22.5°/token shown). The score between the query (m = 2) and the key (n = 6) sees only the angle between their arrows, ω·(m − n) — shifting both tokens leaves it unchanged.</figcaption>
       </figure>
 
-      <p>Two properties of RoPE are benign at short range but become liabilities at long range. First,
-        the rotation induces a built-in <b>long-term decay</b>: the expected query–key score falls as the
-        distance between two tokens grows — desirable for encoding local word order, but it suppresses
-        attention to information that sits far back in the context. Second, RoPE's rotation frequencies
-        are <b>calibrated to the training length</b>: positions far beyond those seen in training produce
-        out-of-distribution angles, and attention degrades. A RoPE model is therefore anchored to its
-        training length and biased toward the local neighborhood — the two failure modes that matter most
-        at a million tokens.</p>
+      <p>Two properties of the rotation become liabilities at long range: it induces a built-in
+        <b>long-term decay</b> — the expected query–key score falls with distance, suppressing attention
+        to information far back — and its frequencies are <b>calibrated to the training length</b>, so
+        positions beyond it produce out-of-distribution angles. Position Interpolation
+        (<a href="https://arxiv.org/abs/2306.15595">Chen et al., 2023</a>) and YaRN
+        (<a href="https://arxiv.org/abs/2309.00071">Peng et al., 2023</a>) — applied with a brief
+        continued-pretraining pass — carry most models to 128K and beyond, but they only push the training-length anchor outward. The
+        decay stays: a RoPE model stretched to a million tokens still struggles to <i>attend</i>
+        uniformly across them.</p>
 
       <figure>
         <img src="../figures/fig-rope-failure.svg" alt="RoPE's failure at range: attention score decays as token distance grows, and past the training length the curve gives way to scattered, unreliable points." />
-        <figcaption><b>Figure 3 — Where RoPE fails at range (schematic).</b> The two limitations, drawn: the rotation makes the query–key score decay as the offset grows (1), and offsets beyond the training length produce angles the model never saw, so attention past the wall is unreliable (2).</figcaption>
+        <figcaption><b>Figure 3 — Where RoPE fails at range (schematic).</b> The rotation makes the query–key score decay as the offset grows (1), and offsets beyond the training length produce angles the model never saw, so attention past the wall is unreliable (2).</figcaption>
       </figure>
 
-      <p>RoPE's range can be extended with a brief continued-pretraining pass — Position Interpolation
-        (<a href="https://arxiv.org/abs/2306.15595">Chen et al., 2023</a>) and YaRN
-        (<a href="https://arxiv.org/abs/2309.00071">Peng et al., 2023</a>) are the standard methods, and
-        they are what carry most models to 128K and beyond. But interpolation only pushes the
-        training-length anchor outward; it does nothing about the decay. A RoPE model stretched to a
-        million tokens still struggles to <i>attend</i> uniformly across them.</p>
-
       <p><b>NoPE</b> — <b>no positional encoding</b> — is the complementary construction: a layer
-        applies no rotation at all and recovers token order implicitly from the causal mask
+        applies no rotation and recovers token order from the causal mask alone
         (<a href="https://arxiv.org/abs/2305.19466">Kazemnejad et al., 2023</a>;
-        <a href="https://arxiv.org/abs/2501.18795">Yang et al., 2025</a>). A NoPE layer exhibits neither
-        of RoPE's failure modes: attention scores do not decay with distance, so it can attend across the
-        whole sequence, and no frequency is tied to a training length, so nothing moves out of
-        distribution as the context grows. The modern recipe combines the two — RoPE on most layers for
-        sharp local order, position-free layers for the long-range reach.</p>
+        <a href="https://arxiv.org/abs/2501.18795">Yang et al., 2025</a>). No rotation means no decay
+        and no training-length anchor. Drag the key token below and watch RoPE's pairs dephase and its
+        match fall while NoPE's holds.</p>
 
       <figure>
         <object type="image/svg+xml" data="../figures/fig5-rope-vs-nope.svg?v=6" role="img" aria-label="Interactive diagram of RoPE and NoPE mechanics: three RoPE frequency pairs rotate the key vector by an angle proportional to token offset, dephasing the query-key match as the offset grows; offsets beyond the training length produce angles unseen in training. A NoPE pair never rotates, so the match is unchanged at any offset. Drag along the token ruler to change the offset." style="width:100%;height:auto;aspect-ratio:760/404;display:block;">Figure 4: RoPE vs NoPE interactive comparison (SVG).</object>
-        <figcaption><b>Figure 4 — RoPE vs NoPE, side by side (interactive).</b> RoPE rotates each two-dimensional pair of the key by ω·(m−n) — three of the <i>d</i>/2 frequency pairs shown. As the offset grows the pairs dephase and the query–key match falls; offsets beyond the training length produce rotation angles never seen in training. A NoPE layer applies no rotation, so the match is independent of offset. Drag the key token along the ruler.</figcaption>
+        <figcaption><b>Figure 4 — RoPE vs NoPE, side by side (interactive).</b> RoPE rotates each two-dimensional pair of the key by ω·(m−n) — three of the <i>d</i>/2 frequency pairs shown — so the pairs dephase and the match falls as the offset grows; offsets beyond the training length produce rotation angles never seen in training. A NoPE layer applies no rotation, so its match is independent of offset. Drag the key token along the ruler.</figcaption>
       </figure>
 
-      <p>This is what the longest-context models actually do. Meta's Llama 4
-        (<a href="https://huggingface.co/blog/llama4-release">2025</a>) calls it <b>iRoPE</b>: roughly
-        three RoPE layers for every one NoPE layer, plus an inference-time attention-temperature scaling,
-        trained at 256K and generalizing to 10M tokens. Hugging Face's fully-open SmolLM3
-        (<a href="https://huggingface.co/blog/smollm3">2025</a>) uses the same recipe — RoPE on
-        three-quarters of its layers, NoPE on every fourth. Because SmolLM3 publishes its weights
-        <i>and</i> its training recipe, it is the clearest public confirmation of the pattern; the
-        proprietary 1M models (Gemini, GPT-4.1, Claude) do not disclose their positional scheme but are
-        widely assumed to do something similar. The modern answer to "how do you encode position for a
-        million tokens?" is to keep it where it helps and drop it where it hurts. Keep that shape in mind —
-        a minority of layers doing the long-range work — because attention is about to repeat it.</p>
+      <p>The modern recipe combines the two — RoPE on most layers for sharp local order,
+        NoPE layers for the long-range reach — and it is what the longest-context models actually
+        do. Meta's Llama 4
+        (<a href="https://huggingface.co/blog/llama4-release">2025</a>) calls it <b>iRoPE</b> — roughly
+        three RoPE layers for every NoPE layer, trained at 256K and generalizing to 10M tokens — and
+        Hugging Face's fully-open SmolLM3 (<a href="https://huggingface.co/blog/smollm3">2025</a>)
+        publishes weights and recipe for the same pattern; the proprietary 1M models (Gemini, GPT-4.1,
+        Claude) don't disclose theirs but are widely assumed to do something similar. Keep that shape in
+        mind — a minority of layers doing the long-range work — because attention is about to repeat
+        it.</p>
 
       <hr />
 
       <h2 id="s3">Attention, Rebuilt: Exact Attention Made Survivable</h2>
 
-      <p>Attention is where long context gets expensive, twice over. Compute grows with the square of
-        the sequence length, <i>O(N²)</i>, because every token attends to every other
-        (<a href="https://arxiv.org/abs/1706.03762">Vaswani et al., 2017</a>). And the <b>KV cache</b> —
-        the keys and values a model keeps for every past token so it never has to recompute them — grows
-        linearly, with a large constant: a 70B model like Llama 3
-        (<a href="https://arxiv.org/abs/2407.21783">Dubey et al., 2024</a>) holds roughly 40 GB of cache at
-        128K tokens, on top of its ~140 GB of weights.</p>
+      <p>Attention is the mechanism that moves information between positions: each token scores every
+        other token and pulls in from the ones that matter
+        (<a href="https://arxiv.org/abs/1706.03762">Vaswani et al., 2017</a>). Compute grows as <i>O(N²)</i>,
+        because every token attends to every other; the <b>KV cache</b> — the keys and values kept for every past token to avoid
+        recomputing them — grows as <i>N</i> with a large constant: roughly 40 GB at 128K for
+        Llama 3 70B (<a href="https://arxiv.org/abs/2407.21783">Dubey et al., 2024</a>).</p>
 
       <figure>
         <img src="../figures/fig-attn-mechanism.svg?v=2" alt="Doubling the tokens roughly quadruples the attention score matrix but only doubles the KV cache: 4 tokens give 10 pairs and 8 cached vectors, 8 tokens give 36 pairs and 16 cached vectors." />
         <figcaption><b>Figure 5 — Where the two costs come from.</b> Attention scores one cell per token pair and caches two vectors per token — so doubling the tokens (4 → 8 here) roughly quadruples the compute (10 → 36 pairs, <i>N²</i>) but only doubles the memory (8 → 16 vectors, <i>N</i>).</figcaption>
       </figure>
 
-      <p>For years the fixes were conservative: keep attention exactly as it is, just compute it smarter
-        and cache it smaller. That era built the tools everything still runs on.</p>
+      <p>For years the fixes were conservative: keep attention exact, compute it smarter, cache it
+        smaller.</p>
 
       <figure>
         <img src="../figures/fig-attn-failure.svg?v=2" alt="On a linear scale, quadratic attention cost rockets upward and crosses a fixed compute budget long before one million tokens, while sub-quadratic methods rise gently. Going from 2K to 1M tokens is 500 times the tokens but roughly 250,000 times the attention compute." />
@@ -137,90 +130,81 @@
 
       <h3>Cache Less: MHA → MQA → GQA → MLA</h3>
 
-      <p>The cache's size is a per-token cost multiplied by the length of the context. The length is the
-        point, so the lever is what each token costs. <b>MHA</b>, the GPT-3 baseline, caches a key and
-        value per head. <b>MQA</b> (<a href="https://arxiv.org/abs/1911.02150">Shazeer, 2019</a>) shares
-        one K/V head across all query heads — a 128× smaller cache at 128 heads, at some cost in quality.
-        <b>GQA</b> (<a href="https://arxiv.org/abs/2305.13245">Ainslie et al., 2023</a>) shares within
-        groups — an 8–16× reduction at near-MHA quality, the open-model default. <b>MLA</b>
-        (<a href="https://arxiv.org/abs/2405.04434">DeepSeek-V2, 2024</a>) compresses K and V into a
-        low-rank latent and caches only that, for a reported 93.3% cache reduction.</p>
+      <p>The cache scales with length times per-token cost; the length is the point — the lever is what
+        each token costs. Everything after GPT-3's <b>MHA</b> baseline shares K/V heads across more query
+        heads, until <b>MLA</b> (<a href="https://arxiv.org/abs/2405.04434">DeepSeek-V2, 2024</a>) caches
+        only a low-rank compression of K and V. Click through:</p>
 
       <figure>
-        <img src="../figures/fig2-kvcache.svg" alt="Bar chart of KV cache floats per token per layer for MHA, GQA, MLA, and MQA on a log scale, showing reductions of 1x, 16x, 57x, and 128x." />
-        <figcaption><b>Figure 7 — Shrinking the KV cache.</b> Floats cached per token per layer for a 128-head, 128-dim example (caching K and V). MLA's ~57× is the <i>per-head</i> compression ratio from these config numbers; end-to-end analyses of the full DeepSeek-V3 cache report a still-dramatic ~28× reduction. Orthogonally, <b>KV quantization</b> (FP8, or 2–3 bit schemes like KIVI and KVQuant) cuts bytes-per-element another 2–8×.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-attn-kvheads.svg?v=1" role="img" aria-label="Interactive comparison of KV-cache schemes: buttons switch between MHA, MQA, GQA, and MLA; eight query heads connect to the K/V heads they read, and a bar shows the cache per token shrinking from 1x to 128x smaller." style="width:100%;height:auto;aspect-ratio:760/316;display:block;">Figure 7: interactive KV-cache comparison (SVG).</object>
+        <figcaption><b>Figure 7 — Shrinking the KV cache (interactive).</b> Eight query heads on top connect to the K/V heads they read; the bar is the cache left per token (the eight-head diagram is schematic — the quoted reductions use real-model head counts). <b>MQA</b>'s (<a href="https://arxiv.org/abs/1911.02150">Shazeer, 2019</a>) 128× at 128 heads costs some quality; <b>GQA</b>'s (<a href="https://arxiv.org/abs/2305.13245">Ainslie et al., 2023</a>) 8–16× keeps near-MHA quality and is the open-model default; MLA's ~57× is the <i>per-head</i> compression from DeepSeek's config numbers — the paper reports a 93.3% cache reduction; end-to-end analyses of the full DeepSeek-V3 cache report a still-dramatic ~28×. Orthogonally, <b>KV quantization</b> (FP8, or 2–3 bit schemes like KIVI and KVQuant) cuts bytes-per-element another 2–8×.</figcaption>
       </figure>
 
       <h3>Compute Smarter: FlashAttention</h3>
 
-      <p>On the compute side the anchor is <b>FlashAttention</b>
-        (<a href="https://arxiv.org/abs/2205.14135">Dao et al., 2022</a>): exact attention computed
-        without ever writing the <i>N×N</i> matrix to high-bandwidth memory, by tiling Q, K, and V into
-        SRAM-sized blocks under a running softmax. FlashAttention-2 and -3
-        (<a href="https://arxiv.org/abs/2307.08691">Dao, 2023</a>;
-        <a href="https://arxiv.org/abs/2407.08608">Shah et al., 2024</a>) pushed hardware utilization
-        from roughly 25% to 75%, and nearly every model since 2023 trains on this kernel. But it is an IO
-        fix, not an algorithmic one — the quadratic is still there, just fed efficiently. At a million
-        tokens you have to attack the exponent.</p>
+      <p><b>FlashAttention</b> (<a href="https://arxiv.org/abs/2205.14135">Dao et al., 2022</a>) computes
+        exact attention without ever materializing the <i>N×N</i> matrix, tiling Q, K, and V through SRAM
+        under a running softmax (<a href="https://arxiv.org/abs/2307.08691">FlashAttention-2</a>,
+        <a href="https://arxiv.org/abs/2407.08608">-3</a>). But it is an IO fix, not an algorithmic one —
+        the quadratic remains, just fed efficiently; at a million tokens you attack the exponent.</p>
 
       <hr />
 
       <h2 id="s3b">Attention, Replaced: Full Attention Becomes a Minority Layer</h2>
 
-      <p>The 2025–26 generation went further, and the field's question changed shape: <b>what fraction
-        of layers keep full attention, and what cheap primitive fills the rest?</b> By mid-2026, no major
-        open-weight model reaches 1M tokens with dense attention in every layer.</p>
+      <p>By mid-2026, no major open-weight model reaches 1M tokens with dense attention in every layer.
+        The question became <b>what fraction of layers keep full attention, and what cheap primitive
+        fills the rest</b> — every answer skips most of the score matrix:</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig-attn-patterns.svg?v=1" role="img" aria-label="Interactive attention-pattern explorer: a 20-by-20 causal grid of query-key cells with five pattern buttons — dense, sliding window, window plus global, learned blocks, and hybrid stack — and a live counter of cells computed out of 210." style="width:100%;height:auto;aspect-ratio:760/400;display:block;">Figure 8: interactive attention-pattern explorer (SVG).</object>
+        <figcaption><b>Figure 8 — Which query–key scores actually get computed (interactive).</b> Twenty tokens, one cell per causal query–key pair, 210 cells when dense. A sliding window plus a few global tokens (<a href="https://arxiv.org/abs/2004.05150">Longformer, 2020</a>; <a href="https://arxiv.org/abs/2007.14062">BigBird, 2020</a>) reaches <i>O(N)</i> — the window keeps local links but misses long range, the globals restore anchors to the start; learned blocks let the model pick where to look; the hybrid stack runs a cheap pattern in most layers and keeps full attention in a few.</figcaption>
+      </figure>
 
       <h3>Attend Sparsely: From Fixed Patterns to Trained Sparsity</h3>
 
-      <p>Hand-designed sparsity came first: Sparse Transformers
-        (<a href="https://arxiv.org/abs/1904.10509">Child et al., 2019</a>) cut <i>O(N²)</i> to
-        <i>O(N√N)</i>; Longformer (<a href="https://arxiv.org/abs/2004.05150">Beltagy et al., 2020</a>)
-        and BigBird (<a href="https://arxiv.org/abs/2007.14062">Zaheer et al., 2020</a>) reached
-        <i>O(N)</i> with a sliding window plus a few global tokens. The second generation lets the model
-        <i>learn</i> where to attend: DeepSeek's Native Sparse Attention
-        (<a href="https://arxiv.org/abs/2502.11089">NSA, February 2025</a>) and Moonshot's MoBA
-        (<a href="https://arxiv.org/abs/2502.13189">February 2025</a>) train the pattern end-to-end, and
-        that September <b>DeepSeek Sparse Attention</b> (DSA) shipped in
+      <p>The fixed patterns above were designed by hand (Sparse Transformers,
+        <a href="https://arxiv.org/abs/1904.10509">Child et al., 2019</a>); DeepSeek's
+        <a href="https://arxiv.org/abs/2502.11089">NSA</a> and Moonshot's
+        <a href="https://arxiv.org/abs/2502.13189">MoBA</a> (February 2025) train the pattern end-to-end.
+        That September, <b>DeepSeek Sparse Attention</b> (DSA) shipped in
         <a href="https://api-docs.deepseek.com/news/news250929">DeepSeek-V3.2-Exp</a> at quality parity
-        with the dense model — with a long-context API price cut of more than half the same day. The
-        price cut is the tell: sparse attention became an economic fact.
-        <a href="https://arxiv.org/abs/2606.19348">DeepSeek-V4 (2026)</a> reaches 1M tokens on the same
-        lineage at roughly 27% of the FLOPs and 10% of the KV cache of its predecessor.</p>
+        with the dense model, with a long-context API price cut of more than half the same day. The price cut
+        is the tell: sparse attention became an economic fact.
+        <a href="https://arxiv.org/abs/2606.19348">DeepSeek-V4 (2026)</a> reaches 1M tokens at roughly
+        27% of the FLOPs and 10% of the KV cache of its predecessor.</p>
 
       <h3>Replace the Layer: Linear Attention and the SSM Lineage</h3>
 
-      <p>The most radical lever drops softmax attention entirely. <b>State-space models</b> compress the
-        past into a fixed-size state — <i>O(N)</i> time, <i>O(1)</i> inference memory — in a line running
-        from S4 (<a href="https://arxiv.org/abs/2111.00396">Gu et al., 2021</a>) through Mamba
-        (<a href="https://arxiv.org/abs/2312.00752">Gu &amp; Dao, 2023</a>) to Mamba-2's formal duality
-        with attention (<a href="https://arxiv.org/abs/2405.21060">Dao &amp; Gu, 2024</a>). The catch,
-        found early and confirmed often: pure SSMs are weaker at <i>precise recall</i>, where attention
-        stays near 100%. So the survivors are hybrids — attention for exact retrieval, the cheap layer
-        for everything else. MiniMax-01 (<a href="https://arxiv.org/abs/2501.08313">January 2025</a>)
-        took <i>lightning attention</i> to frontier scale, trained at 1M context; Kimi Linear
-        (<a href="https://arxiv.org/abs/2510.26692">Moonshot, October 2025</a>) reports a 3:1 hybrid
-        <i>beating</i> full attention with a 75% smaller cache — and some production stacks leave as
-        little as ~8% of layers doing full attention.</p>
+      <p><b>State-space models</b> drop softmax attention entirely, compressing the past into a
+        fixed-size state — <i>O(N)</i> time, <i>O(1)</i> inference memory
+        (<a href="https://arxiv.org/abs/2111.00396">S4</a> →
+        <a href="https://arxiv.org/abs/2312.00752">Mamba</a> →
+        <a href="https://arxiv.org/abs/2405.21060">Mamba-2</a>). The catch: pure SSMs are weaker at
+        <i>precise recall</i>, so the survivors are hybrids — attention for exact retrieval, the cheap
+        layer for everything else. MiniMax-01
+        (<a href="https://arxiv.org/abs/2501.08313">January 2025</a>) took <i>lightning attention</i> to
+        frontier scale, trained at 1M context; Kimi Linear
+        (<a href="https://arxiv.org/abs/2510.26692">October 2025</a>) reports a 3:1 hybrid <i>beating</i>
+        full attention with a 75% smaller cache; some stacks keep ~8% full-attention layers.</p>
 
       <h3>The Composition Question — and the Holdout That Converted</h3>
 
       <p>"Sparse" and "linear" ended in the same place: a minority of full-attention layers doing precise
-        recall, something cheap filling the rest — the same shape as iRoPE. The honest counterpoint:
-        MiniMax kept M2 on full attention and published why its hybrids fell short on multi-hop reasoning
-        at scale (<a href="https://www.minimax.io/news/why-did-m2-end-up-as-a-full-attention-model">October
-        2025</a>) — then converted seven months later, shipping M3 at 1M context on its own block-sparse
+        recall — the same shape as iRoPE. The honest holdout: MiniMax kept M2 dense and published why its
+        hybrids fell short on multi-hop reasoning at scale
+        (<a href="https://www.minimax.io/news/why-did-m2-end-up-as-a-full-attention-model">October
+        2025</a>), and converted seven months later — M3 ships at 1M context on its own block-sparse
         mechanism (<a href="https://arxiv.org/abs/2606.13392">MSA, June 2026</a>). At a million tokens,
         nobody is paying for dense attention in every layer anymore.</p>
 
       <h3>Shard the Sequence</h3>
 
-      <p>However cheap each layer gets, a million-token sequence still doesn't fit on one device.
-        <b>Ring Attention</b> (<a href="https://arxiv.org/abs/2310.01889">Liu et al., 2023</a>) streams KV
-        blocks around a ring of GPUs, overlapping communication with computation — the lineage behind
-        Gemini 1.5's million-token training. At serving time, PagedAttention
-        (<a href="https://arxiv.org/abs/2309.06180">Kwon et al., 2023</a>) cut KV-cache waste from 60–80%
-        to under 4%. The systems story is a post of its own.</p>
+      <p>However cheap each layer gets, a million-token sequence doesn't fit on one device:
+        <b>Ring Attention</b> (<a href="https://arxiv.org/abs/2310.01889">Liu et al., 2023</a>) streams
+        KV blocks around a ring of GPUs, the lineage behind Gemini 1.5's million-token training. At
+        serving time, PagedAttention (<a href="https://arxiv.org/abs/2309.06180">Kwon et al., 2023</a>)
+        cut KV-cache waste from 60–80% to under 4%.</p>
 
       <hr />
 
@@ -261,39 +245,54 @@
 
       <h2 id="s5">The Optimizer: Keeping a Bolt-On Second Training Run Alive</h2>
 
-      <p>A long-context phase is, in effect, a second training run bolted onto a finished, expensive model
-        — and longer sequences make training more fragile. Attention logits can grow with sequence
-        length, one collapsed attention distribution loses information across the entire window, and a
-        single loss spike partway through can corrupt the investment. Most of the stability toolkit is
-        general-purpose background by now (Pre-LN placement and AdamW
-        (<a href="https://arxiv.org/abs/1711.05101">Loshchilov &amp; Hutter, 2017</a>) are near-universal;
+      <p>An <b>optimizer</b> turns each batch's gradients into weight updates — AdamW
+        (<a href="https://arxiv.org/abs/1711.05101">Loshchilov &amp; Hutter, 2017</a>) is the default;
         newer optimizers like Muon, adopted as MuonClip in
-        <a href="https://arxiv.org/abs/2507.20534">Kimi K2, 2025</a>, chase raw efficiency). Three pieces
-        matter specifically because the sequences are long and the phase is bolted on:</p>
+        <a href="https://arxiv.org/abs/2507.20534">Kimi K2, 2025</a>, chase raw efficiency.
+        The <b>learning-rate schedule</b> is the plan for how big those updates are over the run:
+        large early, shrinking as the model settles.</p>
+
+      <p>The GPT-3-era schedule was linear warmup plus a cosine decay — a curve whose horizon is
+        fixed at step zero. That is fine when training is one run with a known end.</p>
+
+      <p>A long-context phase is exactly not that. It is a second training run bolted onto a
+        finished, expensive model, and longer sequences make it more fragile: attention logits can
+        grow with sequence length, and a single loss spike partway through can corrupt the
+        investment.</p>
 
       <figure>
         <img src="../figures/fig-opt-failure.svg" alt="Two identical long-context training runs: with z-loss and QK-norm the loss keeps falling; without them, attention logits explode mid-run and the loss spikes into scattered, unrecoverable territory." />
-        <figcaption><b>Figure 8 — What fragility looks like (schematic).</b> Two otherwise identical long-context runs. With logit-scale safeguards (z-loss, QK-norm) the loss keeps falling; without them, attention logits can explode mid-run — and a bolted-on phase has little budget left to recover.</figcaption>
+        <figcaption><b>Figure 9 — What fragility looks like (schematic).</b> Two otherwise identical long-context runs. With logit-scale safeguards (z-loss, QK-norm) the loss keeps falling; without them, attention logits can explode mid-run — and a bolted-on phase has little budget left to recover.</figcaption>
       </figure>
 
-      <ul>
-        <li><b>Warmup-Stable-Decay schedules</b> — the GPT-3-era linear-warmup-plus-cosine schedule fixed
-          the training horizon in advance; WSD (<a href="https://arxiv.org/abs/2404.06395">Hu et al., 2024</a>)
-          is "horizon-free": you can trigger the decay at any point, which is exactly what bolting a
-          long-context phase onto a finished base model requires. A cosine-scheduled model has already
-          spent its schedule.</li>
-        <li><b>z-loss and QK-norm</b> — a small penalty on the softmax normalizer (z-loss) and normalizing
-          queries and keys before attention (QK-norm) both head off logit explosion. QK-norm matters more at
-          long context, where one collapsed attention distribution loses information across the whole sequence.</li>
-        <li><b>muP</b> — a parametrization (<a href="https://arxiv.org/abs/2203.03466">Yang et al., 2022</a>)
-          that keeps optimal hyperparameters stable as the model scales, so a multi-stage context-extension
-          curriculum doesn't need re-tuning at every stage.</li>
-      </ul>
+      <p>The schedule is the other casualty: by the end of pretraining, a cosine-scheduled model has
+        nothing left to decay.</p>
 
       <figure>
-        <img src="../figures/fig-opt-mechanism.svg" alt="Learning-rate schedules compared: a cosine schedule warms up and decays toward a horizon fixed in advance, while Warmup-Stable-Decay holds a stable plateau from which the decay can be triggered at any point, shown with dashed alternative decay branches." />
-        <figcaption><b>Figure 9 — Why WSD fits a bolt-on phase (schematic).</b> A cosine schedule commits to its horizon at step zero — by the end of pretraining it is spent. Warmup-Stable-Decay holds a stable plateau from which the decay can be triggered whenever the long-context phase ends (dashed alternatives) — exactly the freedom a staged context extension needs.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-opt-mechanism.svg?v=2" role="img" aria-label="Interactive comparison of learning-rate schedules: a grey cosine curve whose horizon is fixed at step zero, and a teal Warmup-Stable-Decay curve holding a stable plateau with a draggable trigger point that sets where the decay begins. A readout reports the trigger as a percentage of the run." style="width:100%;height:auto;aspect-ratio:760/300;display:block;">Figure 10: cosine vs WSD learning-rate schedules (SVG).</object>
+        <figcaption><b>Figure 10 — Why WSD fits a bolt-on phase (interactive).</b> A cosine schedule (grey) commits to its horizon at step zero — by the end of pretraining it is spent. Warmup-Stable-Decay (teal) holds a stable plateau from which the decay can be triggered at any point. Drag the trigger to move where the decay begins.</figcaption>
       </figure>
+
+      <p>Three tools matter specifically because the sequences are long and the phase is bolted on:</p>
+
+      <ul>
+        <li><b>Warmup-Stable-Decay schedules</b> — WSD (<a href="https://arxiv.org/abs/2404.06395">Hu
+          et al., 2024</a>) is "horizon-free": hold the plateau, trigger the decay whenever the
+          long-context phase ends. A cosine-scheduled model has already spent its schedule.</li>
+        <li><b>z-loss and QK-norm</b> — a small penalty on the softmax normalizer (z-loss) and
+          normalizing queries and keys before attention (QK-norm) both head off logit explosion.
+          QK-norm matters more at long context, where one collapsed attention distribution loses
+          information across the whole sequence.</li>
+        <li><b>muP</b> — a parametrization (<a href="https://arxiv.org/abs/2203.03466">Yang et al.,
+          2022</a>) that keeps optimal hyperparameters stable as the model scales, so a multi-stage
+          context-extension curriculum doesn't need re-tuning at every stage.</li>
+      </ul>
+
+      <p>Together these are what make a staged context extension routine: the decay fires whenever
+        the phase ends (WSD), the logits survive the growth that long sequences bring (z-loss,
+        QK-norm), and the same hyperparameters carry across stages (muP). That is what lets a lab
+        bolt a 128K–256K training phase onto a finished model without re-tuning it — and without one
+        spike corrupting the investment.</p>
 
       <hr />
 
