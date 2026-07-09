@@ -79,7 +79,7 @@
         sharp local order, position-free layers for the long-range reach.</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig5-rope-vs-nope.svg?v=4" role="img" aria-label="Interactive diagram of RoPE and NoPE mechanics: three RoPE frequency pairs rotate the key vector by an angle proportional to token offset, dephasing the query-key match as the offset grows; offsets beyond the training length produce angles unseen in training. A NoPE pair never rotates, so the match is unchanged at any offset. Drag along the token ruler to change the offset." style="width:100%;height:auto;aspect-ratio:760/404;display:block;">Figure 2: RoPE vs NoPE mechanism (SVG).</object>
+        <object type="image/svg+xml" data="../figures/fig5-rope-vs-nope.svg?v=5" role="img" aria-label="Interactive diagram of RoPE and NoPE mechanics: three RoPE frequency pairs rotate the key vector by an angle proportional to token offset, dephasing the query-key match as the offset grows; offsets beyond the training length produce angles unseen in training. A NoPE pair never rotates, so the match is unchanged at any offset. Drag along the token ruler to change the offset." style="width:100%;height:auto;aspect-ratio:760/404;display:block;">Figure 2: RoPE vs NoPE mechanism (SVG).</object>
         <figcaption><b>Figure 2 — The two mechanisms (interactive).</b> RoPE rotates each two-dimensional pair of the key by ω·(m−n) — three of the <i>d</i>/2 frequency pairs shown. As the offset grows the pairs dephase and the query–key match falls; offsets beyond the training length produce rotation angles never seen in training. A NoPE layer applies no rotation, so the match is independent of offset. Drag the key token along the ruler.</figcaption>
       </figure>
 

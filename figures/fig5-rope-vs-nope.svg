@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 404" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive diagram of RoPE and NoPE mechanics. RoPE: three frequency pairs rotate the key vector by an angle proportional to token offset, so the query-key match dephases as the offset grows, and offsets beyond the training length produce angles unseen in training. NoPE: no rotation, match unchanged at any offset. Drag along the token ruler to change the offset.">
-<rect width="760" height="404" fill="#ffffff"/>
+<style>#ov{cursor:grab}#ov:active{cursor:grabbing}#kg{pointer-events:none}#kin.idle{animation:nudge 1.6s ease-in-out infinite}@keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(12px)}}@media (prefers-reduced-motion:reduce){#kin.idle{animation:none}}</style><rect width="760" height="404" fill="#ffffff"/>
 <text x="64" y="62" font-size="13" fill="#1b1b1a" font-weight="700">RoPE — key rotated by ω·(m−n)</text>
 <text x="420" y="62" font-size="13" fill="#1b1b1a" font-weight="700">NoPE — no rotation</text>
 <g transform="translate(110,120)">
@@ -40,7 +40,7 @@
 <rect x="352" y="316" width="288" height="24" fill="#b5482e" opacity="0.05"/>
 <line x1="352" y1="308" x2="352" y2="346" stroke="#1b1b1a" stroke-dasharray="4 3" opacity="0.45"/>
 <text x="356" y="306" font-size="11" fill="#6b6b66">training length</text>
-<line x1="64" y1="340" x2="640" y2="340" stroke="#ececec" stroke-width="1.5"/>
+<rect x="64" y="324" width="576" height="8" rx="4" fill="#f6f6f4" stroke="#ececec"/><rect id="fb" x="64" y="324" width="108" height="8" rx="4" fill="#b5482e" opacity="0.25"/><line x1="64" y1="340" x2="640" y2="340" stroke="#ececec" stroke-width="1.5"/>
 <line x1="64" y1="340" x2="64" y2="346" stroke="#ececec"/><line x1="208" y1="340" x2="208" y2="346" stroke="#ececec"/><line x1="352" y1="340" x2="352" y2="346" stroke="#ececec"/><line x1="496" y1="340" x2="496" y2="346" stroke="#ececec"/><line x1="640" y1="340" x2="640" y2="346" stroke="#ececec"/>
 <text x="64" y="358" font-size="11" fill="#6b6b66" text-anchor="middle">0</text>
 <text x="208" y="358" font-size="11" fill="#6b6b66" text-anchor="middle">8</text>
@@ -49,18 +49,19 @@
 <text x="640" y="358" font-size="11" fill="#6b6b66" text-anchor="middle">32</text>
 <circle cx="64" cy="328" r="5" fill="#1b1b1a"/>
 <text x="64" y="314" font-size="10.5" fill="#6b6b66" text-anchor="middle">query</text>
-<circle id="km" cx="172" cy="328" r="7" fill="#b5482e" stroke="#ffffff" stroke-width="1.6"/>
+<g id="kg" transform="translate(172,328)"><g id="kin" class="idle"><path d="M-15 -4 L-19 0 L-15 4" fill="none" stroke="#b5482e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/><path d="M15 -4 L19 0 L15 4" fill="none" stroke="#b5482e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/><circle r="11" fill="#ffffff" stroke="#b5482e" stroke-width="2.5"/><circle r="3.6" fill="#b5482e"/></g></g>
 <text x="352" y="374" font-size="12" fill="#6b6b66" text-anchor="middle">key token's distance from the query (tokens)</text>
-<text x="640" y="374" font-size="11" fill="#6b6b66" text-anchor="end">drag the key</text>
+<text x="640" y="374" font-size="11" fill="#6b6b66" text-anchor="end">drag the key token</text>
 <text id="ro" x="352" y="396" font-size="13" fill="#1b1b1a" font-weight="600" text-anchor="middle">offset m − n = 6 tokens — RoPE match 56% · NoPE match 100%</text>
-<rect id="ov" x="50" y="300" width="610" height="66" fill="#ffffff" fill-opacity="0" style="touch-action:pan-y;cursor:ew-resize"/>
+<rect id="ov" x="50" y="300" width="610" height="66" fill="#ffffff" fill-opacity="0" style="touch-action:pan-y"/>
 <script><![CDATA[
 (function () {
   var svg = document.documentElement;
   var W = [3, 7, 15];
   var keys = [document.getElementById('k0'), document.getElementById('k1'), document.getElementById('k2')];
   var bar = document.getElementById('bar'), bv = document.getElementById('bv');
-  var km = document.getElementById('km'), ro = document.getElementById('ro');
+  var kg = document.getElementById('kg'), kin = document.getElementById('kin');
+  var fb = document.getElementById('fb'), ro = document.getElementById('ro');
   var ov = document.getElementById('ov');
   var PX0 = 64, PPT = 18, MAXD = 32, WALL = 16;
   function upd(d) {
@@ -74,7 +75,8 @@
     bar.setAttribute('width', Math.max(0, m) * 240);
     var pct = Math.round(m * 100);
     bv.textContent = pct + '%';
-    km.setAttribute('cx', PX0 + PPT * d);
+    kg.setAttribute('transform', 'translate(' + (PX0 + PPT * d) + ',328)');
+    fb.setAttribute('width', PPT * d);
     ro.textContent = 'offset m − n = ' + d + ' tokens — RoPE match ' + pct + '% · NoPE match 100%' +
       (d > WALL ? ' — angles unseen in training' : '');
   }
@@ -84,8 +86,8 @@
     return pt.matrixTransform(svg.getScreenCTM().inverse()).x;
   }
   var drag = false;
-  ov.addEventListener('pointerdown', function (e) { drag = true; ov.setPointerCapture(e.pointerId); upd((toX(e) - PX0) / PPT); });
-  ov.addEventListener('pointermove', function (e) { if (drag || e.pointerType === 'mouse') upd((toX(e) - PX0) / PPT); });
+  ov.addEventListener('pointerdown', function (e) { drag = true; kin.setAttribute('class', ''); ov.setPointerCapture(e.pointerId); upd((toX(e) - PX0) / PPT); });
+  ov.addEventListener('pointermove', function (e) { if (drag || e.pointerType === 'mouse') { kin.setAttribute('class', ''); upd((toX(e) - PX0) / PPT); } });
   addEventListener('pointerup', function () { drag = false; });
   upd(6);
 })();
