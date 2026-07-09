@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 404" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive diagram of RoPE and NoPE mechanics. RoPE: three frequency pairs rotate the key vector by an angle proportional to token offset, so the query-key match dephases as the offset grows, and offsets beyond the training length produce angles unseen in training. NoPE: no rotation, match unchanged at any offset. Drag along the token ruler to change the offset.">
-<style>#ov{cursor:grab}#ov:active{cursor:grabbing}#kg{pointer-events:none}#kin.idle{animation:nudge 1.6s ease-in-out infinite}@keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(12px)}}@media (prefers-reduced-motion:reduce){#kin.idle{animation:none}}</style><rect width="760" height="404" fill="#ffffff"/>
+<style>#ov{cursor:grab}#ov:active{cursor:grabbing}#kg{pointer-events:none}</style><rect width="760" height="404" fill="#ffffff"/>
 <text x="64" y="62" font-size="13" fill="#1b1b1a" font-weight="700">RoPE — key rotated by ω·(m−n)</text>
 <text x="420" y="62" font-size="13" fill="#1b1b1a" font-weight="700">NoPE — no rotation</text>
 <g transform="translate(110,120)">
@@ -49,7 +49,7 @@
 <text x="640" y="358" font-size="11" fill="#6b6b66" text-anchor="middle">32</text>
 <circle cx="64" cy="328" r="5" fill="#1b1b1a"/>
 <text x="64" y="314" font-size="10.5" fill="#6b6b66" text-anchor="middle">query</text>
-<g id="kg" transform="translate(172,328)"><g id="kin" class="idle"><path d="M-15 -4 L-19 0 L-15 4" fill="none" stroke="#b5482e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/><path d="M15 -4 L19 0 L15 4" fill="none" stroke="#b5482e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/><circle r="11" fill="#ffffff" stroke="#b5482e" stroke-width="2.5"/><circle r="3.6" fill="#b5482e"/></g></g>
+<g id="kg" transform="translate(172,328)"><g id="kin"><circle r="9" fill="#ffffff" stroke="#b5482e" stroke-width="2.2"/><circle r="3.2" fill="#b5482e"/></g></g>
 <text x="352" y="374" font-size="12" fill="#6b6b66" text-anchor="middle">key token's distance from the query (tokens)</text>
 <text x="640" y="374" font-size="11" fill="#6b6b66" text-anchor="end">drag the key token</text>
 <text id="ro" x="352" y="396" font-size="13" fill="#1b1b1a" font-weight="600" text-anchor="middle">offset m − n = 6 tokens — RoPE match 56% · NoPE match 100%</text>
@@ -60,7 +60,7 @@
   var W = [3, 7, 15];
   var keys = [document.getElementById('k0'), document.getElementById('k1'), document.getElementById('k2')];
   var bar = document.getElementById('bar'), bv = document.getElementById('bv');
-  var kg = document.getElementById('kg'), kin = document.getElementById('kin');
+  var kg = document.getElementById('kg');
   var fb = document.getElementById('fb'), ro = document.getElementById('ro');
   var ov = document.getElementById('ov');
   var PX0 = 64, PPT = 18, MAXD = 32, WALL = 16;
@@ -86,8 +86,8 @@
     return pt.matrixTransform(svg.getScreenCTM().inverse()).x;
   }
   var drag = false;
-  ov.addEventListener('pointerdown', function (e) { drag = true; kin.setAttribute('class', ''); ov.setPointerCapture(e.pointerId); upd((toX(e) - PX0) / PPT); });
-  ov.addEventListener('pointermove', function (e) { if (drag || e.pointerType === 'mouse') { kin.setAttribute('class', ''); upd((toX(e) - PX0) / PPT); } });
+  ov.addEventListener('pointerdown', function (e) { drag = true; ov.setPointerCapture(e.pointerId); upd((toX(e) - PX0) / PPT); });
+  ov.addEventListener('pointermove', function (e) { if (drag || e.pointerType === 'mouse') upd((toX(e) - PX0) / PPT); });
   addEventListener('pointerup', function () { drag = false; });
   upd(6);
 })();
