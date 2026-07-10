@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 412" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Two-panel log chart of training-data growth, 2020 to 2026. Top: pretraining corpora grow from GPT-3's 300 billion tokens to about 36 trillion (Qwen3) and 32-33 trillion (DeepSeek-V4) — roughly 100 times in five years. Bottom: post-training sets grow from InstructGPT's 13 thousand prompts to Nemotron 3's 7 million samples — yet even that equals only about 80 billion SFT tokens, 0.3 percent of its own 25-trillion-token pretraining. A hollow square marks NVIDIA's released 33-million-sample Llama-Nemotron dataset.">
+<rect width="760" height="412" fill="#ffffff"/>
+<text x="64" y="28" font-size="13" fill="#1b1b1a" font-weight="700">pretraining corpus &#8212; tokens</text>
+<line x1="90" y1="168.0" x2="700" y2="168.0" stroke="#ececec"/>
+<text x="84" y="171.5" font-size="10.5" fill="#6b6b66" text-anchor="end">100B</text>
+<line x1="90" y1="128.0" x2="700" y2="128.0" stroke="#ececec"/>
+<text x="84" y="131.5" font-size="10.5" fill="#6b6b66" text-anchor="end">1T</text>
+<line x1="90" y1="88.0" x2="700" y2="88.0" stroke="#ececec"/>
+<text x="84" y="91.5" font-size="10.5" fill="#6b6b66" text-anchor="end">10T</text>
+<line x1="90" y1="48.0" x2="700" y2="48.0" stroke="#ececec"/>
+<text x="84" y="51.5" font-size="10.5" fill="#6b6b66" text-anchor="end">100T</text>
+<polyline points="126.4,148.9 293.0,122.2 412.3,116.0 504.3,81.0 578.9,65.7 677.2,67.3" fill="none" stroke="#b5482e" stroke-width="2"/>
+<circle cx="126.4" cy="148.9" r="4" fill="#b5482e"><title>GPT-3 · 300B (2020)</title></circle>
+<text x="134.4" y="162.9" font-size="10.5" fill="#6b6b66">GPT-3 · 300B</text>
+<circle cx="293.0" cy="122.2" r="4" fill="#b5482e"><title>Chinchilla · 1.4T (2022)</title></circle>
+<text x="301.0" y="136.2" font-size="10.5" fill="#6b6b66">Chinchilla · 1.4T</text>
+<circle cx="412.3" cy="116.0" r="4" fill="#b5482e"><title>Llama 2 · 2T (2023)</title></circle>
+<text x="420.3" y="130.0" font-size="10.5" fill="#6b6b66">Llama 2 · 2T</text>
+<circle cx="504.3" cy="81.0" r="4" fill="#b5482e"><title>Llama 3 · ~15T (2024)</title></circle>
+<text x="498.3" y="71.0" font-size="10.5" fill="#6b6b66" text-anchor="end">Llama 3 · ~15T</text>
+<circle cx="578.9" cy="65.7" r="4" fill="#b5482e"><title>Qwen3 · 36T (2025)</title></circle>
+<text x="564.9" y="55.7" font-size="10.5" fill="#6b6b66" text-anchor="end">Qwen3 · 36T</text>
+<circle cx="677.2" cy="67.3" r="4" fill="#b5482e"><title>DeepSeek-V4 · 32–33T (2026)</title></circle>
+<text x="647.2" y="89.3" font-size="10.5" fill="#6b6b66" text-anchor="end">DeepSeek-V4 · 32–33T</text>
+<text x="700" y="37.3" font-size="11" fill="#b5482e" text-anchor="end" font-weight="600">~100&#215; in five years</text>
+<text x="64" y="206" font-size="13" fill="#1b1b1a" font-weight="700">post-training sets &#8212; samples</text>
+<rect x="290" y="198" width="8" height="8" fill="#ffffff" stroke="#2f6f7a" stroke-width="1.6"/><text x="303" y="206" font-size="10.5" fill="#6b6b66">released dataset (not one model's recipe)</text>
+<line x1="90" y1="344.0" x2="700" y2="344.0" stroke="#ececec"/>
+<text x="84" y="347.5" font-size="10.5" fill="#6b6b66" text-anchor="end">10K</text>
+<line x1="90" y1="314.0" x2="700" y2="314.0" stroke="#ececec"/>
+<text x="84" y="317.5" font-size="10.5" fill="#6b6b66" text-anchor="end">100K</text>
+<line x1="90" y1="284.0" x2="700" y2="284.0" stroke="#ececec"/>
+<text x="84" y="287.5" font-size="10.5" fill="#6b6b66" text-anchor="end">1M</text>
+<line x1="90" y1="254.0" x2="700" y2="254.0" stroke="#ececec"/>
+<text x="84" y="257.5" font-size="10.5" fill="#6b6b66" text-anchor="end">10M</text>
+<line x1="90" y1="224.0" x2="700" y2="224.0" stroke="#ececec"/>
+<text x="84" y="227.5" font-size="10.5" fill="#6b6b66" text-anchor="end">100M</text>
+<polyline points="290.3,340.6 412.3,330.8 536.1,284.8 659.0,258.6" fill="none" stroke="#2f6f7a" stroke-width="2"/>
+<circle cx="290.3" cy="340.6" r="4" fill="#2f6f7a"><title>InstructGPT · ~13K prompts (2022)</title></circle>
+<text x="298.3" y="352.6" font-size="10.5" fill="#6b6b66">InstructGPT · ~13K prompts</text>
+<circle cx="412.3" cy="330.8" r="4" fill="#2f6f7a"><title>Llama 2 · 27.5K (2023)</title></circle>
+<text x="420.3" y="342.8" font-size="10.5" fill="#6b6b66">Llama 2 · 27.5K</text>
+<circle cx="536.1" cy="284.8" r="4" fill="#2f6f7a"><title>Tulu 3 · ~940K (2024)</title></circle>
+<text x="544.1" y="298.8" font-size="10.5" fill="#6b6b66">Tulu 3 · ~940K</text>
+<circle cx="659.0" cy="258.6" r="4" fill="#2f6f7a"><title>Nemotron 3 · 7M ≈ 80B tokens (2026)</title></circle>
+<text x="649.0" y="248.6" font-size="10.5" fill="#6b6b66" text-anchor="end">Nemotron 3 · 7M ≈ 80B tokens</text>
+<rect x="573.1" y="234.4" width="8" height="8" fill="#ffffff" stroke="#2f6f7a" stroke-width="1.8"><title>Llama-Nemotron set · 33M (2025) — released dataset</title></rect>
+<text x="567.1" y="230.4" font-size="10.5" fill="#6b6b66" text-anchor="end">Llama-Nemotron set · 33M</text>
+<line x1="90" y1="356" x2="700" y2="356" stroke="#ececec" stroke-width="1.5"/>
+<line x1="90.0" y1="356" x2="90.0" y2="361" stroke="#ececec"/>
+<text x="90.0" y="376" font-size="11" fill="#6b6b66" text-anchor="middle">2020</text>
+<line x1="181.0" y1="356" x2="181.0" y2="361" stroke="#ececec"/>
+<text x="181.0" y="376" font-size="11" fill="#6b6b66" text-anchor="middle">2021</text>
+<line x1="272.1" y1="356" x2="272.1" y2="361" stroke="#ececec"/>
+<text x="272.1" y="376" font-size="11" fill="#6b6b66" text-anchor="middle">2022</text>
+<line x1="363.1" y1="356" x2="363.1" y2="361" stroke="#ececec"/>
+<text x="363.1" y="376" font-size="11" fill="#6b6b66" text-anchor="middle">2023</text>
+<line x1="454.2" y1="356" x2="454.2" y2="361" stroke="#ececec"/>
+<text x="454.2" y="376" font-size="11" fill="#6b6b66" text-anchor="middle">2024</text>
+<line x1="545.2" y1="356" x2="545.2" y2="361" stroke="#ececec"/>
+<text x="545.2" y="376" font-size="11" fill="#6b6b66" text-anchor="middle">2025</text>
+<line x1="636.3" y1="356" x2="636.3" y2="361" stroke="#ececec"/>
+<text x="636.3" y="376" font-size="11" fill="#6b6b66" text-anchor="middle">2026</text>
+<text x="395" y="402" font-size="12" fill="#1b1b1a" text-anchor="middle">both axes log &#8212; a 2026 flagship's whole SFT stage (&#8776;80B tokens) is ~0.3% of its 25T-token pretraining</text>
+</svg>

@@ -306,22 +306,61 @@
         stopped treating that as a curiosity and started training the behavior in deliberately, and this
         became the fastest-moving pillar of the five.</p>
 
-      <p>The direct line is reinforcement learning on long-context reasoning. QwenLong-L1
+      <p>Why behavior lags capacity is visible in the training data. Pretraining corpora grew from
+        GPT-3's 300B tokens to Qwen3's 36T (<a href="https://arxiv.org/abs/2505.09388">Qwen Team,
+        2025</a>) — roughly 100× in five years. Post-training grew faster still — from InstructGPT's
+        ~13K prompts (<a href="https://arxiv.org/abs/2203.02155">Ouyang et al., 2022</a>) to Tulu 3's
+        ~940K samples (<a href="https://arxiv.org/abs/2411.15124">Lambert et al., 2024</a>) to the 7M in
+        Nemotron 3 (<a href="https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf">NVIDIA,
+        2026</a>) — but it remains a rounding error next to pretraining: Nemotron 3 Super's ~80B tokens
+        of SFT amount to ~0.3% of its 25T-token pretraining.</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig-data-growth.svg?v=1" role="img" aria-label="Two-panel log chart, 2020 to 2026. Top: pretraining corpora grow from GPT-3's 300 billion tokens through Chinchilla, Llama 2 and 3 to Qwen3's 36 trillion and DeepSeek-V4's 32–33 trillion — about 100 times in five years. Bottom: post-training sets grow from InstructGPT's 13 thousand prompts through Llama 2 and Tulu 3 to Nemotron 3's 7 million samples, with NVIDIA's released 33M-sample Llama-Nemotron set shown as a hollow square — still orders of magnitude below pretraining in tokens." style="width:100%;height:auto;aspect-ratio:760/412;display:block;">Figure 11: growth of pretraining vs post-training datasets (SVG).</object>
+        <figcaption><b>Figure 11 — Two data regimes, both growing, still orders of magnitude apart.</b> Top: pretraining tokens per model — GPT-3's 300B (<a href="https://arxiv.org/abs/2005.14165">2020</a>), Chinchilla's 1.4T (<a href="https://arxiv.org/abs/2203.15556">2022</a>), Llama 2's 2T (<a href="https://arxiv.org/abs/2307.09288">2023</a>), Llama 3's ~15T (<a href="https://arxiv.org/abs/2407.21783">2024</a>), Qwen3's 36T (<a href="https://arxiv.org/abs/2505.09388">2025</a>), DeepSeek-V4's 32–33T (<a href="https://arxiv.org/abs/2606.19348">2026</a>). Bottom: post-training samples — InstructGPT's ~13K SFT prompts (<a href="https://arxiv.org/abs/2203.02155">2022</a>), Llama 2's 27.5K (<a href="https://arxiv.org/abs/2307.09288">2023</a>), Tulu 3's ~940K (<a href="https://arxiv.org/abs/2411.15124">2024</a>), Nemotron 3 Super's 7M ≈ 80B tokens (<a href="https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf">2026</a>); the hollow point is NVIDIA's released <a href="https://huggingface.co/datasets/nvidia/Llama-Nemotron-Post-Training-Dataset">Llama-Nemotron set</a> (~33M samples, 2025). Hover the points for details.</figcaption>
+      </figure>
+
+      <p>Put lengths on that picture and it becomes the open bottleneck of mid-2026. The window side is
+        nearly free now: DeepSeek-V4 pretrains at 1M natively
+        (<a href="https://arxiv.org/abs/2606.19348">2026</a>), Nemotron 3 buys its 1M window with a
+        34B-token continued-pretraining phase, and Qwen2.5-1M gets from 256K to 1M with no training at
+        all (<a href="https://arxiv.org/abs/2501.15383">Qwen Team, 2025</a>). The data that trains
+        <i>behavior</i> stops far short of that. Qwen2.5-1M's own SFT tops out at 256K and its RL pairs
+        at 8,192 tokens — under 1% of the window it ships; the strongest published long-context RL,
+        QwenLong-L1.5, trains at ~120K inputs; and a June 2026 recipe still caps RL at 64K, "leaving
+        extension to longer context lengths for future work"
+        (<a href="https://arxiv.org/abs/2606.18831">Beyond Reward Engineering, 2026</a>). The blockers
+        are structural: past ~32K tokens human annotators can no longer reliably write or verify the
+        tasks (<a href="https://arxiv.org/abs/2512.12967">QwenLong-L1.5, 2025</a>), so long training
+        data is synthesized — and the tooling strains too, with verl's 2026 roadmap still listing ≥128K
+        RL as a goal (<a href="https://github.com/verl-project/verl/issues/5836">verl, 2026</a>) and the
+        first published RL stack built for million-token sequences arriving only with DeepSeek-V4, its
+        data lengths undisclosed.</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig-length-gap.svg?v=1" role="img" aria-label="Dumbbell chart, one row per model from late 2024 to mid 2026, log token axis. Filled markers: the longest sample in each model's post-training data (squares SFT, circles RL). Hollow circles: the context the model ships or handles. Post-training data stops between 4K and 512K while the windows above it grew from 128K to 1–10 million tokens; Qwen2.5-1M ran RL on 8K samples against a 1M window. The last row marks DeepSeek-V4, whose RL infrastructure targets million-token sequences with data lengths unpublished." style="width:100%;height:auto;aspect-ratio:760/470;display:block;">Figure 12: the training-length gap between shipped windows and post-training data (SVG).</object>
+        <figcaption><b>Figure 12 — The training-length gap.</b> The longest sample in each model's post-training data (filled: squares SFT, circles RL) against the context it ships or handles (hollow), log scale. Tulu 3 runs SFT at 4,096 tokens (<a href="https://arxiv.org/abs/2411.15124">2024</a>); Qwen2.5-1M's RL pairs stop at 8,192 against a 1M window (<a href="https://arxiv.org/abs/2501.15383">2025</a>); UltraLong fine-tunes on sub-8K data for a 4M window (<a href="https://arxiv.org/abs/2504.06214">2025</a>); Llama 4 Scout post-trains at 256K for a 10M window (<a href="https://ai.meta.com/blog/llama-4-multimodal-intelligence/">2025</a>); QwenLong-L1.5's RL caps at ~120K, reaching 4M+ only through its memory agent (<a href="https://arxiv.org/abs/2512.12967">2025</a>); Nemotron 3 Super's 512K SFT samples are synthetic concatenations of shorter documents (<a href="https://arxiv.org/html/2604.12374v1">2026</a>); DeepSeek-V4 built RL infrastructure for million-token sequences but publishes no data lengths (<a href="https://arxiv.org/abs/2606.19348">2026</a>). Hover the markers for details.</figcaption>
+      </figure>
+
+      <p>The direct line of attack is reinforcement learning on long-context reasoning. QwenLong-L1
         (<a href="https://arxiv.org/abs/2505.17667">May 2025</a>) formalized it — RL with progressively
         scaled context lengths — and its 32B model matched Claude-3.7-Sonnet-Thinking on long-document QA.
         At the frontier this is already routine practice: MiniMax-M1
         (<a href="https://arxiv.org/abs/2506.13585">June 2025</a>), whose lightning-attention backbone
-        natively supports a 1M-token context, was trained with large-scale RL.</p>
+        natively supports a 1M-token context, was trained with large-scale RL — though even there, what
+        the RL scaled was the output budget, staged from 40K to 80K tokens, not the million-token
+        input.</p>
 
-      <p>The stranger and more interesting line treats <b>memory itself as a trainable behavior</b>.
+      <p>The stranger line routes <i>around</i> the data gap instead of closing it: treat <b>memory
+        itself as a trainable behavior</b>, so the window RL has to pay for stays small.
         MemAgent (<a href="https://arxiv.org/abs/2507.02259">July 2025</a>) used RL to teach a model with
         an 8K window to maintain a rolling token memory — and it then answered questions over 3.5M-token
         documents with under 5% degradation, reaching far past its architectural window. Memory-as-Action
         (<a href="https://arxiv.org/abs/2510.12635">October 2025</a>) goes further and puts editing one's
         own context directly into the action space, so context curation is itself a learned policy.
-        QwenLong-L1.5 (<a href="https://arxiv.org/abs/2512.12967">December 2025</a>) fused the two threads
-        — long-context RL plus a memory-agent framework in one post-training recipe — and reports
-        long-context reasoning at 1M–4M tokens competitive with the strongest closed models. By mid-2026
+        QwenLong-L1.5 — the ~120K-input recipe from above — fused the two threads, long-context RL plus
+        a memory-agent framework in one post-training recipe, and reports long-context reasoning at
+        1M–4M+ tokens competitive with the strongest closed models. By mid-2026
         the motivation is stated outright: long-context skill is the bottleneck on long-horizon agent
         benchmarks, and it is attacked with curated RL data
         (<a href="https://arxiv.org/abs/2606.18831">Beyond Reward Engineering, 2026</a>).</p>
@@ -463,10 +502,11 @@
         <li>Sparse attention — fixed patterns: Child et al., <a href="https://arxiv.org/abs/1904.10509">Sparse Transformers</a> (2019); Beltagy et al., <a href="https://arxiv.org/abs/2004.05150">Longformer</a> (2020); Zaheer et al., <a href="https://arxiv.org/abs/2007.14062">BigBird</a> (2020); Xiao et al., <a href="https://arxiv.org/abs/2309.17453">StreamingLLM</a> (2023); Jiang et al., <a href="https://arxiv.org/abs/2310.06825">Mistral 7B</a> (2023).</li>
         <li>Sparse attention — trainable: Yuan et al., <a href="https://arxiv.org/abs/2502.11089">Native Sparse Attention</a> (DeepSeek, 2025); Lu et al., <a href="https://arxiv.org/abs/2502.13189">MoBA: Mixture of Block Attention</a> (Moonshot, 2025); DeepSeek-AI, <a href="https://api-docs.deepseek.com/news/news250929">DeepSeek-V3.2-Exp / DSA</a> (2025) and <a href="https://arxiv.org/abs/2606.19348">DeepSeek-V4</a> (2026); MiniMax, <a href="https://arxiv.org/abs/2606.13392">MiniMax M3 / MSA</a> (2026).</li>
         <li>Linear &amp; hybrid: Gu et al., <a href="https://arxiv.org/abs/2111.00396">S4</a> (2021); Gu &amp; Dao, <a href="https://arxiv.org/abs/2312.00752">Mamba</a> (2023); Dao &amp; Gu, <a href="https://arxiv.org/abs/2405.21060">Mamba-2 / SSD</a> (2024); Lieber et al., <a href="https://arxiv.org/abs/2403.19887">Jamba</a> (2024); Ren et al., <a href="https://arxiv.org/abs/2406.07522">Samba</a> (2024); MiniMax, <a href="https://arxiv.org/abs/2501.08313">MiniMax-01 (lightning attention)</a> (2025) and <a href="https://www.minimax.io/news/why-did-m2-end-up-as-a-full-attention-model">the M2 full-attention essay</a> (2025); Gemma Team, <a href="https://arxiv.org/abs/2503.19786">Gemma 3</a> (2025); Moonshot, <a href="https://arxiv.org/abs/2510.26692">Kimi Linear</a> (2025).</li>
-        <li>Training data: Dubey et al., <a href="https://arxiv.org/abs/2407.21783">The Llama 3 Herd of Models</a> (2024); Gao et al., <a href="https://arxiv.org/abs/2410.02660">ProLong</a> (2024); Qwen Team, <a href="https://arxiv.org/abs/2501.15383">Qwen2.5-1M</a> (2025).</li>
+        <li>Training data: Dubey et al., <a href="https://arxiv.org/abs/2407.21783">The Llama 3 Herd of Models</a> (2024); Gao et al., <a href="https://arxiv.org/abs/2410.02660">ProLong</a> (2024); Qwen Team, <a href="https://arxiv.org/abs/2501.15383">Qwen2.5-1M</a> (2025); Hoffmann et al., <a href="https://arxiv.org/abs/2203.15556">Chinchilla</a> (2022); Touvron et al., <a href="https://arxiv.org/abs/2307.09288">Llama 2</a> (2023); Qwen Team, <a href="https://arxiv.org/abs/2505.09388">Qwen3</a> (2025).</li>
         <li>Systems: Liu et al., <a href="https://arxiv.org/abs/2310.01889">Ring Attention</a> (2023); Korthikanti et al., <a href="https://arxiv.org/abs/2205.05198">Sequence Parallelism</a> (2022); Kwon et al., <a href="https://arxiv.org/abs/2309.06180">PagedAttention / vLLM</a> (2023); Qin et al., <a href="https://arxiv.org/abs/2407.00079">Mooncake</a> (FAST'25).</li>
         <li>Optimizer: Loshchilov &amp; Hutter, <a href="https://arxiv.org/abs/1711.05101">AdamW</a> (2017); Yang et al., <a href="https://arxiv.org/abs/2203.03466">Tensor Programs V (muP)</a> (2022); Hu et al., <a href="https://arxiv.org/abs/2404.06395">MiniCPM (WSD)</a> (2024); Kimi Team, <a href="https://arxiv.org/abs/2507.20534">Kimi K2 (MuonClip)</a> (2025).</li>
         <li>Post-training: Wan et al., <a href="https://arxiv.org/abs/2505.17667">QwenLong-L1</a> (2025); Shen et al., <a href="https://arxiv.org/abs/2512.12967">QwenLong-L1.5</a> (2025); MiniMax, <a href="https://arxiv.org/abs/2506.13585">MiniMax-M1</a> (2025); Yu et al., <a href="https://arxiv.org/abs/2507.02259">MemAgent</a> (2025); <a href="https://arxiv.org/abs/2510.12635">Memory-as-Action</a> (2025); <a href="https://arxiv.org/abs/2606.18831">Beyond Reward Engineering</a> (2026).</li>
+        <li>Post-training data: Ouyang et al., <a href="https://arxiv.org/abs/2203.02155">InstructGPT</a> (2022); Lambert et al., <a href="https://arxiv.org/abs/2411.15124">Tulu 3</a> (2024); <a href="https://arxiv.org/abs/2504.06214">UltraLong: From 128K to 4M</a> (2025); NVIDIA, <a href="https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf">Nemotron 3 Super Technical Report</a> (2026) and <a href="https://huggingface.co/datasets/nvidia/Llama-Nemotron-Post-Training-Dataset">Llama-Nemotron Post-Training Dataset</a> (2025).</li>
         <li>Evaluation: Liu et al., <a href="https://arxiv.org/abs/2307.03172">Lost in the Middle</a> (2023); Hsieh et al., <a href="https://arxiv.org/abs/2404.06654">RULER</a> (2024); Bai et al., <a href="https://arxiv.org/abs/2308.14508">LongBench</a> (2023) and <a href="https://arxiv.org/abs/2412.15204">LongBench v2</a> (2024); Gemini Team, <a href="https://arxiv.org/abs/2403.05530">Gemini 1.5</a> (2024); OpenAI, <a href="https://openai.com/index/gpt-4-1/">GPT-4.1 (MRCR, Graphwalks)</a> (2025); Modarressi et al., <a href="https://arxiv.org/abs/2502.05167">NoLiMa</a> (ICML 2025); Hong et al., <a href="https://www.trychroma.com/research/context-rot">Context Rot</a> (Chroma, 2025); Du et al., <a href="https://arxiv.org/abs/2510.05381">Context Length Alone Hurts LLM Performance Despite Perfect Retrieval</a> (2025).</li>
         <li>Long-horizon: Kwa et al., <a href="https://arxiv.org/abs/2503.14499">Measuring AI Ability to Complete Long Software Tasks</a> (METR, 2025); Ord, <a href="https://arxiv.org/abs/2505.05115">Is There a Half-Life for the Success Rates of AI Agents?</a> (2025); Agarwal et al., <a href="https://arxiv.org/abs/2404.11018">Many-Shot In-Context Learning</a> (2024); Anthropic, <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Effective Context Engineering for AI Agents</a> (2025) and <a href="https://claude.com/blog/1m-context">the 1M-context announcement</a> (2025); Li et al., <a href="https://arxiv.org/abs/2407.16833">RAG or Long-Context LLMs?</a> (EMNLP 2024); Zhang et al., <a href="https://arxiv.org/abs/2512.24601">Recursive Language Models</a> (2025).</li>
       </ol>
