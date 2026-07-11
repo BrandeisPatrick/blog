@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 370" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive schematic of advertised versus effective context. A quality curve over input length from 1K to 1M tokens on a log axis, with the advertised 1M window marked. Three buttons switch the task: single needle stays near 100% all the way — saturated; multi-needle (MRCR-class) holds and then falls hard, around 57% by 128K; reasoning over the context (NoLiMa-class) falls earliest, below half of baseline by 32K. A dashed threshold marks where the model still works; where the curve crosses it is the effective context.">
+<style>.bt{cursor:pointer}</style>
+<rect width="760" height="370" fill="#ffffff"/>
+<!-- coordinate math: x(tokens) = 80 + (log10(tokens/1000)/3)*620, so 1K=80, 8K=267, 32K=391, 128K=516, 1M=700;
+     y(quality%) = 290 - 2*q, so 100%=90, 80%(threshold)=130, 50%=190, 0%=290 -->
+<g id="tb0" class="bt"><rect id="tr0" x="64" y="18" width="96" height="26" rx="5" fill="#f6f6f4" stroke="#1b1b1a"/><text id="tt0" x="112" y="35" font-size="11.5" fill="#1b1b1a" text-anchor="middle" font-weight="700">single needle</text></g>
+<g id="tb1" class="bt"><rect id="tr1" x="170" y="18" width="136" height="26" rx="5" fill="#f6f6f4" stroke="#ececec"/><text id="tt1" x="238" y="35" font-size="11.5" fill="#1b1b1a" text-anchor="middle">multi-needle (MRCR)</text></g>
+<g id="tb2" class="bt"><rect id="tr2" x="316" y="18" width="132" height="26" rx="5" fill="#f6f6f4" stroke="#ececec"/><text id="tt2" x="382" y="35" font-size="11.5" fill="#1b1b1a" text-anchor="middle">reasoning (NoLiMa)</text></g>
+<text x="696" y="35" font-size="11" fill="#6b6b66" text-anchor="end">click a task type</text>
+<!-- axes -->
+<line x1="80" y1="90" x2="80" y2="290" stroke="#ececec" stroke-width="1.5"/>
+<line x1="80" y1="290" x2="700" y2="290" stroke="#ececec" stroke-width="1.5"/>
+<line x1="80" y1="190" x2="700" y2="190" stroke="#ececec"/>
+<text x="74" y="94" font-size="11" fill="#6b6b66" text-anchor="end">100%</text>
+<text x="74" y="194" font-size="11" fill="#6b6b66" text-anchor="end">50%</text>
+<text x="74" y="294" font-size="11" fill="#6b6b66" text-anchor="end">0%</text>
+<text x="36" y="190" font-size="11" fill="#6b6b66" text-anchor="middle" transform="rotate(-90 36 190)">quality vs short-context baseline</text>
+<line x1="80" y1="290" x2="80" y2="296" stroke="#ececec"/><line x1="267" y1="290" x2="267" y2="296" stroke="#ececec"/><line x1="391" y1="290" x2="391" y2="296" stroke="#ececec"/><line x1="516" y1="290" x2="516" y2="296" stroke="#ececec"/><line x1="700" y1="290" x2="700" y2="296" stroke="#ececec"/>
+<text x="80" y="310" font-size="11" fill="#6b6b66" text-anchor="middle">1K</text>
+<text x="267" y="310" font-size="11" fill="#6b6b66" text-anchor="middle">8K</text>
+<text x="391" y="310" font-size="11" fill="#6b6b66" text-anchor="middle">32K</text>
+<text x="516" y="310" font-size="11" fill="#6b6b66" text-anchor="middle">128K</text>
+<text x="700" y="310" font-size="11" fill="#6b6b66" text-anchor="middle">1M</text>
+<text x="390" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">input length (tokens, log scale)</text>
+<!-- advertised window -->
+<line x1="700" y1="90" x2="700" y2="290" stroke="#1b1b1a" stroke-dasharray="4 3" opacity="0.45"/>
+<text x="696" y="80" font-size="11" fill="#6b6b66" text-anchor="end">advertised window — 1M</text>
+<!-- "still works" threshold -->
+<line x1="80" y1="130" x2="700" y2="130" stroke="#6b6b66" stroke-dasharray="4 3" opacity="0.6"/>
+<text x="84" y="124" font-size="11" fill="#6b6b66">&#8220;still works&#8221; threshold</text>
+<text x="84" y="144" font-size="10.5" fill="#6b6b66" opacity="0.8">(curves schematic)</text>
+<!-- effective-context marker (teal) -->
+<line id="ml" x1="700" y1="92" x2="700" y2="290" stroke="#2f6f7a" stroke-dasharray="4 3" stroke-width="1.6"/>
+<circle id="md" cx="700" cy="92" r="4" fill="#2f6f7a"/>
+<text id="mt" x="694" y="282" font-size="11" fill="#2f6f7a" font-weight="700" text-anchor="end">effective &#8776; advertised</text>
+<!-- quality curve (red) -->
+<path id="cv" d="M80,92 C240,92 480,93 700,93" fill="none" stroke="#b5482e" stroke-width="2.4"/>
+<!-- anchor point from the text -->
+<circle id="ac" cx="700" cy="92" r="3.6" fill="#ffffff" stroke="#b5482e" stroke-width="2"/>
+<text id="at" x="690" y="112" font-size="11" fill="#b5482e" text-anchor="end">&#8776;100% recall at 1M</text>
+<text id="ex" x="380" y="356" font-size="12" fill="#1b1b1a" font-weight="600" text-anchor="middle">One planted fact, recited back — near-perfect all the way to 1M. Saturated: the entry ticket, not the proof.</text>
+<script><![CDATA[
+(function () {
+  var D = [
+    'M80,92 C240,92 480,93 700,93',
+    'M80,96 C160,97 220,99 267,102 C310,105 350,116 391,126 C433,140 470,163 516,176 C560,189 640,206 700,214',
+    'M80,98 C130,102 170,107 204,114 C230,120 248,126 267,134 C300,148 350,180 391,196 C440,212 560,228 700,234'
+  ];
+  var MX  = [700, 405, 258], MY1 = [92, 130, 130];
+  var MTX = [694, 411, 264], MTA = ['end', 'start', 'start'];
+  var MTT = ['effective ≈ advertised', 'effective context', 'effective context'];
+  var AX  = [700, 516, 391], AY = [92, 176, 196], ATX = [690, 506, 383], ATY = [112, 194, 216];
+  var ATT = ['≈100% recall at 1M', '~57% at 128K', 'below half of baseline by 32K'];
+  var EX  = [
+    'One planted fact, recited back — near-perfect all the way to 1M. Saturated: the entry ticket, not the proof.',
+    'Two needles to tell apart instead of one — holds, then falls hard: ~57% by 128K.',
+    'No shared words to match — the model must actually reason: below half its baseline by 32K.'
+  ];
+  var cv = document.getElementById('cv'), ml = document.getElementById('ml'),
+      md = document.getElementById('md'), mt = document.getElementById('mt'),
+      ac = document.getElementById('ac'), at = document.getElementById('at'),
+      ex = document.getElementById('ex');
+  function set(m) {
+    cv.setAttribute('d', D[m]);
+    ml.setAttribute('x1', MX[m]); ml.setAttribute('x2', MX[m]); ml.setAttribute('y1', MY1[m]);
+    md.setAttribute('cx', MX[m]); md.setAttribute('cy', MY1[m]);
+    mt.setAttribute('x', MTX[m]); mt.setAttribute('text-anchor', MTA[m]); mt.textContent = MTT[m];
+    ac.setAttribute('cx', AX[m]); ac.setAttribute('cy', AY[m]);
+    at.setAttribute('x', ATX[m]); at.setAttribute('y', ATY[m]); at.textContent = ATT[m];
+    ex.textContent = EX[m];
+    for (var k = 0; k < 3; k++) {
+      document.getElementById('tr' + k).setAttribute('stroke', k === m ? '#1b1b1a' : '#ececec');
+      document.getElementById('tt' + k).setAttribute('font-weight', k === m ? '700' : '400');
+    }
+  }
+  for (var k = 0; k < 3; k++) (function (m) {
+    document.getElementById('tb' + m).addEventListener('click', function () { set(m); });
+  })(k);
+})();
+]]></script>
+</svg>

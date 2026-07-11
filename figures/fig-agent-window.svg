@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Schematic of an agent's context window as working memory: a horizontal bar spanning one million tokens fills left to right with a session's artifacts — instructions, files read, tool results, decisions, more tool results — with a thin highlighted slice deep in the middle labeled as the requirement stated hundreds of tool calls ago, and a write head near the right edge where new tokens append. An arrow from the slice to the write head notes that silently dropping it means every action downstream inherits the error.">
+<!-- Geometry: window bar x=40..720 (680 wide = 1M tokens), bar y=46..92, segments clipped to
+     rounded bar via clipPath. Fill runs 40..702; write head at x=702, empty sliver 702..718.
+     Red requirement slice x=366..374 (near window middle, x_mid=380). Segment label row y=110
+     with 6px ticks from bar bottom (y=92..98). Red leader x=370, y=92..140; callout text
+     y=154/168 centered on 370 (spans ~295..445, clear of labels). Downstream arrow y=178 from
+     x=378 to x=698, arrowhead at 698; annotation text y=196 centered at 538. -->
+<rect width="760" height="210" fill="#ffffff"/>
+<defs>
+  <clipPath id="win"><rect x="40" y="46" width="680" height="46" rx="7"/></clipPath>
+</defs>
+<text x="380" y="20" font-size="12.5" fill="#1b1b1a" font-weight="600" text-anchor="middle">an agent&#8217;s context window &#8212; 1M tokens</text>
+<line x1="48" y1="33" x2="712" y2="33" stroke="#6b6b66" stroke-width="1"/>
+<polygon points="40,33 49,29 49,37" fill="#6b6b66"/>
+<polygon points="720,33 711,29 711,37" fill="#6b6b66"/>
+<!-- window frame -->
+<rect x="40" y="46" width="680" height="46" rx="7" fill="#fcfcfb" stroke="#ececec"/>
+<!-- session artifacts, left to right -->
+<g clip-path="url(#win)">
+  <rect x="40"  y="46" width="68"  height="46" fill="#2f6f7a"/>
+  <rect x="108" y="46" width="92"  height="46" fill="#2f6f7a" opacity="0.42"/>
+  <rect x="200" y="46" width="90"  height="46" fill="#6b6b66" opacity="0.28"/>
+  <rect x="290" y="46" width="54"  height="46" fill="#1b1b1a" opacity="0.13"/>
+  <rect x="344" y="46" width="22"  height="46" fill="#2f6f7a" opacity="0.42"/>
+  <rect x="366" y="46" width="8"   height="46" fill="#b5482e"/>
+  <rect x="374" y="46" width="96"  height="46" fill="#6b6b66" opacity="0.28"/>
+  <rect x="470" y="46" width="35"  height="46" fill="#1b1b1a" opacity="0.13"/>
+  <rect x="505" y="46" width="55"  height="46" fill="#2f6f7a" opacity="0.42"/>
+  <rect x="560" y="46" width="88"  height="46" fill="#6b6b66" opacity="0.28"/>
+  <rect x="648" y="46" width="28"  height="46" fill="#1b1b1a" opacity="0.13"/>
+  <rect x="676" y="46" width="26"  height="46" fill="#6b6b66" opacity="0.28"/>
+</g>
+<!-- write head -->
+<line x1="702" y1="42" x2="702" y2="96" stroke="#1b1b1a" stroke-width="2"/>
+<polygon points="702,98 697,106 707,106" fill="#1b1b1a"/>
+<!-- segment labels -->
+<line x1="74"  y1="92" x2="74"  y2="98" stroke="#ececec"/>
+<line x1="154" y1="92" x2="154" y2="98" stroke="#ececec"/>
+<line x1="245" y1="92" x2="245" y2="98" stroke="#ececec"/>
+<line x1="317" y1="92" x2="317" y2="98" stroke="#ececec"/>
+<text x="74"  y="110" font-size="10.5" fill="#6b6b66" text-anchor="middle">instructions</text>
+<text x="154" y="110" font-size="10.5" fill="#6b6b66" text-anchor="middle">files read</text>
+<text x="245" y="110" font-size="10.5" fill="#6b6b66" text-anchor="middle">tool results</text>
+<text x="317" y="110" font-size="10.5" fill="#6b6b66" text-anchor="middle">decisions</text>
+<text x="718" y="120" font-size="10.5" fill="#1b1b1a" font-weight="600" text-anchor="end">write head &#8212; new tokens</text>
+<!-- the buried requirement -->
+<line x1="370" y1="92" x2="370" y2="140" stroke="#b5482e" stroke-width="1.2"/>
+<text x="370" y="154" font-size="11" fill="#b5482e" font-weight="600" text-anchor="middle">the requirement stated</text>
+<text x="370" y="168" font-size="11" fill="#b5482e" font-weight="600" text-anchor="middle">hundreds of tool calls ago</text>
+<!-- downstream consequence -->
+<line x1="378" y1="178" x2="690" y2="178" stroke="#6b6b66" stroke-width="1" stroke-dasharray="4 3"/>
+<polygon points="698,178 689,174 689,182" fill="#6b6b66"/>
+<text x="538" y="196" font-size="11" fill="#6b6b66" text-anchor="middle">drop it silently and every action downstream inherits the error</text>
+</svg>

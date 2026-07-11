@@ -17,7 +17,7 @@
 
     <article class="article">
       <h1>The path to 1M context window</h1>
-      <p class="meta"><time datetime="2026-07-05">July 5, 2026</time> · ~20 min read · <span class="status status-review">In final review</span></p>
+      <p class="meta"><time datetime="2026-07-05">July 5, 2026</time> · ~25 min read · <span class="status status-review">In final review</span></p>
 
       <details class="toc" open>
         <summary>Table of Contents</summary>
@@ -53,17 +53,24 @@
       <p>Self-attention is order-blind: shuffle the tokens and every attention score is unchanged —
         "dog bites man" and "man bites dog" read the same. A <b>positional encoding</b> is the signal
         injected to tell the model where each token sits
-        (<a href="https://arxiv.org/abs/1706.03762">Vaswani et al., 2017</a>).</p>
+        (<a href="https://arxiv.org/abs/1706.03762">Vaswani et al., 2017</a>). The figure below builds
+        one such score from scratch to show why the shuffle changes nothing.</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig-embed-primer.svg?v=1" role="img" aria-label="Interactive diagram: the three tokens of 'dog bites man' each become a vector, drawn as arrows in circles. One token's query vector and another's key vector meet in a detail circle, where the attention score is their dot product — proportional to the cosine of the angle between them, shown on a live bar from minus one to plus one. Drag the key arrow to change the angle and watch the cosine and score bar update. Shuffling the tokens moves none of the vectors, so every score stays the same." style="width:100%;height:auto;aspect-ratio:760/352;display:block;">Figure 2: from tokens to an attention score (SVG).</object>
+        <figcaption><b>Figure 2 — From tokens to a score (interactive).</b> Each token's vector yields a <b>query</b> — the vector a token searches with — and a <b>key</b> — the vector it is found by; one attention score is their dot product, cosine similarity scaled by the vectors' lengths (drag the key arrow). Shuffle the tokens and no vector moves, so no score changes — how the model actually uses these scores is the next section's story.</figcaption>
+      </figure>
 
       <p><b>Rotary Position Embedding (RoPE)</b> (<a href="https://arxiv.org/abs/2104.09864">Su et al.,
-        2021</a>) rotates every query and key by an angle proportional to position, so the score between
+        2021</a>) rotates every query and key — the vectors just introduced — by an angle proportional
+        to position, so the score between
         positions <i>m</i> and <i>n</i> depends only on the offset <i>m − n</i> — relative position, at
         zero parameter cost. Since LLaMA adopted it, RoPE has been effectively universal — Llama,
         Mistral, Qwen, DeepSeek, and Gemma all use it.</p>
 
       <figure>
         <img src="../figures/fig-rope-mechanism.svg" alt="How RoPE encodes position: eight tokens whose arrows advance by a fixed angle per position; the query at position 2 and key at position 6 are highlighted, and a detail circle shows the score depends only on the angle between their arrows." />
-        <figcaption><b>Figure 2 — How RoPE encodes position.</b> Each two-dimensional pair of a query or key is rotated by ω·position, so arrows advance steadily along the sequence (ω = 22.5°/token shown). The score between the query (m = 2) and the key (n = 6) sees only the angle between their arrows, ω·(m − n) — shifting both tokens leaves it unchanged.</figcaption>
+        <figcaption><b>Figure 3 — How RoPE encodes position.</b> Each two-dimensional pair of a query or key is rotated by ω·position, so arrows advance steadily along the sequence (ω = 22.5°/token shown). The score between the query (m = 2) and the key (n = 6) sees only the angle between their arrows, ω·(m − n) — shifting both tokens leaves it unchanged.</figcaption>
       </figure>
 
       <p>Two properties of the rotation become liabilities at long range: it induces a built-in
@@ -78,19 +85,20 @@
 
       <figure>
         <img src="../figures/fig-rope-failure.svg" alt="RoPE's failure at range: attention score decays as token distance grows, and past the training length the curve gives way to scattered, unreliable points." />
-        <figcaption><b>Figure 3 — Where RoPE fails at range (schematic).</b> The rotation makes the query–key score decay as the offset grows (1), and offsets beyond the training length produce angles the model never saw, so attention past the wall is unreliable (2).</figcaption>
+        <figcaption><b>Figure 4 — Where RoPE fails at range (schematic).</b> The rotation makes the query–key score decay as the offset grows (1), and offsets beyond the training length produce angles the model never saw, so attention past the wall is unreliable (2).</figcaption>
       </figure>
 
       <p><b>NoPE</b> — <b>no positional encoding</b> — is the complementary construction: a layer
-        applies no rotation and recovers token order from the causal mask alone
+        applies no rotation and recovers token order from the causal mask alone — the rule that each
+        token can only see the tokens before it
         (<a href="https://arxiv.org/abs/2305.19466">Kazemnejad et al., 2023</a>;
         <a href="https://arxiv.org/abs/2501.18795">Yang et al., 2025</a>). No rotation means no decay
         and no training-length anchor. Drag the key token below and watch RoPE's pairs dephase and its
         match fall while NoPE's holds.</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig5-rope-vs-nope.svg?v=6" role="img" aria-label="Interactive diagram of RoPE and NoPE mechanics: three RoPE frequency pairs rotate the key vector by an angle proportional to token offset, dephasing the query-key match as the offset grows; offsets beyond the training length produce angles unseen in training. A NoPE pair never rotates, so the match is unchanged at any offset. Drag along the token ruler to change the offset." style="width:100%;height:auto;aspect-ratio:760/404;display:block;">Figure 4: RoPE vs NoPE interactive comparison (SVG).</object>
-        <figcaption><b>Figure 4 — RoPE vs NoPE, side by side (interactive).</b> RoPE rotates each two-dimensional pair of the key by ω·(m−n) — three of the <i>d</i>/2 frequency pairs shown — so the pairs dephase and the match falls as the offset grows; offsets beyond the training length produce rotation angles never seen in training. A NoPE layer applies no rotation, so its match is independent of offset. Drag the key token along the ruler.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig5-rope-vs-nope.svg?v=6" role="img" aria-label="Interactive diagram of RoPE and NoPE mechanics: three RoPE frequency pairs rotate the key vector by an angle proportional to token offset, dephasing the query-key match as the offset grows; offsets beyond the training length produce angles unseen in training. A NoPE pair never rotates, so the match is unchanged at any offset. Drag along the token ruler to change the offset." style="width:100%;height:auto;aspect-ratio:760/404;display:block;">Figure 5: RoPE vs NoPE interactive comparison (SVG).</object>
+        <figcaption><b>Figure 5 — RoPE vs NoPE, side by side (interactive).</b> RoPE rotates each two-dimensional pair of the key by ω·(m−n) — three of the <i>d</i>/2 frequency pairs shown, where <i>d</i> is the length of each query/key vector — so the pairs dephase and the match falls as the offset grows; offsets beyond the training length produce rotation angles never seen in training. A NoPE layer applies no rotation, so its match is independent of offset. Drag the key token along the ruler.</figcaption>
       </figure>
 
       <p>The modern recipe combines the two — RoPE on most layers for sharp local order,
@@ -115,9 +123,18 @@
         recomputing them — grows as <i>N</i> with a large constant: roughly 40 GB at 128K for
         Llama 3 70B (<a href="https://arxiv.org/abs/2407.21783">Dubey et al., 2024</a>).</p>
 
+      <p>Under the hood, each token emits three vectors: a <b>query</b> — what it is looking for — a
+        <b>key</b> — what it can be matched by — and a <b>value</b> — what it hands over once matched.
+        An attention score is just the dot product of a query with a key — cosine similarity scaled by the two vectors' lengths. Click any token below to make it the query:</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig-attn-head-primer.svg?v=1" role="img" aria-label="Interactive anatomy of one attention head: six tokens along the bottom; click one to make it the query. The query is dotted against every visible token's key, softmax squashes the scores into positive weights that sum to 1, and the output is the weighted blend of the value vectors. Ghosted panels behind the diagram indicate many such heads run in parallel." style="width:100%;height:auto;aspect-ratio:760/424;display:block;">Figure 6: interactive anatomy of one attention head (SVG).</object>
+        <figcaption><b>Figure 6 — Anatomy of one attention head (interactive).</b> The highlighted token's query is dotted against the key of every token up to and including it; <b>softmax</b> squashes those scores into positive weights that sum to 1; the output is the blend of the value vectors, mixed by those weights. Click a token to move the query (the weights are illustrative, not from a real model). A model runs many of these side by side with different learned projections — each one is an <b>attention head</b>.</figcaption>
+      </figure>
+
       <figure>
         <img src="../figures/fig-attn-mechanism.svg?v=2" alt="Doubling the tokens roughly quadruples the attention score matrix but only doubles the KV cache: 4 tokens give 10 pairs and 8 cached vectors, 8 tokens give 36 pairs and 16 cached vectors." />
-        <figcaption><b>Figure 5 — Where the two costs come from.</b> Attention scores one cell per token pair and caches two vectors per token — so doubling the tokens (4 → 8 here) roughly quadruples the compute (10 → 36 pairs, <i>N²</i>) but only doubles the memory (8 → 16 vectors, <i>N</i>).</figcaption>
+        <figcaption><b>Figure 7 — Where the two costs come from.</b> Attention scores one cell per token pair and caches two vectors per token — so doubling the tokens (4 → 8 here) roughly quadruples the compute (10 → 36 pairs, <i>N²</i>) but only doubles the memory (8 → 16 vectors, <i>N</i>).</figcaption>
       </figure>
 
       <p>For years the fixes were conservative: keep attention exact, compute it smarter, cache it
@@ -125,26 +142,27 @@
 
       <figure>
         <img src="../figures/fig-attn-failure.svg?v=2" alt="On a linear scale, quadratic attention cost rockets upward and crosses a fixed compute budget long before one million tokens, while sub-quadratic methods rise gently. Going from 2K to 1M tokens is 500 times the tokens but roughly 250,000 times the attention compute." />
-        <figcaption><b>Figure 6 — The quadratic wall (schematic).</b> Attention compute against context length, both on linear scales. Going from 2K to 1M is 500× the tokens but ~250,000× the compute: the quadratic exhausts any fixed budget long before a million tokens, while sub-quadratic methods stay affordable. Getting past this wall is what the rest of the attention story is about.</figcaption>
+        <figcaption><b>Figure 8 — The quadratic wall (schematic).</b> Attention compute against context length, both on linear scales. Going from 2K to 1M is 500× the tokens but ~250,000× the compute: the quadratic exhausts any fixed budget long before a million tokens, while sub-quadratic methods stay affordable. Getting past this wall is what the rest of the attention story is about.</figcaption>
       </figure>
 
       <h3>Cache Less: MHA → MQA → GQA → MLA</h3>
 
       <p>The cache scales with length times per-token cost; the length is the point — the lever is what
-        each token costs. Everything after GPT-3's <b>MHA</b> baseline shares K/V heads across more query
-        heads, until <b>MLA</b> (<a href="https://arxiv.org/abs/2405.04434">DeepSeek-V2, 2024</a>) caches
-        only a low-rank compression of K and V. Click through:</p>
+        each token costs. And what it stores per token is exactly each token's key and value vectors from the anatomy figure — queries do the searching fresh each step and are never cached. Everything after GPT-3's
+        <b>MHA</b> baseline — multi-head attention, each query head with its own K/V head — shares K/V
+        heads across more query heads, until <b>MLA</b>
+        (<a href="https://arxiv.org/abs/2405.04434">DeepSeek-V2, 2024</a>) caches
+        only a low-rank compression of K and V — the same information in far fewer numbers. Click through:</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig-attn-kvheads.svg?v=1" role="img" aria-label="Interactive comparison of KV-cache schemes: buttons switch between MHA, MQA, GQA, and MLA; eight query heads connect to the K/V heads they read, and a bar shows the cache per token shrinking from 1x to 128x smaller." style="width:100%;height:auto;aspect-ratio:760/316;display:block;">Figure 7: interactive KV-cache comparison (SVG).</object>
-        <figcaption><b>Figure 7 — Shrinking the KV cache (interactive).</b> Eight query heads on top connect to the K/V heads they read; the bar is the cache left per token (the eight-head diagram is schematic — the quoted reductions use real-model head counts). <b>MQA</b>'s (<a href="https://arxiv.org/abs/1911.02150">Shazeer, 2019</a>) 128× at 128 heads costs some quality; <b>GQA</b>'s (<a href="https://arxiv.org/abs/2305.13245">Ainslie et al., 2023</a>) 8–16× keeps near-MHA quality and is the open-model default; MLA's ~57× is the <i>per-head</i> compression from DeepSeek's config numbers — the paper reports a 93.3% cache reduction; end-to-end analyses of the full DeepSeek-V3 cache report a still-dramatic ~28×. Orthogonally, <b>KV quantization</b> (FP8, or 2–3 bit schemes like KIVI and KVQuant) cuts bytes-per-element another 2–8×.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-attn-kvheads.svg?v=1" role="img" aria-label="Interactive comparison of KV-cache schemes: buttons switch between MHA, MQA, GQA, and MLA; eight query heads connect to the K/V heads they read, and a bar shows the cache per token shrinking from 1x to 128x smaller." style="width:100%;height:auto;aspect-ratio:760/316;display:block;">Figure 9: interactive KV-cache comparison (SVG).</object>
+        <figcaption><b>Figure 9 — Shrinking the KV cache (interactive).</b> Eight query heads on top connect to the K/V heads they read; the bar is the cache left per token (the eight-head diagram is schematic — the quoted reductions use real-model head counts). multi-query <b>MQA</b>'s (<a href="https://arxiv.org/abs/1911.02150">Shazeer, 2019</a>) 128× at 128 heads costs some quality; grouped-query <b>GQA</b>'s (<a href="https://arxiv.org/abs/2305.13245">Ainslie et al., 2023</a>) 8–16× keeps near-MHA quality and is the open-model default; multi-head-latent <b>MLA</b>'s ~57× is the <i>per-head</i> compression from DeepSeek's config numbers — the paper reports a 93.3% cache reduction; end-to-end analyses of the full DeepSeek-V3 cache report a still-dramatic ~28×. Orthogonally, <b>KV quantization</b> — storing each cached number in fewer bits (FP8, or 2–3 bit schemes like KIVI and KVQuant) — cuts the cache another 2–8×.</figcaption>
       </figure>
 
       <h3>Compute Smarter: FlashAttention</h3>
 
       <p><b>FlashAttention</b> (<a href="https://arxiv.org/abs/2205.14135">Dao et al., 2022</a>) computes
-        exact attention without ever materializing the <i>N×N</i> matrix, tiling Q, K, and V through SRAM
-        under a running softmax (<a href="https://arxiv.org/abs/2307.08691">FlashAttention-2</a>,
+        exact attention without ever materializing the <i>N×N</i> matrix, tiling Q, K, and V through SRAM (the GPU's small, fast on-chip memory) under a running softmax (<a href="https://arxiv.org/abs/2307.08691">FlashAttention-2</a>,
         <a href="https://arxiv.org/abs/2407.08608">-3</a>). But it is an IO fix, not an algorithmic one —
         the quadratic remains, just fed efficiently; at a million tokens you attack the exponent.</p>
 
@@ -157,8 +175,8 @@
         fills the rest</b> — every answer skips most of the score matrix:</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig-attn-patterns.svg?v=1" role="img" aria-label="Interactive attention-pattern explorer: a 20-by-20 causal grid of query-key cells with five pattern buttons — dense, sliding window, window plus global, learned blocks, and hybrid stack — and a live counter of cells computed out of 210." style="width:100%;height:auto;aspect-ratio:760/400;display:block;">Figure 8: interactive attention-pattern explorer (SVG).</object>
-        <figcaption><b>Figure 8 — Which query–key scores actually get computed (interactive).</b> Twenty tokens, one cell per causal query–key pair, 210 cells when dense. A sliding window plus a few global tokens (<a href="https://arxiv.org/abs/2004.05150">Longformer, 2020</a>; <a href="https://arxiv.org/abs/2007.14062">BigBird, 2020</a>) reaches <i>O(N)</i> — the window keeps local links but misses long range, the globals restore anchors to the start; learned blocks let the model pick where to look; the hybrid stack runs a cheap pattern in most layers and keeps full attention in a few.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-attn-patterns.svg?v=1" role="img" aria-label="Interactive attention-pattern explorer: a 20-by-20 causal grid of query-key cells with five pattern buttons — dense, sliding window, window plus global, learned blocks, and hybrid stack — and a live counter of cells computed out of 210." style="width:100%;height:auto;aspect-ratio:760/400;display:block;">Figure 10: interactive attention-pattern explorer (SVG).</object>
+        <figcaption><b>Figure 10 — Which query–key scores actually get computed (interactive).</b> Twenty tokens, one cell per causal query–key pair — causal: each token may only look backward — 210 cells when dense. A sliding window plus a few global tokens (<a href="https://arxiv.org/abs/2004.05150">Longformer, 2020</a>; <a href="https://arxiv.org/abs/2007.14062">BigBird, 2020</a>) reaches <i>O(N)</i> — the window keeps local links but misses long range, the globals restore anchors to the start; learned blocks let the model pick where to look; the hybrid stack runs a cheap pattern in most layers and keeps full attention in a few.</figcaption>
       </figure>
 
       <h3>Attend Sparsely: From Fixed Patterns to Trained Sparsity</h3>
@@ -172,18 +190,18 @@
         with the dense model, with a long-context API price cut of more than half the same day. The price cut
         is the tell: sparse attention became an economic fact.
         <a href="https://arxiv.org/abs/2606.19348">DeepSeek-V4 (2026)</a> reaches 1M tokens at roughly
-        27% of the FLOPs and 10% of the KV cache of its predecessor.</p>
+        27% of the FLOPs (raw compute) and 10% of the KV cache of its predecessor.</p>
 
       <h3>Replace the Layer: Linear Attention and the SSM Lineage</h3>
 
-      <p><b>State-space models</b> drop softmax attention entirely, compressing the past into a
-        fixed-size state — <i>O(N)</i> time, <i>O(1)</i> inference memory
+      <p><b>State-space models</b> (SSMs) drop softmax attention entirely, compressing the past into a
+        fixed-size state — <i>O(N)</i> time, <i>O(1)</i> inference memory (the "linear" in linear attention)
         (<a href="https://arxiv.org/abs/2111.00396">S4</a> →
         <a href="https://arxiv.org/abs/2312.00752">Mamba</a> →
         <a href="https://arxiv.org/abs/2405.21060">Mamba-2</a>). The catch: pure SSMs are weaker at
         <i>precise recall</i>, so the survivors are hybrids — attention for exact retrieval, the cheap
         layer for everything else. MiniMax-01
-        (<a href="https://arxiv.org/abs/2501.08313">January 2025</a>) took <i>lightning attention</i> to
+        (<a href="https://arxiv.org/abs/2501.08313">January 2025</a>) took <i>lightning attention</i> — its linear-attention variant — to
         frontier scale, trained at 1M context; Kimi Linear
         (<a href="https://arxiv.org/abs/2510.26692">October 2025</a>) reports a 3:1 hybrid <i>beating</i>
         full attention with a 75% smaller cache; some stacks keep ~8% full-attention layers.</p>
@@ -217,18 +235,24 @@
 
       <p>Llama 3 (<a href="https://arxiv.org/abs/2407.21783">Dubey et al., 2024</a>) is the canonical
         example. It trained on roughly 15T tokens at 8K, then added about 800B tokens ramping through six
-        stages from 8K to 128K, with the RoPE base raised to 500,000. Each stage advanced only once two
-        criteria were met: short-context benchmarks had recovered, <i>and</i> needle-in-a-haystack recall
-        had reached nearly 100% at the new length. DeepSeek-V3
+        stages from 8K to 128K, with the RoPE base raised to 500,000 — the dial that sets the rotation frequencies (the ω of the positional-encoding figures); a higher base means slower per-token rotation, so longer spans stay inside familiar angles. Each stage advanced only once two
+        criteria were met: short-context benchmarks had recovered, <i>and</i> needle-in-a-haystack recall —
+        plant a fact in a long document, ask for it back — had reached nearly 100% at the new length.
+        DeepSeek-V3
         (<a href="https://arxiv.org/abs/2412.19437">2024</a>) did much the same with two 1,000-step YaRN
-        phases (4K → 32K → 128K) on top of 14.8T tokens of 4K pretraining, buying 128K of context for the
+        phases (4K → 32K → 128K) — YaRN is the RoPE-stretching method from the positional-encoding section — on top of 14.8T tokens of 4K pretraining, buying 128K of context for the
         cost of 2,000 extra steps.</p>
+
+      <figure>
+        <img src="../figures/fig-curriculum.svg?v=1" alt="The multi-stage context curriculum: training tokens on the x-axis (not to scale), context length on a log y-axis. A long plateau at 8K covers roughly 15T tokens, where attention is cheap; then a compact six-step staircase rises from 8K to 128K over about 800B tokens, with a gate between stages — advance only when short-context scores recover and needle recall is about 100%." />
+        <figcaption><b>Figure 11 — The long-context curriculum.</b> The bulk of pretraining stays at 8K, where the quadratic is cheap — ~15T tokens for Llama 3 — and a compact six-stage staircase carries the model from 8K to 128K on ~800B more. Between steps sits a gate: advance only when short-context benchmarks have recovered <i>and</i> needle recall is ~100% at the new length.</figcaption>
+      </figure>
 
       <p>The data details turned out to matter as much as the length:</p>
       <ul>
         <li><b>Document packing with intra-document masking</b> — pack many short documents into one long
           training sequence for efficiency, but mask attention so that each token only sees its own document.</li>
-        <li><b>Long-data upsampling</b> — code repositories and books carry genuine long-range dependencies.
+        <li><b>Long-data upsampling</b> — sampling long documents beyond their natural share: code repositories and books carry genuine long-range dependencies.
           Princeton's ProLong (<a href="https://arxiv.org/abs/2410.02660">Gao et al., 2024</a>) showed that
           the right data mix, trained on just 40B tokens, beat Llama-3.1-8B-Instruct's roughly 800B-token
           long-context training on the HELMET benchmark.</li>
@@ -250,27 +274,34 @@
         newer optimizers like Muon, adopted as MuonClip in
         <a href="https://arxiv.org/abs/2507.20534">Kimi K2, 2025</a>, chase raw efficiency.
         The <b>learning-rate schedule</b> is the plan for how big those updates are over the run:
-        large early, shrinking as the model settles.</p>
+        large early, shrinking as the model settles. The learning rate is just the step size — drag
+        it below and watch the same eight downhill steps land in four different regimes.</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig-lr-primer.svg?v=1" role="img" aria-label="Interactive gradient-descent primer: a ball descends a one-dimensional loss bowl in eight discrete steps. A draggable slider sets the learning rate — the step size — moving between four regimes: too small (the ball crawls and never reaches the bottom), about right (it settles at the minimum), too large (it overshoots and bounces across the bowl), and way too large (each step lands higher and the ball leaves the bowl). A readout reports the current learning rate and regime." style="width:100%;height:auto;aspect-ratio:760/372;display:block;">Figure 12: interactive learning-rate primer (SVG).</object>
+        <figcaption><b>Figure 12 — The learning rate is a step size (interactive).</b> Gradient descent on a one-dimensional loss bowl: eight update steps from the same start. Too small a step crawls and never arrives; the right size settles at the minimum; too large overshoots and bounces across the bowl; larger still and each step lands <i>higher</i> — divergence. A schedule is nothing more than a plan for how this step size changes over the run.</figcaption>
+      </figure>
 
       <p>The GPT-3-era schedule was linear warmup plus a cosine decay — a curve whose horizon is
         fixed at step zero. That is fine when training is one run with a known end.</p>
 
       <p>A long-context phase is exactly not that. It is a second training run bolted onto a
-        finished, expensive model, and longer sequences make it more fragile: attention logits can
+        finished, expensive model, and longer sequences make it more fragile: attention logits — the
+        raw query–key scores fed into the softmax before they become attention weights — can
         grow with sequence length, and a single loss spike partway through can corrupt the
         investment.</p>
 
       <figure>
         <img src="../figures/fig-opt-failure.svg" alt="Two identical long-context training runs: with z-loss and QK-norm the loss keeps falling; without them, attention logits explode mid-run and the loss spikes into scattered, unrecoverable territory." />
-        <figcaption><b>Figure 9 — What fragility looks like (schematic).</b> Two otherwise identical long-context runs. With logit-scale safeguards (z-loss, QK-norm) the loss keeps falling; without them, attention logits can explode mid-run — and a bolted-on phase has little budget left to recover.</figcaption>
+        <figcaption><b>Figure 13 — What fragility looks like (schematic).</b> Two otherwise identical long-context runs. With logit-scale safeguards (z-loss, QK-norm) the loss keeps falling; without them, attention logits can explode mid-run — and a bolted-on phase has little budget left to recover.</figcaption>
       </figure>
 
       <p>The schedule is the other casualty: by the end of pretraining, a cosine-scheduled model has
         nothing left to decay.</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig-opt-mechanism.svg?v=2" role="img" aria-label="Interactive comparison of learning-rate schedules: a grey cosine curve whose horizon is fixed at step zero, and a teal Warmup-Stable-Decay curve holding a stable plateau with a draggable trigger point that sets where the decay begins. A readout reports the trigger as a percentage of the run." style="width:100%;height:auto;aspect-ratio:760/300;display:block;">Figure 10: cosine vs WSD learning-rate schedules (SVG).</object>
-        <figcaption><b>Figure 10 — Why WSD fits a bolt-on phase (interactive).</b> A cosine schedule (grey) commits to its horizon at step zero — by the end of pretraining it is spent. Warmup-Stable-Decay (teal) holds a stable plateau from which the decay can be triggered at any point. Drag the trigger to move where the decay begins.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-opt-mechanism.svg?v=2" role="img" aria-label="Interactive comparison of learning-rate schedules: a grey cosine curve whose horizon is fixed at step zero, and a teal Warmup-Stable-Decay curve holding a stable plateau with a draggable trigger point that sets where the decay begins. A readout reports the trigger as a percentage of the run." style="width:100%;height:auto;aspect-ratio:760/300;display:block;">Figure 14: cosine vs WSD learning-rate schedules (SVG).</object>
+        <figcaption><b>Figure 14 — Why WSD fits a bolt-on phase (interactive).</b> A cosine schedule (grey) commits to its horizon at step zero — by the end of pretraining it is spent. Warmup-Stable-Decay (teal) holds a stable plateau from which the decay can be triggered at any point. Drag the trigger to move where the decay begins.</figcaption>
       </figure>
 
       <p>Three tools matter specifically because the sequences are long and the phase is bolted on:</p>
@@ -304,7 +335,13 @@
         capacity was there; the <i>behavior</i> wasn't. Long-context ability isn't only built in
         pretraining — it can be suppressed, or unlocked, by what happens after. Through 2025 the field
         stopped treating that as a curiosity and started training the behavior in deliberately, and this
-        became the fastest-moving pillar of the five.</p>
+        became the fastest-moving pillar of the five. First, fix where that "after" sits in the
+        pipeline — and how little data lives there.</p>
+
+      <figure>
+        <img src="../figures/fig-posttrain-pipeline.svg?v=1" alt="The three-stage training pipeline as shrinking bars on a log data axis: pretraining on roughly 10^12 to 10^13 tokens of raw text learns to predict the next token; SFT on roughly 10^4 to 10^7 curated demonstrations learns to imitate; RL on roughly 10^3 to 10^4 tasks with graded outcomes learns what works." />
+        <figcaption><b>Figure 15 — The training pipeline, by data volume.</b> Pretraining learns to <i>predict the next token</i> from trillions of tokens of raw text; supervised fine-tuning (SFT) learns to <i>imitate</i> from curated demonstrations; reinforcement learning (RL) learns <i>what works</i> from tasks with graded outcomes. Bar length is data volume on a log scale — each stage runs on orders of magnitude less than the one before, and the unit of supervision shifts from tokens to demonstrations to tasks.</figcaption>
+      </figure>
 
       <p>Why behavior lags capacity is visible in the training data. Pretraining corpora grew from
         GPT-3's 300B tokens to Qwen3's 36T (<a href="https://arxiv.org/abs/2505.09388">Qwen Team,
@@ -316,8 +353,8 @@
         of SFT amount to ~0.3% of its 25T-token pretraining.</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig-data-growth.svg?v=1" role="img" aria-label="Two-panel log chart, 2020 to 2026. Top: pretraining corpora grow from GPT-3's 300 billion tokens through Chinchilla, Llama 2 and 3 to Qwen3's 36 trillion and DeepSeek-V4's 32–33 trillion — about 100 times in five years. Bottom: post-training sets grow from InstructGPT's 13 thousand prompts through Llama 2 and Tulu 3 to Nemotron 3's 7 million samples, with NVIDIA's released 33M-sample Llama-Nemotron set shown as a hollow square — still orders of magnitude below pretraining in tokens." style="width:100%;height:auto;aspect-ratio:760/412;display:block;">Figure 11: growth of pretraining vs post-training datasets (SVG).</object>
-        <figcaption><b>Figure 11 — Two data regimes, both growing, still orders of magnitude apart.</b> Top: pretraining tokens per model — GPT-3's 300B (<a href="https://arxiv.org/abs/2005.14165">2020</a>), Chinchilla's 1.4T (<a href="https://arxiv.org/abs/2203.15556">2022</a>), Llama 2's 2T (<a href="https://arxiv.org/abs/2307.09288">2023</a>), Llama 3's ~15T (<a href="https://arxiv.org/abs/2407.21783">2024</a>), Qwen3's 36T (<a href="https://arxiv.org/abs/2505.09388">2025</a>), DeepSeek-V4's 32–33T (<a href="https://arxiv.org/abs/2606.19348">2026</a>). Bottom: post-training samples — InstructGPT's ~13K SFT prompts (<a href="https://arxiv.org/abs/2203.02155">2022</a>), Llama 2's 27.5K (<a href="https://arxiv.org/abs/2307.09288">2023</a>), Tulu 3's ~940K (<a href="https://arxiv.org/abs/2411.15124">2024</a>), Nemotron 3 Super's 7M ≈ 80B tokens (<a href="https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf">2026</a>); the hollow point is NVIDIA's released <a href="https://huggingface.co/datasets/nvidia/Llama-Nemotron-Post-Training-Dataset">Llama-Nemotron set</a> (~33M samples, 2025). Hover the points for details.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-data-growth.svg?v=1" role="img" aria-label="Two-panel log chart, 2020 to 2026. Top: pretraining corpora grow from GPT-3's 300 billion tokens through Chinchilla, Llama 2 and 3 to Qwen3's 36 trillion and DeepSeek-V4's 32–33 trillion — about 100 times in five years. Bottom: post-training sets grow from InstructGPT's 13 thousand prompts through Llama 2 and Tulu 3 to Nemotron 3's 7 million samples, with NVIDIA's released 33M-sample Llama-Nemotron set shown as a hollow square — still orders of magnitude below pretraining in tokens." style="width:100%;height:auto;aspect-ratio:760/412;display:block;">Figure 16: growth of pretraining vs post-training datasets (SVG).</object>
+        <figcaption><b>Figure 16 — Two data regimes, both growing, still orders of magnitude apart.</b> Top: pretraining tokens per model — GPT-3's 300B (<a href="https://arxiv.org/abs/2005.14165">2020</a>), Chinchilla's 1.4T (<a href="https://arxiv.org/abs/2203.15556">2022</a>), Llama 2's 2T (<a href="https://arxiv.org/abs/2307.09288">2023</a>), Llama 3's ~15T (<a href="https://arxiv.org/abs/2407.21783">2024</a>), Qwen3's 36T (<a href="https://arxiv.org/abs/2505.09388">2025</a>), DeepSeek-V4's 32–33T (<a href="https://arxiv.org/abs/2606.19348">2026</a>). Bottom: post-training samples — InstructGPT's ~13K SFT prompts (<a href="https://arxiv.org/abs/2203.02155">2022</a>), Llama 2's 27.5K (<a href="https://arxiv.org/abs/2307.09288">2023</a>), Tulu 3's ~940K (<a href="https://arxiv.org/abs/2411.15124">2024</a>), Nemotron 3 Super's 7M ≈ 80B tokens (<a href="https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Super-Technical-Report.pdf">2026</a>); the hollow point is NVIDIA's released <a href="https://huggingface.co/datasets/nvidia/Llama-Nemotron-Post-Training-Dataset">Llama-Nemotron set</a> (~33M samples, 2025). Hover the points for details.</figcaption>
       </figure>
 
       <p>Put lengths on that picture and it becomes the open bottleneck of mid-2026. The window side is
@@ -325,21 +362,19 @@
         (<a href="https://arxiv.org/abs/2606.19348">2026</a>), Nemotron 3 buys its 1M window with a
         34B-token continued-pretraining phase, and Qwen2.5-1M gets from 256K to 1M with no training at
         all (<a href="https://arxiv.org/abs/2501.15383">Qwen Team, 2025</a>). The data that trains
-        <i>behavior</i> stops far short of that. Qwen2.5-1M's own SFT tops out at 256K and its RL pairs
-        at 8,192 tokens — under 1% of the window it ships; the strongest published long-context RL,
+        <i>behavior</i> stops far short of that. Qwen2.5-1M's own SFT tops out at 256K and its RL pairs (prompt-and-response training examples) at 8,192 tokens — under 1% of the window it ships; the strongest published long-context RL,
         QwenLong-L1.5, trains at ~120K inputs; and a June 2026 recipe still caps RL at 64K, "leaving
         extension to longer context lengths for future work"
         (<a href="https://arxiv.org/abs/2606.18831">Beyond Reward Engineering, 2026</a>). The blockers
         are structural: past ~32K tokens human annotators can no longer reliably write or verify the
         tasks (<a href="https://arxiv.org/abs/2512.12967">QwenLong-L1.5, 2025</a>), so long training
-        data is synthesized — and the tooling strains too, with verl's 2026 roadmap still listing ≥128K
-        RL as a goal (<a href="https://github.com/verl-project/verl/issues/5836">verl, 2026</a>) and the
+        data is synthesized — and the tooling strains too, with verl, a widely used open-source RL trainer, still listing ≥128K RL on its 2026 roadmap (<a href="https://github.com/verl-project/verl/issues/5836">verl, 2026</a>) and the
         first published RL stack built for million-token sequences arriving only with DeepSeek-V4, its
         data lengths undisclosed.</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig-length-gap.svg?v=1" role="img" aria-label="Dumbbell chart, one row per model from late 2024 to mid 2026, log token axis. Filled markers: the longest sample in each model's post-training data (squares SFT, circles RL). Hollow circles: the context the model ships or handles. Post-training data stops between 4K and 512K while the windows above it grew from 128K to 1–10 million tokens; Qwen2.5-1M ran RL on 8K samples against a 1M window. The last row marks DeepSeek-V4, whose RL infrastructure targets million-token sequences with data lengths unpublished." style="width:100%;height:auto;aspect-ratio:760/470;display:block;">Figure 12: the training-length gap between shipped windows and post-training data (SVG).</object>
-        <figcaption><b>Figure 12 — The training-length gap.</b> The longest sample in each model's post-training data (filled: squares SFT, circles RL) against the context it ships or handles (hollow), log scale. Tulu 3 runs SFT at 4,096 tokens (<a href="https://arxiv.org/abs/2411.15124">2024</a>); Qwen2.5-1M's RL pairs stop at 8,192 against a 1M window (<a href="https://arxiv.org/abs/2501.15383">2025</a>); UltraLong fine-tunes on sub-8K data for a 4M window (<a href="https://arxiv.org/abs/2504.06214">2025</a>); Llama 4 Scout post-trains at 256K for a 10M window (<a href="https://ai.meta.com/blog/llama-4-multimodal-intelligence/">2025</a>); QwenLong-L1.5's RL caps at ~120K, reaching 4M+ only through its memory agent (<a href="https://arxiv.org/abs/2512.12967">2025</a>); Nemotron 3 Super's 512K SFT samples are synthetic concatenations of shorter documents (<a href="https://arxiv.org/html/2604.12374v1">2026</a>); DeepSeek-V4 built RL infrastructure for million-token sequences but publishes no data lengths (<a href="https://arxiv.org/abs/2606.19348">2026</a>). Hover the markers for details.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-length-gap.svg?v=1" role="img" aria-label="Dumbbell chart, one row per model from late 2024 to mid 2026, log token axis. Filled markers: the longest sample in each model's post-training data (squares SFT, circles RL). Hollow circles: the context the model ships or handles. Post-training data stops between 4K and 512K while the windows above it grew from 128K to 1–10 million tokens; Qwen2.5-1M ran RL on 8K samples against a 1M window. The last row marks DeepSeek-V4, whose RL infrastructure targets million-token sequences with data lengths unpublished." style="width:100%;height:auto;aspect-ratio:760/470;display:block;">Figure 17: the training-length gap between shipped windows and post-training data (SVG).</object>
+        <figcaption><b>Figure 17 — The training-length gap.</b> The longest sample in each model's post-training data (filled: squares SFT, circles RL) against the context it ships or handles (hollow), log scale. Tulu 3 runs SFT at 4,096 tokens (<a href="https://arxiv.org/abs/2411.15124">2024</a>); Qwen2.5-1M's RL pairs stop at 8,192 against a 1M window (<a href="https://arxiv.org/abs/2501.15383">2025</a>); UltraLong fine-tunes on sub-8K data for a 4M window (<a href="https://arxiv.org/abs/2504.06214">2025</a>); Llama 4 Scout post-trains at 256K for a 10M window (<a href="https://ai.meta.com/blog/llama-4-multimodal-intelligence/">2025</a>); QwenLong-L1.5's RL caps at ~120K, reaching 4M+ only through its memory agent — a learned summarize-as-you-go loop (<a href="https://arxiv.org/abs/2512.12967">2025</a>); Nemotron 3 Super's 512K SFT samples are synthetic concatenations of shorter documents (<a href="https://arxiv.org/html/2604.12374v1">2026</a>); DeepSeek-V4 built RL infrastructure for million-token sequences but publishes no data lengths (<a href="https://arxiv.org/abs/2606.19348">2026</a>). Hover the markers for details.</figcaption>
       </figure>
 
       <p>The direct line of attack is reinforcement learning on long-context reasoning. QwenLong-L1
@@ -357,7 +392,7 @@
         an 8K window to maintain a rolling token memory — and it then answered questions over 3.5M-token
         documents with under 5% degradation, reaching far past its architectural window. Memory-as-Action
         (<a href="https://arxiv.org/abs/2510.12635">October 2025</a>) goes further and puts editing one's
-        own context directly into the action space, so context curation is itself a learned policy.
+        own context directly into the set of actions RL can choose from, so context curation is itself a learned behavior.
         QwenLong-L1.5 — the ~120K-input recipe from above — fused the two threads, long-context RL plus
         a memory-agent framework in one post-training recipe, and reports long-context reasoning at
         1M–4M+ tokens competitive with the strongest closed models. By mid-2026
@@ -386,15 +421,21 @@
         The tell is what OpenAI shipped <i>alongside</i> that claim: two harder in-house evals,
         <a href="https://openai.com/index/gpt-4-1/">OpenAI-MRCR and Graphwalks (April 2025)</a> — because
         the same model that never misses one needle scored only ~57% when asked to distinguish two of them
-        at 128K. When a lab's own release notes retire a benchmark, it's saturated.</p>
+        at 128K. When a lab's own release notes retire a benchmark, it's saturated. Click through the task
+        types below to watch the same advertised window shrink.</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig-effective-context.svg?v=1" role="img" aria-label="Interactive schematic of advertised versus effective context: a quality curve over input length from 1K to 1M tokens on a log axis, with the advertised 1M window marked. Three buttons switch the task — single needle stays near 100% all the way (saturated); multi-needle, MRCR-class, holds then falls hard, around 57% by 128K; reasoning over the context, NoLiMa-class, falls earliest, below half of baseline by 32K. Where the curve crosses a dashed 'still works' threshold is the effective context." style="width:100%;height:auto;aspect-ratio:760/370;display:block;">Figure 18: advertised vs effective context, interactive (SVG).</object>
+        <figcaption><b>Figure 18 — Advertised vs effective context (interactive, schematic).</b> The same 1M window graded on three tasks — curves are schematic; only the marked anchor points come from the results in this section. Where the curve crosses the "still works" threshold is the <i>effective context</i>: at the advertised window for a single needle, far short of it once the task hardens. Click a task type.</figcaption>
+      </figure>
 
       <p>What replaced it is the concept this section is really about: <b>effective context</b> — the
         length at which a model still <i>works</i>, as opposed to the length it accepts. RULER
         (<a href="https://arxiv.org/abs/2404.06654">Hsieh et al., 2024</a>) measured the gap first with
         controlled synthetic tasks: models claiming 128K or 1M windows routinely hold their short-context
         quality only to 32K or 64K. NoLiMa (<a href="https://arxiv.org/abs/2502.05167">Modarressi et al.,
-        ICML 2025</a>) made the test unriggable by removing lexical overlap between question and needle —
-        forcing actual semantic bridging — and most models claiming 128K+ fell below half their
+        ICML 2025</a>) made the test unriggable by removing lexical overlap (shared words between question
+        and needle) — forcing actual semantic bridging — and most models claiming 128K+ fell below half their
         short-context baseline by 32K. Chroma's Context Rot report
         (<a href="https://www.trychroma.com/research/context-rot">July 2025</a>) showed 18 frontier models,
         1M-class included, degrading non-uniformly with input length even on trivially simple tasks. And
@@ -404,9 +445,9 @@
 
       <p>So evaluation graduated from gating training stages to defining what "1M context" even means.
         LongBench v2 (<a href="https://arxiv.org/abs/2412.15204">Bai et al., 2024</a>) tests deep
-        reasoning over contexts up to 2M words, where the best model answering directly scored only ~50% at release; agentic
+        reasoning over contexts up to 2M words, where the best model answering directly (no extended step-by-step reasoning) scored only ~50% at release; agentic
         long-context benchmarks arrived in 2026 to test dynamic synthesis over tool outputs rather than
-        static retrieval. The flagship comparisons now happen on MRCR-class scores at 1M, where the
+        static retrieval. The flagship comparisons now happen on MRCR-class (multi-needle) scores at 1M, where the
         spread between models is wide and the numbers are nowhere near saturated. Read a spec sheet
         accordingly: the advertised window tells you what the model accepts; only the effective-context
         evals tell you what it can do there.</p>
@@ -424,12 +465,12 @@
           <tr><td>Attention heads</td><td>Full MHA</td><td>GQA or MLA (+ KV quantization)</td></tr>
           <tr><td>Attention algorithm</td><td>Dense O(N²)</td><td>FlashAttention-3; trainable sparsity (NSA → DSA, MSA)</td></tr>
           <tr><td>Attention composition</td><td>Every layer full attention</td><td>1 full-attention layer per 3–12 sparse / linear / sliding-window layers</td></tr>
-          <tr><td>Architecture</td><td>Dense Transformer</td><td>MoE, often SSM/linear hybrids</td></tr>
+          <tr><td>Architecture</td><td>Dense Transformer</td><td>Mixture-of-Experts (MoE), often SSM/linear hybrids</td></tr>
           <tr><td>Pretraining</td><td>Single length, 2K</td><td>Multi-stage curriculum to 128K–256K + synthetic data</td></tr>
           <tr><td>Post-training</td><td>— (base model)</td><td>Long-context RL + learned memory (QwenLong-L1.5, MemAgent)</td></tr>
-          <tr><td>Systems</td><td>Data parallel</td><td>+ Context parallel / ring attention, paged &amp; disaggregated KV serving</td></tr>
+          <tr><td>Systems</td><td>Data parallel</td><td>+ Context parallel / ring attention (one sequence split across GPUs), paged &amp; disaggregated KV serving</td></tr>
           <tr><td>Optimizer</td><td>Adam + cosine</td><td>AdamW/Muon + WSD, z-loss, QK-norm, muP</td></tr>
-          <tr><td>Evaluation</td><td>Perplexity</td><td>Effective-context evals (MRCR, NoLiMa, RULER); NIAH as entry ticket</td></tr>
+          <tr><td>Evaluation</td><td>Perplexity (next-token prediction quality)</td><td>Effective-context evals (MRCR, NoLiMa, RULER); needle-in-a-haystack (NIAH) as entry ticket</td></tr>
         </tbody>
       </table>
 
@@ -458,6 +499,11 @@
         with hundreds to thousands of examples in context, in-context learning starts to rival
         fine-tuning.</p>
 
+      <figure>
+        <img src="../figures/fig-agent-window.svg?v=1" alt="Schematic of an agent's context window as working memory: a horizontal 1M-token bar fills left to right with instructions, files read, tool results, and decisions; a thin red slice deep in the middle marks the requirement stated hundreds of tool calls ago, a write head near the right edge marks where new tokens append, and a dashed arrow notes that dropping the slice silently means every action downstream inherits the error." />
+        <figcaption><b>Figure 19 — Context as an agent's working memory (schematic).</b> A session fills the window left to right — instructions, files read, tool results, decisions, more tool results — while new tokens append at the write head. The requirement buried mid-window is one thin slice; drop it silently and every action written after it inherits the error.</figcaption>
+      </figure>
+
       <p>And the demand curve is measurable. METR's time-horizon studies
         (<a href="https://arxiv.org/abs/2503.14499">Kwa et al., 2025</a>) find that the length of task an
         agent can complete at 50% reliability has doubled roughly every seven months for six years — faster
@@ -471,10 +517,11 @@
         effective context isn't a benchmark nuance; it is the spec.</p>
 
       <p>Two honest caveats complete the picture. First, economics: an agent re-sends a nearly identical
-        million-token prefix every turn, and that is affordable only because prefix caching discounts
-        cached tokens by 90%+ across the major APIs — the serving layer, not the model, is what makes
+        million-token prefix every turn, and that is affordable only because prefix caching — the API
+        re-uses the unchanged start of the prompt instead of recomputing it — discounts cached tokens by
+        90%+ across the major APIs; the serving layer, not the model, is what makes
         million-token agents viable products. Second, the big window did not retire the memory layer above
-        the model — it became its substrate. Compaction and memory tools shipped as API primitives in 2025;
+        the model — it became its substrate. Compaction — auto-summarizing older context to reclaim window space — and memory tools shipped as API primitives in 2025;
         systems like MemGPT's descendants and the RL-trained memory agents of the post-training section manage
         what enters the window rather than assuming everything fits; and recursive approaches
         (<a href="https://arxiv.org/abs/2512.24601">Zhang et al., 2025</a>) already handle inputs a

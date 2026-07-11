@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="The multi-stage long-context curriculum: training tokens on the x-axis (not to scale), context length on a log y-axis. A long plateau at 8K covers roughly 15 trillion tokens, where attention is cheap; then a compact six-step staircase rises from 8K to 128K over about 800 billion tokens. A gate sits between stages: advance only when short-context scores recover and needle recall is about 100% at the new length.">
+<!-- Geometry: y encodes log(context length): 8K at y=250, 128K at y=70; the six stage
+     risers sit at x=490,523,556,589,622,655, each 30px tall (equal log steps).
+     Riser midpoints (gate dots): (490,235) (523,205) (556,175) (589,145) (622,115) (655,85).
+     The x-axis is deliberately not to scale (annotated). -->
+<rect width="760" height="320" fill="#ffffff"/>
+<rect x="490" y="40" width="210" height="220" fill="#f6f6f4" opacity="0.55"/>
+<text x="280" y="56" font-size="11" fill="#6b6b66" text-anchor="middle">pretraining</text>
+<text x="597" y="56" font-size="11" fill="#6b6b66" text-anchor="middle">context-extension phase</text>
+<line x1="64" y1="40" x2="64" y2="260" stroke="#ececec"/>
+<line x1="64" y1="260" x2="710" y2="260" stroke="#ececec"/>
+<line x1="58" y1="250" x2="64" y2="250" stroke="#ececec"/>
+<text x="54" y="254" font-size="11" fill="#6b6b66" text-anchor="end">8K</text>
+<line x1="58" y1="70" x2="64" y2="70" stroke="#ececec"/>
+<text x="54" y="74" font-size="11" fill="#6b6b66" text-anchor="end">128K</text>
+<line x1="64" y1="70" x2="652" y2="70" stroke="#ececec" stroke-dasharray="4 3"/>
+<text x="387" y="298" font-size="12.5" fill="#1b1b1a" text-anchor="middle">training tokens →  <tspan fill="#6b6b66">(not to scale)</tspan></text>
+<text x="24" y="150" font-size="12.5" fill="#1b1b1a" text-anchor="middle" transform="rotate(-90 24 150)">context length (log)</text>
+<path d="M70 250 H490 V220 H523 V190 H556 V160 H589 V130 H622 V100 H655 V70 H700" fill="none" stroke="#2f6f7a" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="280" y="222" font-size="12" fill="#1b1b1a" font-weight="600" text-anchor="middle">~15T tokens at 8K</text>
+<text x="280" y="238" font-size="11" fill="#6b6b66" text-anchor="middle">attention is cheap here</text>
+<text x="642" y="200" font-size="12" fill="#1b1b1a" font-weight="600" text-anchor="middle">~800B tokens</text>
+<text x="642" y="216" font-size="11" fill="#6b6b66" text-anchor="middle">six stages, 8K → 128K</text>
+<circle cx="490" cy="235" r="3" fill="#b5482e"/>
+<circle cx="523" cy="205" r="3" fill="#b5482e"/>
+<circle cx="556" cy="175" r="3" fill="#b5482e"/>
+<circle cx="589" cy="145" r="3" fill="#b5482e"/>
+<circle cx="622" cy="115" r="3" fill="#b5482e"/>
+<circle cx="655" cy="85" r="3" fill="#b5482e"/>
+<text x="96" y="92" font-size="12" fill="#b5482e" font-weight="600">the gate between stages:</text>
+<text x="96" y="110" font-size="11.5" fill="#6b6b66">advance only when short-context scores recover</text>
+<text x="96" y="126" font-size="11.5" fill="#6b6b66">AND needle recall is ~100% at the new length</text>
+<line x1="370" y1="116" x2="581" y2="142" stroke="#6b6b66" stroke-dasharray="3 3" opacity="0.6"/>
+</svg>

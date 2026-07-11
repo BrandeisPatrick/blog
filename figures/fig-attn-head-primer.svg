@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 424" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive anatomy of one attention head. Six tokens along the bottom; click one to make it the query. The query is dotted against every visible token's key, softmax squashes the scores into positive weights that sum to 1, and the output is the weighted blend of the value vectors. Ghosted panels behind the diagram indicate many such heads run in parallel.">
+<!-- Coordinate math: 6 columns at cx = 78 + 82*i (i=0..5); token boxes y 366..394 (w72);
+     k/v chips y 330..346; q chip y 306..322 above the selected column; score row baseline y 296;
+     softmax band y 252..272; weights baseline y 240 with bar height = weight*96 (max top y 144);
+     blend bar x 48..530 (widths = weight*482), y 92..118; panel x 34..544, y 60..360;
+     ghost panels offset (+8,-8) each; annotations column x 576..750. All inside 760x424. -->
+<style>
+.tok{cursor:pointer}
+.tok rect{transition:stroke .15s ease}
+#qg{transition:transform .18s ease}
+.wb{transition:y .18s ease,height .18s ease}
+.bs{transition:x .18s ease,width .18s ease}
+</style>
+<rect width="760" height="424" fill="#ffffff"/>
+
+<!-- ghost panels: many heads in parallel -->
+<rect x="50" y="44" width="510" height="300" rx="10" fill="#fcfcfb" stroke="#ececec" opacity="0.55"/>
+<rect x="42" y="52" width="510" height="300" rx="10" fill="#fcfcfb" stroke="#ececec" opacity="0.8"/>
+<rect x="34" y="60" width="510" height="300" rx="10" fill="#fcfcfb" stroke="#ececec"/>
+<text x="576" y="48" font-size="11" fill="#6b6b66">a model runs many of these</text>
+<text x="576" y="62" font-size="11" fill="#6b6b66">in parallel — each one is an</text>
+<text x="576" y="76" font-size="11" fill="#1b1b1a" font-weight="700">“attention head”</text>
+
+<!-- output: weighted blend of value vectors -->
+<text x="48" y="84" font-size="12" fill="#1b1b1a"><tspan font-weight="700">output</tspan> for <tspan id="ow" font-weight="700">“mat”</tspan> — a weighted blend of the value vectors</text>
+<rect x="48" y="92" width="482" height="26" fill="none" stroke="#ececec"/>
+<rect id="bs0" class="bs" x="48" y="92" width="28.9" height="26" fill="#2f6f7a" fill-opacity="0.28" stroke="#ffffff"/>
+<rect id="bs1" class="bs" x="76.9" y="92" width="143.2" height="26" fill="#2f6f7a" fill-opacity="0.55" stroke="#ffffff"/>
+<rect id="bs2" class="bs" x="220.1" y="92" width="67.7" height="26" fill="#2f6f7a" fill-opacity="0.38" stroke="#ffffff"/>
+<rect id="bs3" class="bs" x="287.8" y="92" width="117.3" height="26" fill="#2f6f7a" fill-opacity="0.62" stroke="#ffffff"/>
+<rect id="bs4" class="bs" x="405.1" y="92" width="28.9" height="26" fill="#2f6f7a" fill-opacity="0.33" stroke="#ffffff"/>
+<rect id="bs5" class="bs" x="434" y="92" width="96" height="26" fill="#2f6f7a" fill-opacity="0.48" stroke="#ffffff"/>
+<text id="bt0" x="62.5" y="109" font-size="10.5" fill="#1b1b1a" text-anchor="middle"></text>
+<text id="bt1" x="148.5" y="109" font-size="10.5" fill="#1b1b1a" text-anchor="middle">cat</text>
+<text id="bt2" x="253.9" y="109" font-size="10.5" fill="#1b1b1a" text-anchor="middle">sat</text>
+<text id="bt3" x="346.4" y="109" font-size="10.5" fill="#1b1b1a" text-anchor="middle">on</text>
+<text id="bt4" x="419.5" y="109" font-size="10.5" fill="#1b1b1a" text-anchor="middle"></text>
+<text id="bt5" x="482" y="109" font-size="10.5" fill="#1b1b1a" text-anchor="middle">mat</text>
+<text x="576" y="100" font-size="11" fill="#6b6b66">the blend is the token's</text>
+<text x="576" y="114" font-size="11" fill="#6b6b66">output — one vector, sent</text>
+<text x="576" y="128" font-size="11" fill="#6b6b66">to the next layer</text>
+
+<!-- attention weights (post-softmax) -->
+<text x="576" y="200" font-size="11" fill="#6b6b66">bars = attention weights</text>
+<line x1="48" y1="240" x2="530" y2="240" stroke="#ececec" stroke-width="1.5"/>
+<rect id="wb0" class="wb" x="65" y="234.24" width="26" height="5.76" fill="#2f6f7a"/>
+<rect id="wb1" class="wb" x="147" y="211.47" width="26" height="28.53" fill="#2f6f7a"/>
+<rect id="wb2" class="wb" x="229" y="226.53" width="26" height="13.47" fill="#2f6f7a"/>
+<rect id="wb3" class="wb" x="311" y="216.64" width="26" height="23.36" fill="#2f6f7a"/>
+<rect id="wb4" class="wb" x="393" y="234.24" width="26" height="5.76" fill="#2f6f7a"/>
+<rect id="wb5" class="wb" x="475" y="220.88" width="26" height="19.12" fill="#2f6f7a"/>
+<text id="wl0" x="78" y="229.24" font-size="11" fill="#2f6f7a" font-weight="700" text-anchor="middle">.06</text>
+<text id="wl1" x="160" y="206.47" font-size="11" fill="#2f6f7a" font-weight="700" text-anchor="middle">.30</text>
+<text id="wl2" x="242" y="221.53" font-size="11" fill="#2f6f7a" font-weight="700" text-anchor="middle">.14</text>
+<text id="wl3" x="324" y="211.64" font-size="11" fill="#2f6f7a" font-weight="700" text-anchor="middle">.24</text>
+<text id="wl4" x="406" y="229.24" font-size="11" fill="#2f6f7a" font-weight="700" text-anchor="middle">.06</text>
+<text id="wl5" x="488" y="215.88" font-size="11" fill="#2f6f7a" font-weight="700" text-anchor="middle">.20</text>
+
+<!-- softmax band -->
+<rect x="48" y="252" width="482" height="20" rx="10" fill="#f6f6f4" stroke="#ececec"/>
+<text x="289" y="266" font-size="11" fill="#1b1b1a" font-weight="700" text-anchor="middle">softmax</text>
+<text x="576" y="254" font-size="11" fill="#6b6b66">squashes the scores into</text>
+<text x="576" y="268" font-size="11" fill="#6b6b66">positive weights that</text>
+<text x="576" y="282" font-size="11" fill="#6b6b66">sum to 1</text>
+
+<!-- raw scores (dot products) -->
+<text id="sc0" x="78" y="296" font-size="12" fill="#b5482e" font-weight="600" text-anchor="middle">−0.7</text>
+<text id="sc1" x="160" y="296" font-size="12" fill="#b5482e" font-weight="600" text-anchor="middle">+0.9</text>
+<text id="sc2" x="242" y="296" font-size="12" fill="#b5482e" font-weight="600" text-anchor="middle">+0.15</text>
+<text id="sc3" x="324" y="296" font-size="12" fill="#b5482e" font-weight="600" text-anchor="middle">+0.7</text>
+<text id="sc4" x="406" y="296" font-size="12" fill="#b5482e" font-weight="600" text-anchor="middle">−0.7</text>
+<text id="sc5" x="488" y="296" font-size="12" fill="#b5482e" font-weight="600" text-anchor="middle">+0.5</text>
+<text x="576" y="300" font-size="11" fill="#6b6b66">score = query · key, a dot</text>
+<text x="576" y="314" font-size="11" fill="#6b6b66">product — cosine similarity</text>
+<text x="576" y="328" font-size="11" fill="#6b6b66">scaled by the two vectors' lengths</text>
+
+<!-- fan: the query is dotted against every visible key -->
+<line id="f0" x1="488" y1="306" x2="78" y2="302" stroke="#b5482e" stroke-width="1" opacity="0.5"/>
+<line id="f1" x1="488" y1="306" x2="160" y2="302" stroke="#b5482e" stroke-width="1" opacity="0.5"/>
+<line id="f2" x1="488" y1="306" x2="242" y2="302" stroke="#b5482e" stroke-width="1" opacity="0.5"/>
+<line id="f3" x1="488" y1="306" x2="324" y2="302" stroke="#b5482e" stroke-width="1" opacity="0.5"/>
+<line id="f4" x1="488" y1="306" x2="406" y2="302" stroke="#b5482e" stroke-width="1" opacity="0.5"/>
+<line id="f5" x1="488" y1="306" x2="488" y2="302" stroke="#b5482e" stroke-width="1" opacity="0.5"/>
+
+<!-- q chip, positioned above the selected token -->
+<g id="qg" transform="translate(488,0)">
+  <line x1="0" y1="322" x2="0" y2="330" stroke="#b5482e" stroke-width="1.2"/>
+  <rect x="-9" y="306" width="18" height="16" rx="3" fill="#ffffff" stroke="#b5482e" stroke-width="1.6"/>
+  <text x="0" y="318" font-size="10.5" fill="#b5482e" font-weight="700" text-anchor="middle">q</text>
+  <text x="14" y="318" font-size="10" fill="#b5482e">query</text>
+</g>
+
+<!-- k/v chips per token -->
+<g id="kv0"><rect x="57" y="330" width="18" height="16" rx="3" fill="#ffffff" stroke="#c9c9c4"/><text x="66" y="342" font-size="10.5" fill="#1b1b1a" text-anchor="middle">k</text><rect x="81" y="330" width="18" height="16" rx="3" fill="#f6f6f4" stroke="#c9c9c4"/><text x="90" y="342" font-size="10.5" fill="#1b1b1a" text-anchor="middle">v</text><line x1="78" y1="346" x2="78" y2="366" stroke="#d8d8d3"/></g>
+<g id="kv1"><rect x="139" y="330" width="18" height="16" rx="3" fill="#ffffff" stroke="#c9c9c4"/><text x="148" y="342" font-size="10.5" fill="#1b1b1a" text-anchor="middle">k</text><rect x="163" y="330" width="18" height="16" rx="3" fill="#f6f6f4" stroke="#c9c9c4"/><text x="172" y="342" font-size="10.5" fill="#1b1b1a" text-anchor="middle">v</text><line x1="160" y1="346" x2="160" y2="366" stroke="#d8d8d3"/></g>
+<g id="kv2"><rect x="221" y="330" width="18" height="16" rx="3" fill="#ffffff" stroke="#c9c9c4"/><text x="230" y="342" font-size="10.5" fill="#1b1b1a" text-anchor="middle">k</text><rect x="245" y="330" width="18" height="16" rx="3" fill="#f6f6f4" stroke="#c9c9c4"/><text x="254" y="342" font-size="10.5" fill="#1b1b1a" text-anchor="middle">v</text><line x1="242" y1="346" x2="242" y2="366" stroke="#d8d8d3"/></g>
+<g id="kv3"><rect x="303" y="330" width="18" height="16" rx="3" fill="#ffffff" stroke="#c9c9c4"/><text x="312" y="342" font-size="10.5" fill="#1b1b1a" text-anchor="middle">k</text><rect x="327" y="330" width="18" height="16" rx="3" fill="#f6f6f4" stroke="#c9c9c4"/><text x="336" y="342" font-size="10.5" fill="#1b1b1a" text-anchor="middle">v</text><line x1="324" y1="346" x2="324" y2="366" stroke="#d8d8d3"/></g>
+<g id="kv4"><rect x="385" y="330" width="18" height="16" rx="3" fill="#ffffff" stroke="#c9c9c4"/><text x="394" y="342" font-size="10.5" fill="#1b1b1a" text-anchor="middle">k</text><rect x="409" y="330" width="18" height="16" rx="3" fill="#f6f6f4" stroke="#c9c9c4"/><text x="418" y="342" font-size="10.5" fill="#1b1b1a" text-anchor="middle">v</text><line x1="406" y1="346" x2="406" y2="366" stroke="#d8d8d3"/></g>
+<g id="kv5"><rect x="467" y="330" width="18" height="16" rx="3" fill="#ffffff" stroke="#c9c9c4"/><text x="476" y="342" font-size="10.5" fill="#1b1b1a" text-anchor="middle">k</text><rect x="491" y="330" width="18" height="16" rx="3" fill="#f6f6f4" stroke="#c9c9c4"/><text x="500" y="342" font-size="10.5" fill="#1b1b1a" text-anchor="middle">v</text><line x1="488" y1="346" x2="488" y2="366" stroke="#d8d8d3"/></g>
+<text x="576" y="344" font-size="11" fill="#6b6b66">each token's k and v are</text>
+<text x="576" y="358" font-size="11" fill="#6b6b66">what the KV cache stores</text>
+
+<!-- tokens (clickable) -->
+<g id="tok0" class="tok"><rect x="42" y="366" width="72" height="28" rx="6" fill="#f6f6f4" stroke="#ececec"/><text x="78" y="384.5" font-size="12.5" fill="#1b1b1a" text-anchor="middle">The</text></g>
+<g id="tok1" class="tok"><rect x="124" y="366" width="72" height="28" rx="6" fill="#f6f6f4" stroke="#ececec"/><text x="160" y="384.5" font-size="12.5" fill="#1b1b1a" text-anchor="middle">cat</text></g>
+<g id="tok2" class="tok"><rect x="206" y="366" width="72" height="28" rx="6" fill="#f6f6f4" stroke="#ececec"/><text x="242" y="384.5" font-size="12.5" fill="#1b1b1a" text-anchor="middle">sat</text></g>
+<g id="tok3" class="tok"><rect x="288" y="366" width="72" height="28" rx="6" fill="#f6f6f4" stroke="#ececec"/><text x="324" y="384.5" font-size="12.5" fill="#1b1b1a" text-anchor="middle">on</text></g>
+<g id="tok4" class="tok"><rect x="370" y="366" width="72" height="28" rx="6" fill="#f6f6f4" stroke="#ececec"/><text x="406" y="384.5" font-size="12.5" fill="#1b1b1a" text-anchor="middle">the</text></g>
+<g id="tok5" class="tok"><rect x="452" y="366" width="72" height="28" rx="6" fill="#f6f6f4" stroke="#1b1b1a" stroke-width="1.5"/><text x="488" y="384.5" font-size="12.5" fill="#1b1b1a" text-anchor="middle" font-weight="700">mat</text></g>
+
+<text x="380" y="414" font-size="11.5" fill="#6b6b66" text-anchor="middle">click any token to make it the query — later tokens are masked (attention is causal: it only looks backward)</text>
+
+<script><![CDATA[
+(function () {
+  // Illustrative scores only — softmax is computed live so weights are exactly consistent.
+  var S = [[0],
+           [-0.3, 0.3],
+           [-1, 0.8, 0],
+           [-1.2, -0.1, 1.2, 0.4],
+           [0.6, -0.6, -0.2, 1, -0.35],
+           [-0.7, 0.9, 0.15, 0.7, -0.7, 0.5]];
+  var CX = [78, 160, 242, 324, 406, 488];
+  var WORD = ['The', 'cat', 'sat', 'on', 'the', 'mat'];
+  var N = 6, i;
+  function $(id) { return document.getElementById(id); }
+  var sc = [], kv = [], wb = [], wl = [], bs = [], bt = [], fan = [], tr = [], tt = [];
+  for (i = 0; i < N; i++) {
+    sc.push($('sc' + i)); kv.push($('kv' + i)); wb.push($('wb' + i)); wl.push($('wl' + i));
+    bs.push($('bs' + i)); bt.push($('bt' + i)); fan.push($('f' + i));
+    var t = $('tok' + i);
+    tr.push(t.querySelector('rect')); tt.push(t.querySelector('text'));
+  }
+  var qg = $('qg'), ow = $('ow');
+  function fmt(v) {
+    var t = Math.abs(v).toFixed(2).replace(/0$/, '');
+    return (v > 0 ? '+' : v < 0 ? '−' : '') + t;
+  }
+  function upd(s) {
+    var e = [], sum = 0, w = [], j, x = 48;
+    for (j = 0; j <= s; j++) { e[j] = Math.exp(S[s][j]); sum += e[j]; }
+    for (j = 0; j < N; j++) w[j] = j <= s ? e[j] / sum : 0;
+    for (j = 0; j < N; j++) {
+      var on = j <= s;
+      sc[j].textContent = on ? fmt(S[s][j]) : '—';
+      sc[j].setAttribute('fill', on ? '#b5482e' : '#c9c9c4');
+      sc[j].setAttribute('font-weight', on ? 600 : 400);
+      kv[j].setAttribute('opacity', on ? 1 : 0.35);
+      tr[j].setAttribute('stroke', j === s ? '#1b1b1a' : '#ececec');
+      tr[j].setAttribute('stroke-width', j === s ? 1.5 : 1);
+      tt[j].setAttribute('font-weight', j === s ? 700 : 400);
+      tt[j].setAttribute('fill', on ? '#1b1b1a' : '#b3b3ae');
+      var h = w[j] * 96;
+      wb[j].setAttribute('height', h);
+      wb[j].setAttribute('y', 240 - h);
+      wl[j].setAttribute('y', 235 - h);
+      wl[j].textContent = on ? (w[j] >= 0.995 ? '1.0' : w[j].toFixed(2).slice(1)) : '';
+      var bw = w[j] * 482;
+      bs[j].setAttribute('x', x);
+      bs[j].setAttribute('width', bw);
+      bt[j].setAttribute('x', x + bw / 2);
+      bt[j].textContent = bw > 36 ? WORD[j] : '';
+      if (on) {
+        fan[j].setAttribute('display', '');
+        fan[j].setAttribute('x1', CX[s]);
+        fan[j].setAttribute('x2', CX[j]);
+      } else {
+        fan[j].setAttribute('display', 'none');
+      }
+      x += bw;
+    }
+    qg.setAttribute('transform', 'translate(' + CX[s] + ',0)');
+    ow.textContent = '“' + WORD[s] + '”';
+  }
+  for (i = 0; i < N; i++) (function (j) {
+    $('tok' + j).addEventListener('click', function () { upd(j); });
+  })(i);
+  upd(5);
+})();
+]]></script>
+</svg>

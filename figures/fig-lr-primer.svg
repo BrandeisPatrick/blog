@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 372" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive gradient-descent primer: a ball descends a one-dimensional loss bowl in eight discrete steps. A draggable slider sets the learning rate — the step size — moving between four regimes: too small (the ball crawls and never reaches the bottom), about right (it settles at the minimum), too large (it overshoots and bounces across the bowl), and way too large (each step lands higher and the ball leaves the bowl). A readout reports the current learning rate and regime.">
+<!-- Geometry: parameter u in [-1.5, 1.5] maps to x = 380 + 200u; loss f(u) = u^2 maps to y = 250 - 84u^2
+     (bowl rim y = 61 at u = +/-1.5, bottom y = 250 at u = 0). The bowl path M80,61 Q380,439 680,61 traces
+     this exact parabola (x is linear in the Bezier parameter t, and y is quadratic in t, hence in x).
+     Descent: u_{k+1} = u_k * (1 - 2*lr), start u0 = -1.2, 8 steps; drawing clamps u to +/-1.5 so diverging
+     trajectories pin to the bowl rim inside the viewBox. Slider: track x = 280..640 (t in [0,1]) maps
+     log-scale to lr = 0.01 * 130^t; static default lr = 0.30 -> t = 0.6988 -> knob x = 531.6. -->
+<style>#ov{cursor:grab}#ov:active{cursor:grabbing}#knob{pointer-events:none}</style>
+<rect width="760" height="372" fill="#ffffff"/>
+<path d="M80,61 Q380,439 680,61 Z" fill="#fcfcfb"/>
+<path d="M80,61 Q380,439 680,61" fill="none" stroke="#1b1b1a" stroke-width="1.5"/>
+<text x="380" y="88" font-size="11" fill="#6b6b66" text-anchor="middle">a ball rolls down a loss bowl in 8 discrete steps</text>
+<text x="380" y="104" font-size="11" fill="#6b6b66" text-anchor="middle">teal dot = one step · red ball = where it ends</text>
+<text transform="rotate(-90 56 160)" x="56" y="160" font-size="11" fill="#6b6b66" text-anchor="middle">loss</text>
+<polyline id="traj" points="140,129 284,230.6 341.6,246.9 364.6,249.5 373.9,249.9 377.5,250 379,250 379.6,250 379.8,250" fill="none" stroke="#2f6f7a" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.8"/>
+<circle id="s1" cx="284" cy="230.6" r="3.2" fill="#2f6f7a"/>
+<circle id="s2" cx="341.6" cy="246.9" r="3.2" fill="#2f6f7a"/>
+<circle id="s3" cx="364.6" cy="249.5" r="3.2" fill="#2f6f7a"/>
+<circle id="s4" cx="373.9" cy="249.9" r="3.2" fill="#2f6f7a"/>
+<circle id="s5" cx="377.5" cy="250" r="3.2" fill="#2f6f7a"/>
+<circle id="s6" cx="379" cy="250" r="3.2" fill="#2f6f7a"/>
+<circle id="s7" cx="379.6" cy="250" r="3.2" fill="#2f6f7a"/>
+<circle id="s8" cx="379.8" cy="250" r="3.2" fill="#2f6f7a"/>
+<circle cx="140" cy="129" r="4.5" fill="#ffffff" stroke="#1b1b1a" stroke-width="1.6"/>
+<text x="140" y="112" font-size="10.5" fill="#6b6b66" text-anchor="middle">start</text>
+<circle id="ball" cx="379.8" cy="250" r="6.5" fill="#b5482e"/>
+<line x1="380" y1="253" x2="380" y2="261" stroke="#6b6b66" stroke-width="1"/>
+<text x="380" y="276" font-size="11" fill="#6b6b66" text-anchor="middle">one weight&#8217;s value — the bottom of the bowl is the loss minimum</text>
+<text x="80" y="317" font-size="12" fill="#1b1b1a" font-weight="700">learning rate</text>
+<text x="80" y="333" font-size="10.5" fill="#6b6b66">drag the slider</text>
+<rect x="280" y="316" width="360" height="8" rx="4" fill="#f6f6f4" stroke="#ececec"/>
+<rect id="tf" x="280" y="316" width="251.6" height="8" rx="4" fill="#b5482e" opacity="0.25"/>
+<text x="280" y="341" font-size="10.5" fill="#6b6b66">smaller steps</text>
+<text x="640" y="341" font-size="10.5" fill="#6b6b66" text-anchor="end">larger steps</text>
+<g id="knob" transform="translate(531.6,320)"><circle r="9" fill="#ffffff" stroke="#b5482e" stroke-width="2.2"/><circle r="3.2" fill="#b5482e"/></g>
+<text id="ro" x="380" y="362" font-size="13" fill="#1b1b1a" font-weight="600" text-anchor="middle">learning rate 0.30 — about right: settles at the bottom</text>
+<rect id="ov" x="266" y="298" width="388" height="56" fill="#ffffff" fill-opacity="0" style="touch-action:pan-y"/>
+<script><![CDATA[
+(function () {
+  var svg = document.documentElement;
+  var U0 = -1.2, N = 8, UMAX = 1.5;
+  var X0 = 380, XS = 200, YB = 250, YS = 84;
+  var TX0 = 280, TW = 360, LRMIN = 0.01, LRMAX = 1.3;
+  var dots = [], i;
+  for (i = 1; i <= N; i++) dots.push(document.getElementById('s' + i));
+  var traj = document.getElementById('traj'), ball = document.getElementById('ball');
+  var knob = document.getElementById('knob'), tf = document.getElementById('tf');
+  var ro = document.getElementById('ro'), ov = document.getElementById('ov');
+  function pos(u) {
+    var c = Math.max(-UMAX, Math.min(UMAX, u));
+    return [X0 + XS * c, YB - YS * c * c];
+  }
+  function upd(t) {
+    t = Math.max(0, Math.min(1, t));
+    var lr = LRMIN * Math.pow(LRMAX / LRMIN, t);
+    var u = U0, pts = [pos(U0)], k, p;
+    for (k = 1; k <= N; k++) {
+      u = u * (1 - 2 * lr);
+      p = pos(u);
+      dots[k - 1].setAttribute('cx', p[0]);
+      dots[k - 1].setAttribute('cy', p[1]);
+      pts.push(p);
+    }
+    traj.setAttribute('points', pts.map(function (q) { return q[0] + ',' + q[1]; }).join(' '));
+    ball.setAttribute('cx', pts[N][0]);
+    ball.setAttribute('cy', pts[N][1]);
+    knob.setAttribute('transform', 'translate(' + (TX0 + t * TW) + ',320)');
+    tf.setAttribute('width', t * TW);
+    var m = 1 - 2 * lr, msg;
+    if (Math.abs(m) > 1.0001) msg = 'way too large: each step lands higher — the ball leaves the bowl';
+    else if (lr > 0.55) msg = 'too large: overshoots the minimum and bounces across the bowl';
+    else if (Math.abs(u) > 0.3) msg = 'too small: still crawling toward the bottom after 8 steps';
+    else msg = 'about right: settles at the bottom';
+    ro.textContent = 'learning rate ' + lr.toFixed(2) + ' — ' + msg;
+  }
+  function toX(e) {
+    var pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse()).x;
+  }
+  var drag = false;
+  ov.addEventListener('pointerdown', function (e) { drag = true; ov.setPointerCapture(e.pointerId); upd((toX(e) - TX0) / TW); });
+  ov.addEventListener('pointermove', function (e) { if (drag || e.pointerType === 'mouse') upd((toX(e) - TX0) / TW); });
+  addEventListener('pointerup', function () { drag = false; });
+  upd(Math.log(0.3 / LRMIN) / Math.log(LRMAX / LRMIN));
+})();
+]]></script>
+</svg>

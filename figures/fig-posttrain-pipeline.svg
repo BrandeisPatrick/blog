@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Training pipeline as three shrinking bars on a log data axis: pretraining on hundreds of billions to tens of trillions of tokens of raw text learns to predict the next token; supervised fine-tuning on roughly 10^4 to 10^7 curated demonstrations learns to imitate; reinforcement learning on tasks with graded outcomes — set sizes rarely disclosed — learns what works.">
+<!-- log axis: x = 110 + 48*(log10(v) - 2); decades 10^2..10^13 at x = 110,158,...,638; bars start at x=110 (10^2); solid = low end of published range, faded (opacity .3) = high end; rows: labels y=50/132/214, bars y=60/142/224 h=28; axis baseline y=292 -->
+<rect width="760" height="360" fill="#ffffff"/>
+<line x1="158" y1="44" x2="158" y2="292" stroke="#ececec"/>
+<line x1="206" y1="44" x2="206" y2="292" stroke="#ececec"/>
+<line x1="254" y1="44" x2="254" y2="292" stroke="#ececec"/>
+<line x1="302" y1="44" x2="302" y2="292" stroke="#ececec"/>
+<line x1="350" y1="44" x2="350" y2="292" stroke="#ececec"/>
+<line x1="398" y1="44" x2="398" y2="292" stroke="#ececec"/>
+<line x1="446" y1="44" x2="446" y2="292" stroke="#ececec"/>
+<line x1="494" y1="44" x2="494" y2="292" stroke="#ececec"/>
+<line x1="542" y1="44" x2="542" y2="292" stroke="#ececec"/>
+<line x1="590" y1="44" x2="590" y2="292" stroke="#ececec"/>
+<line x1="638" y1="44" x2="638" y2="292" stroke="#ececec"/>
+<rect x="458" y="18" width="16" height="9" rx="2" fill="#2f6f7a" opacity="0.3"/>
+<text x="480" y="27" font-size="10.5" fill="#6b6b66">faded = approximate range across published models</text>
+<text x="110" y="50" font-size="12"><tspan font-weight="700" fill="#1b1b1a">PRETRAINING</tspan><tspan font-size="11.5" fill="#6b6b66"> — trillions of tokens of raw text</tspan></text>
+<text x="650" y="50" font-size="11.5" font-style="italic" fill="#b5482e" text-anchor="end">learn to predict the next token</text>
+<rect x="110" y="60" width="540" height="28" rx="3" fill="#2f6f7a" opacity="0.3"/>
+<rect x="110" y="60" width="455" height="28" rx="3" fill="#2f6f7a"/>
+<text x="638" y="104" font-size="10.5" fill="#6b6b66" text-anchor="end">≈300B–36T tokens</text>
+<line x1="90" y1="94" x2="90" y2="132" stroke="#6b6b66" stroke-width="1.5"/>
+<polygon points="90,140 85.5,130 94.5,130" fill="#6b6b66"/>
+<text x="110" y="132" font-size="12"><tspan font-weight="700" fill="#1b1b1a">SFT</tspan><tspan font-size="11.5" fill="#6b6b66"> (supervised fine-tuning) — curated demonstrations</tspan></text>
+<text x="650" y="132" font-size="11.5" font-style="italic" fill="#b5482e" text-anchor="end">learn to imitate</text>
+<rect x="110" y="142" width="240" height="28" rx="3" fill="#2f6f7a" opacity="0.3"/>
+<rect x="110" y="142" width="96" height="28" rx="3" fill="#2f6f7a"/>
+<text x="358" y="160" font-size="10.5" fill="#6b6b66">≈10⁴–10⁷ demonstrations</text>
+<line x1="90" y1="176" x2="90" y2="214" stroke="#6b6b66" stroke-width="1.5"/>
+<polygon points="90,222 85.5,212 94.5,212" fill="#6b6b66"/>
+<text x="110" y="214" font-size="12"><tspan font-weight="700" fill="#1b1b1a">RL</tspan><tspan font-size="11.5" fill="#6b6b66"> (reinforcement learning) — tasks with graded outcomes</tspan></text>
+<text x="650" y="214" font-size="11.5" font-style="italic" fill="#b5482e" text-anchor="end">learn what works</text>
+<rect x="110" y="224" width="96" height="28" rx="3" fill="#2f6f7a" opacity="0.3"/>
+<text x="214" y="242" font-size="10.5" fill="#6b6b66">set sizes vary by recipe — rarely disclosed</text>
+<line x1="110" y1="292" x2="650" y2="292" stroke="#ececec" stroke-width="1.5"/>
+<line x1="110" y1="292" x2="110" y2="297" stroke="#ececec"/>
+<line x1="158" y1="292" x2="158" y2="297" stroke="#ececec"/>
+<line x1="206" y1="292" x2="206" y2="297" stroke="#ececec"/>
+<line x1="254" y1="292" x2="254" y2="297" stroke="#ececec"/>
+<line x1="302" y1="292" x2="302" y2="297" stroke="#ececec"/>
+<line x1="350" y1="292" x2="350" y2="297" stroke="#ececec"/>
+<line x1="398" y1="292" x2="398" y2="297" stroke="#ececec"/>
+<line x1="446" y1="292" x2="446" y2="297" stroke="#ececec"/>
+<line x1="494" y1="292" x2="494" y2="297" stroke="#ececec"/>
+<line x1="542" y1="292" x2="542" y2="297" stroke="#ececec"/>
+<line x1="590" y1="292" x2="590" y2="297" stroke="#ececec"/>
+<line x1="638" y1="292" x2="638" y2="297" stroke="#ececec"/>
+<text x="110" y="310" font-size="10.5" fill="#6b6b66" text-anchor="middle">10²</text>
+<text x="158" y="310" font-size="10.5" fill="#6b6b66" text-anchor="middle">10³</text>
+<text x="206" y="310" font-size="10.5" fill="#6b6b66" text-anchor="middle">10⁴</text>
+<text x="254" y="310" font-size="10.5" fill="#6b6b66" text-anchor="middle">10⁵</text>
+<text x="302" y="310" font-size="10.5" fill="#6b6b66" text-anchor="middle">10⁶</text>
+<text x="350" y="310" font-size="10.5" fill="#6b6b66" text-anchor="middle">10⁷</text>
+<text x="398" y="310" font-size="10.5" fill="#6b6b66" text-anchor="middle">10⁸</text>
+<text x="446" y="310" font-size="10.5" fill="#6b6b66" text-anchor="middle">10⁹</text>
+<text x="494" y="310" font-size="10.5" fill="#6b6b66" text-anchor="middle">10¹⁰</text>
+<text x="542" y="310" font-size="10.5" fill="#6b6b66" text-anchor="middle">10¹¹</text>
+<text x="590" y="310" font-size="10.5" fill="#6b6b66" text-anchor="middle">10¹²</text>
+<text x="638" y="310" font-size="10.5" fill="#6b6b66" text-anchor="middle">10¹³</text>
+<text x="158" y="324" font-size="10" fill="#6b6b66" text-anchor="middle">thousand</text>
+<text x="302" y="324" font-size="10" fill="#6b6b66" text-anchor="middle">million</text>
+<text x="446" y="324" font-size="10" fill="#6b6b66" text-anchor="middle">billion</text>
+<text x="590" y="324" font-size="10" fill="#6b6b66" text-anchor="middle">trillion</text>
+<text x="380" y="346" font-size="11" fill="#6b6b66" text-anchor="middle">training signals per stage (count, log scale) — the unit shifts: tokens → demonstrations → tasks</text>
+</svg>

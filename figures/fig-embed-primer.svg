@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 352" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive diagram: the three tokens of 'dog bites man' each become a vector, drawn as arrows in circles. One token's query vector and another's key vector meet in a detail circle, where the attention score is their dot product — proportional to the cosine of the angle between them, shown on a live bar from minus one to plus one. Drag the key arrow to change the angle and watch the cosine and score bar update. Shuffling the tokens moves none of the vectors, so every score stays the same.">
+<!-- geometry: detail circle center (560,140) r=62; angles measured clockwise from straight up,
+     so point(a,r) = (560 + r·sin a, 140 − r·cos a); query fixed at −20°, key starts at 45° (θ=65°, cos θ=0.42);
+     angle arc drawn at r=26, θ label at r=40, key label at r=74 (all inside viewBox: max reach 140−74=66 > 0);
+     score bar is zero-centered: x=560, half-width 120 → spans 440..680; drag overlay covers x 478..654, y 60..210. -->
+<style>#ov{cursor:grab}#ov:active{cursor:grabbing}</style>
+<rect width="760" height="352" fill="#ffffff"/>
+
+<text x="64" y="36" font-size="13" fill="#1b1b1a" font-weight="700">each token becomes a vector</text>
+<text x="430" y="36" font-size="13" fill="#1b1b1a" font-weight="700">one score: query · key</text>
+
+<!-- tokens -->
+<rect x="76" y="50" width="72" height="24" rx="5" fill="#f6f6f4" stroke="#ececec"/>
+<text x="112" y="66" font-size="12.5" fill="#1b1b1a" font-weight="600" text-anchor="middle">dog</text>
+<rect x="178" y="50" width="72" height="24" rx="5" fill="#f6f6f4" stroke="#ececec"/>
+<text x="214" y="66" font-size="12.5" fill="#1b1b1a" font-weight="600" text-anchor="middle">bites</text>
+<rect x="280" y="50" width="72" height="24" rx="5" fill="#f6f6f4" stroke="#ececec"/>
+<text x="316" y="66" font-size="12.5" fill="#1b1b1a" font-weight="600" text-anchor="middle">man</text>
+
+<g stroke="#6b6b66" opacity="0.45">
+  <line x1="112" y1="80" x2="112" y2="94"/><line x1="214" y1="80" x2="214" y2="94"/><line x1="316" y1="80" x2="316" y2="94"/>
+</g>
+<g fill="#6b6b66" opacity="0.45">
+  <polygon points="109,94 115,94 112,100"/><polygon points="211,94 217,94 214,100"/><polygon points="313,94 319,94 316,100"/>
+</g>
+
+<!-- connectors into the detail circle (drawn first so circles paint over them) -->
+<line x1="214" y1="126" x2="495" y2="126" stroke="#d9d9d5" stroke-dasharray="4 3"/>
+<line x1="316" y1="146" x2="497" y2="156" stroke="#d9d9d5" stroke-dasharray="4 3"/>
+
+<!-- token vectors -->
+<g transform="translate(112,132)">
+  <circle r="28" fill="#fcfcfb" stroke="#ececec"/>
+  <g transform="rotate(-55)"><line y2="-22" stroke="#6b6b66" stroke-width="2"/><polygon points="0,-26 -3.5,-18 3.5,-18" fill="#6b6b66"/></g>
+</g>
+<g transform="translate(214,132)">
+  <circle r="28" fill="#fcfcfb" stroke="#ececec"/>
+  <g transform="rotate(-20)"><line y2="-22" stroke="#1b1b1a" stroke-width="2.4"/><polygon points="0,-26 -3.5,-18 3.5,-18" fill="#1b1b1a"/></g>
+</g>
+<g transform="translate(316,132)">
+  <circle r="28" fill="#fcfcfb" stroke="#ececec"/>
+  <g id="ks" transform="rotate(45)"><line y2="-22" stroke="#b5482e" stroke-width="2.4"/><polygon points="0,-26 -3.5,-18 3.5,-18" fill="#b5482e"/></g>
+</g>
+<text x="112" y="180" font-size="10.5" fill="#6b6b66" text-anchor="middle">a vector</text>
+<text x="214" y="180" font-size="11" fill="#1b1b1a" font-weight="700" text-anchor="middle">query (q)</text>
+<text x="316" y="180" font-size="11" fill="#b5482e" font-weight="700" text-anchor="middle">key (k)</text>
+<text x="214" y="202" font-size="10.5" fill="#6b6b66" text-anchor="middle">drawn in 2-D — real vectors have thousands of dimensions</text>
+
+<!-- detail circle -->
+<circle cx="560" cy="140" r="62" fill="#fcfcfb" stroke="#ececec"/>
+<path id="arc" d="M551.1 115.6 A26 26 0 0 1 578.4 121.6" fill="none" stroke="#6b6b66" stroke-width="1.3"/>
+<text id="th" x="568.7" y="105.0" font-size="11" fill="#6b6b66" text-anchor="middle">θ</text>
+<g transform="translate(560,140)">
+  <g transform="rotate(-20)"><line y2="-52" stroke="#1b1b1a" stroke-width="2.4"/><polygon points="0,-57 -4,-48 4,-48" fill="#1b1b1a"/></g>
+  <g id="kv" transform="rotate(45)"><line y2="-52" stroke="#b5482e" stroke-width="2.4"/><polygon points="0,-57 -4,-48 4,-48" fill="#b5482e"/></g>
+</g>
+<text x="535" y="72" font-size="11" fill="#1b1b1a" font-weight="700" text-anchor="middle">query</text>
+<text id="klab" x="612.3" y="91.7" font-size="11" fill="#b5482e" font-weight="700" text-anchor="middle">key</text>
+<text x="696" y="210" font-size="11" fill="#6b6b66" text-anchor="end">drag the key arrow</text>
+
+<text x="560" y="228" font-size="12" fill="#1b1b1a" font-weight="600" text-anchor="middle">score = q · k  ∝  cos(angle)</text>
+
+<!-- zero-centered score bar -->
+<rect x="440" y="246" width="240" height="9" rx="2" fill="none" stroke="#ececec"/>
+<rect id="bar" x="560" y="246" width="50.7" height="9" rx="2" fill="#b5482e"/>
+<line x1="560" y1="243" x2="560" y2="258" stroke="#d9d9d5"/>
+<text x="432" y="255" font-size="11" fill="#6b6b66" text-anchor="end">−1</text>
+<text x="688" y="255" font-size="11" fill="#6b6b66">+1</text>
+<text x="560" y="270" font-size="10" fill="#6b6b66" text-anchor="middle">0</text>
+<text id="rv" x="560" y="290" font-size="13" fill="#1b1b1a" font-weight="600" text-anchor="middle">angle θ = 65° → cos θ = 0.42</text>
+
+<!-- takeaway -->
+<rect x="64" y="302" width="632" height="34" rx="5" fill="#fcfcfb" stroke="#ececec"/>
+<text x="380" y="323" font-size="12" fill="#1b1b1a" text-anchor="middle"><tspan font-weight="700">Shuffle the tokens</tspan> and nothing here moves — the vectors, and every score, stay exactly the same.</text>
+
+<rect id="ov" x="478" y="60" width="176" height="150" fill="#ffffff" fill-opacity="0" style="touch-action:pan-y"/>
+<script><![CDATA[
+(function () {
+  var svg = document.documentElement;
+  var CX = 560, CY = 140, QA = -20;
+  var kv = document.getElementById('kv'), ks = document.getElementById('ks');
+  var bar = document.getElementById('bar'), arc = document.getElementById('arc');
+  var th = document.getElementById('th'), rv = document.getElementById('rv');
+  var klab = document.getElementById('klab'), ov = document.getElementById('ov');
+  function pt(a, r) {
+    var t = a * Math.PI / 180;
+    return [CX + r * Math.sin(t), CY - r * Math.cos(t)];
+  }
+  function upd(a) {
+    a = Math.round(a);
+    var d = a - QA;
+    while (d > 180) d -= 360;
+    while (d < -180) d += 360;
+    var deg = Math.abs(d);
+    kv.setAttribute('transform', 'rotate(' + a + ')');
+    ks.setAttribute('transform', 'rotate(' + a + ')');
+    var kp = pt(a, 74);
+    klab.setAttribute('x', kp[0].toFixed(1));
+    klab.setAttribute('y', (kp[1] + 4).toFixed(1));
+    var p1 = pt(QA, 26), p2 = pt(a, 26);
+    arc.setAttribute('d', 'M' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) +
+      ' A26 26 0 0 ' + (d > 0 ? 1 : 0) + ' ' + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1));
+    var mid = pt(QA + d / 2, 40);
+    th.setAttribute('x', mid[0].toFixed(1));
+    th.setAttribute('y', (mid[1] + 4).toFixed(1));
+    th.setAttribute('opacity', deg < 12 ? 0 : 1);
+    var c = Math.cos(deg * Math.PI / 180);
+    if (c >= 0) { bar.setAttribute('x', CX); bar.setAttribute('width', c * 120); }
+    else { bar.setAttribute('x', CX + c * 120); bar.setAttribute('width', -c * 120); }
+    rv.textContent = 'angle θ = ' + deg + '° → cos θ = ' + (c < 0 ? '−' : '') + Math.abs(c).toFixed(2);
+  }
+  function updFrom(e) {
+    var p = svg.createSVGPoint();
+    p.x = e.clientX; p.y = e.clientY;
+    var q = p.matrixTransform(svg.getScreenCTM().inverse());
+    upd(Math.atan2(q.x - CX, CY - q.y) * 180 / Math.PI);
+  }
+  var drag = false;
+  ov.addEventListener('pointerdown', function (e) { drag = true; ov.setPointerCapture(e.pointerId); updFrom(e); });
+  ov.addEventListener('pointermove', function (e) { if (drag || e.pointerType === 'mouse') updFrom(e); });
+  addEventListener('pointerup', function () { drag = false; });
+  upd(45);
+})();
+]]></script>
+</svg>
