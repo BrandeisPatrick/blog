@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="400" viewBox="0 0 760 400" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Three harness modes: one-shot (prompt to model to answer), generation (the same turn repeated by a bare Continue message), and the Ralph/goal loop, where a stop hook runs a checker and either blocks the exit and re-feeds the same prompt with feedback, or lets the run end once the checker passes and the model emits the completion promise.">
-  <rect width="760" height="400" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="470" viewBox="0 0 760 470" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="The experiment rig. Top: three harness modes — one-shot (prompt to model to answer), generation (the same turn repeated by a bare Continue message), and the Ralph/goal loop, where a stop hook runs a checker and either blocks the exit and re-feeds the same prompt with feedback, or lets the run end once the checker passes and the model emits the completion promise. Bottom: 2 models times 3 tasks times 3 modes equals 18 runs; kimi-k3 at reasoning effort max, kimi-k2.6 at high; tasks are enumerate (exact set of five numbers), build (code executed against eight hidden checks), and longdoc (twelve sections, at least 2,400 words, merged across turns).">
+  <rect width="760" height="470" fill="#ffffff"/>
   <defs>
     <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 1 L 9 5 L 0 9 z" fill="#6b6b66"/>
@@ -67,4 +67,16 @@
   <text x="430" y="340" font-size="11.5" fill="#6b6b66" text-anchor="middle">checker feedback + the SAME prompt re-fed</text>
 
   <text x="380" y="380" font-size="11.5" fill="#6b6b66" text-anchor="middle">Completion = checker passes AND the model emits &#60;promise&#62;COMPLETE&#60;/promise&#62; &#8212; and it may not lie to exit.</text>
+
+  <!-- design strip -->
+  <line x1="20" y1="400" x2="740" y2="400" stroke="#ececec"/>
+  <text x="20" y="424" font-size="12" fill="#1b1b1a"><tspan font-weight="700">The rig:</tspan> 2 models &#215; 3 tasks &#215; 3 modes = 18 runs</text>
+  <text x="20" y="443" font-size="10.5" fill="#6b6b66">kimi-k3 @ reasoning_effort=max</text>
+  <text x="20" y="458" font-size="10.5" fill="#6b6b66">kimi-k2.6 @ high</text>
+  <rect x="330" y="412" width="7" height="7" fill="#178a5c"/>
+  <text x="344" y="420" font-size="10.5" fill="#1b1b1a"><tspan font-weight="600">enumerate</tspan> &#8212; an exact set of five numbers, checked against ground truth</text>
+  <rect x="330" y="431" width="7" height="7" fill="#178a5c"/>
+  <text x="344" y="439" font-size="10.5" fill="#1b1b1a"><tspan font-weight="600">build</tspan> &#8212; a queue class, executed against eight hidden behavior checks</text>
+  <rect x="330" y="450" width="7" height="7" fill="#178a5c"/>
+  <text x="344" y="458" font-size="10.5" fill="#1b1b1a"><tspan font-weight="600">longdoc</tspan> &#8212; twelve sections, &#8805;2,400 words, merged across turns</text>
 </svg>
