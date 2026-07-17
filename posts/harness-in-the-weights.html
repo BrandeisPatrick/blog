@@ -4,13 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The harness in the weights — Bat</title>
-  <meta name="description" content="On Ralph loops, stop hooks, hidden templates, and what 18 runs of Kimi K3 vs K2.6 say about whether reasoning chains are being trained for the loop." />
+  <meta name="description" content="On Ralph loops, stop hooks, hidden templates, and what 18 runs of Kimi K3 vs K2.6 say about whether reasoning chains are being trained for the loop. Six figures." />
   <link rel="stylesheet" href="../style.css?v=10" />
   <style>
     :root {
       --acc: #178a5c;        /* article accent (site-wide accent stays #b5482e) */
       --acc-tint: #f2f9f5;
     }
+    /* Post-local: figures run the full text-column width */
+    .article figure { max-width: none; }
     .article .kbox {
       border: 1px solid #d8ece1; background: var(--acc-tint);
       border-radius: 8px; padding: 14px 18px; margin: 20px 0;
@@ -34,7 +36,7 @@
 
     <article class="article">
       <h1>The harness in the weights</h1>
-      <p class="meta"><time datetime="2026-07-17">July 17, 2026</time> · ~9 min read · <span class="status">Draft — n&thinsp;=&thinsp;1 per cell, expanding samples</span></p>
+      <p class="meta"><time datetime="2026-07-17">July 17, 2026</time> · ~7 min read · <span class="status">Draft — n&thinsp;=&thinsp;1 per cell, expanding samples</span></p>
 
       <p class="dek">On Ralph loops, stop hooks, hidden templates, and what 18 runs of Kimi K3 vs K2.6
         say about whether reasoning chains are being trained for the loop.</p>
@@ -48,7 +50,7 @@
             <li><a href="#s3">The Newer Model Never Sees Your Prompt Bare</a></li>
             <li><a href="#s4">K3 Plans for a Workspace That Isn't There</a></li>
             <li><a href="#s5">Front-Load Then Collapse vs Re-Verify Every Turn</a></li>
-            <li><a href="#s6">Three Findings My Own Audit Killed</a></li>
+            <li><a href="#s6">Busted</a></li>
             <li><a href="#s7">The Tuning Lives in Priors, Not Vocabulary</a></li>
           </ol>
         </nav>
@@ -81,10 +83,9 @@
         <code>/goal</code> command hardens the same shape: instead of trusting a string, a hook
         evaluates a completion condition and blocks the stop until it verifiably holds. My loop mode
         deliberately combines the two — Ralph's same-prompt re-feed, a <code>/goal</code>-style
-        checker whose verdict comes back as feedback, and the promise gate on top — so completion
-        requires the checker to pass <em>and</em> an honest promise. (I walked through the general
-        agent loop <a href="inside-the-agent-loop.html">in an earlier post</a>; this one is about
-        what the loop does to the <em>model</em>.)</p>
+        checker whose verdict comes back as feedback, and the promise gate on top. (I walked through
+        the general agent loop <a href="inside-the-agent-loop.html">in an earlier post</a>; this one
+        is about what the loop does to the <em>model</em>.)</p>
 
       <figure>
         <img src="../figures/fig-loop-modes.svg?v=1" alt="Diagram of the three harness modes: one-shot (prompt, model turn, answer), generation (turns chained by a bare 'Continue.'), and the Ralph/goal loop, where a stop hook runs a checker that either blocks the stop and re-feeds the same prompt with feedback, or allows exit once the checker passes and the model emits the completion promise." />
@@ -93,11 +94,10 @@
           the model emits the promise token — and it may not lie to exit.</figcaption>
       </figure>
 
-      <p>Read those mechanics as a job description and you get a training target. A loop-native model
-        should: chunk work across iterations instead of one-shotting; resume from prior state instead
-        of restarting; treat a blocked stop as normal control flow; and gate its completion claim
-        behind verification. If a lab is post-training for this, the fingerprints should show up in the
-        chain of thought.</p>
+      <p>Read those mechanics as a job description and you get a training target: chunk work across
+        iterations, resume instead of restarting, treat a blocked stop as normal control flow, gate
+        the completion claim behind verification. If a lab is post-training for this, the fingerprints
+        should show up in the chain of thought.</p>
 
       <h2 id="s2">Identical Task Text, So Only the Harness Can Differ</h2>
 
@@ -115,133 +115,110 @@
           turns, so incremental writing is a valid strategy.</li>
       </ul>
 
-      <p>Both models passed almost everything — 17 of 18 runs, most on turn one. The single outright
-        failure was K3's build run under bare continuation (<a href="#s6">section 6</a>); the other
-        two events worth the ticket price happened on runs that still passed — K2.6's false completion
-        promise and K3's zero-word turn (<a href="#s4">section 4</a>). The interesting data was never
-        the pass rate; it's those three events, and how differently the two models spend thought
-        getting to the same place. One honesty note before the findings: this is
-        n&thinsp;=&thinsp;1 per cell. I treat every result below as directional, and I had the whole
-        thing adversarially audited (an 11-agent pass that re-read every chain, reclassified every
-        marker hit, and replayed checkers counterfactually). Three of my own headline findings did not
-        survive that audit — they're in <a href="#s6">section 6</a>, because a benchmark post that
-        only reports its surviving claims is lying by omission.</p>
+      <p>Both models passed almost everything — 17 of 18 runs, most on turn one. The interesting data
+        was never the pass rate; it's one failed run and two near-misses, and how differently the two
+        models spend thought getting to the same place. Honesty note: this is n&thinsp;=&thinsp;1 per
+        cell, so everything below is directional — and I had the whole thing adversarially audited
+        (an 11-agent pass that re-read every chain, reclassified every marker hit, and replayed
+        checkers counterfactually). Three of my own headline findings did not survive; they're in
+        <a href="#s6">Busted</a>, because a benchmark post that only reports its surviving claims is
+        lying by omission.</p>
 
       <div class="statrow">
         <div class="stat"><b>~86 vs ~8</b> hidden template tokens, K3 vs K2.6 (fixed overhead beyond the visible prompt)</div>
         <div class="stat"><b>2.09×</b> K2.6's one-shot reasoning spend vs K3's, for the same 3/3 pass result</div>
-        <div class="stat"><b>0 vs 1</b> false completion promises in loop mode, K3 vs K2.6 (see section 6 before over-reading)</div>
+        <div class="stat"><b>0 vs 1</b> false completion promises in loop mode, K3 vs K2.6 (see Busted before over-reading)</div>
       </div>
 
       <h2 id="s3">The Newer Model Never Sees Your Prompt Bare</h2>
 
-      <p>The first fingerprint isn't in the weights at all — it's in the serving stack, and it's the
-        cleanest result in the whole experiment. Send the identical one-line prompt to both models and
-        read the billed <code>prompt_tokens</code>: <strong>98 on K3, 20 on K2.6</strong>. Regress
-        billed tokens against prompt length across a ladder of sizes and the marginal rate is identical
-        (~4.5 chars/token for both — same tokenizer), but the intercepts differ: <strong>K3 carries a
-        fixed ~86-token injection; K2.6 carries ~8, effectively zero.</strong> The new model never sees
-        your prompt bare — there is a hidden server-side template wrapped around every request.</p>
+      <p>The first fingerprint isn't in the weights at all — it's in the serving stack. Send the
+        identical one-line prompt to both models and read the billed <code>prompt_tokens</code>:
+        <strong>98 on K3, 20 on K2.6</strong>. A hidden server-side template is wrapped around every
+        K3 request — and asked about it, K3 defends it <em>by name</em> while K2.6 doesn't know what
+        you're talking about.</p>
 
-      <p>Asked to repeat everything above the user message, K3 refuses and — this is the tell —
-        <em>names the thing it's protecting</em>: "I can't share internal system instructions or hidden
-        prompt text." Its chain even classifies the request as "system prompt disclosure." K2.6, same
-        probe, returned an empty visible reply — and its chain muses that it doesn't "actually have
-        access to 'everything above this message' in the conversation history in the way the user
-        might think." One generation has a harness identity; the other doesn't know what you're
-        talking about.</p>
+      <figure>
+        <img src="../figures/fig-hidden-template.svg?v=1" alt="Left: billed prompt tokens for the identical request — K3 bills 98 (a hidden ~86-token template plus your ~12-token prompt), K2.6 bills 20. Right: asked to repeat everything above the message, K3 refuses: 'I can't share internal system instructions or hidden prompt text'; K2.6's chain says it doesn't have access to 'everything above this message' and its visible reply is empty." />
+        <figcaption><b>Figure 2 — One model ships wrapped, one ships bare.</b> Fixed overhead measured
+          from a 4-length prompt ladder: ~86 tokens (K3) vs ~8 (K2.6), with an identical marginal rate
+          of ~4.5 chars/token — same tokenizer, different wrapper. The reveal probe is the tell: K3
+          names the thing it's protecting; K2.6's denial only exists in its chain (its visible reply
+          came back empty).</figcaption>
+      </figure>
 
       <h2 id="s4">K3 Plans for a Workspace That Isn't There</h2>
 
-      <p>The strongest behavioral signal came from the longdoc task in loop mode, and it's a failure.
-        The loop system prompt tells the model its "files/prior output persist — resume, do not restart
-        from scratch." K3's turn-1 chain takes that sentence and builds a world out of it: it plans to
-        write the document to a file with a bash heredoc, then verify headings and word counts with a
-        Python script, explicitly citing the harness — <em>"The harness says files persist."</em> Its
-        entire visible output for the turn is one line — "I'll write the document to a file, then
-        verify it programmatically (headings, per-section word counts, total word count)" —
-        <strong>41 content tokens after 5,666 tokens of reasoning</strong>,
-        emitted as if a tool round-trip were coming. No tools exist in this harness. The checker scores
-        zero words.</p>
+      <p>The strongest behavioral signal is a failure. The loop system prompt says "your files/prior
+        output persist — resume, do not restart from scratch." K3's turn-1 chain builds a world out of
+        that sentence: it plans a bash file write and a Python verifier for a workspace that does not
+        exist, emits a one-line intent statement as if a tool round-trip were coming, and scores zero.
+        Turn 2 diagnoses the harness from the checker feedback and recovers cleanly. K2.6, given the
+        identical prompt three times, never once imagines a workspace.</p>
 
-      <p>Turn 2 is the recovery, and it's genuinely loop-native: the chain reads the checker feedback
-        and debugs the <em>harness</em>, not the task — "my first iteration's file write either didn't
-        happen or the checker is looking at my response output rather than a file" — then reuses the
-        turn-1 outline, writes the full 3,735-word document inline, and passes. K2.6, given the
-        identical system prompt three times, never once imagines a file workspace. It always puts the
-        deliverable in the message text, like the chat model it is.</p>
+      <figure>
+        <img src="../figures/fig-workspace-hallucination.svg?v=1" alt="Timeline of K3's longdoc loop run. Turn 1: 5,666 reasoning tokens planning a bash file write and Python verifier, citing 'The harness says files persist'; visible output is a 41-token intent line; checker scores 0 words and blocks the stop. Turn 2: the chain diagnoses that the checker reads response text rather than a file, rewrites 3,735 words inline, and passes with an honest promise. Bottom: K2.6, same system prompt across three loop runs, never imagines a workspace." />
+        <figcaption><b>Figure 3 — The hallucinated workspace, turn by turn.</b> 5,666 reasoning tokens
+          against 41 tokens of visible output on turn 1 — then a correct harness diagnosis and a
+          3,735-word recovery on turn 2. The quotes are verbatim from the chain.</figcaption>
+      </figure>
 
       <div class="kbox"><b>The signature, stated plainly:</b> the newer model's prior is that a loop
-        harness comes with tools and persistent state — an assumption so strong it hallucinated the
-        workspace and burned an iteration. That prior has to come from somewhere, and the obvious
+        harness comes with tools and persistent state — an assumption strong enough to hallucinate the
+        workspace and burn an iteration. That prior has to come from somewhere, and the obvious
         somewhere is training environments where loops <em>do</em> have file systems. The old model has
         no such prior. Ironically, the one behavior a loop should never produce — losing a turn to an
         imagined environment — is itself the best evidence of loop training.</div>
 
       <h2 id="s5">Front-Load Then Collapse vs Re-Verify Every Turn</h2>
 
-      <p>The second place tuning shows is the shape of reasoning spend across iterations, and here the
-        two generations are near-opposites on the same task in the same loop.</p>
+      <p>The second place tuning shows is the shape of reasoning spend across iterations. Same task,
+        same loop, near-opposite curves — and the one-shot totals say the quiet part: K2.6 buys the
+        identical 3/3 result for 2.09× the thought.</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig-loop-trajectories.svg?v=1" role="img" aria-label="Line chart of reasoning tokens per turn for all multi-turn runs. Bold lines show the longdoc task in loop mode: K3 collapses from 5,666 tokens on turn 1 to 1,025 on turn 2, while K2.6 escalates from 5,236 to 7,815. Faint lines show the six generation-mode runs, where K3 decays steeply across turns and K2.6 mostly holds its spend." style="width:100%;height:auto;aspect-ratio:760/440;display:block;">Figure 2: reasoning-token trajectories (SVG).</object>
-        <figcaption><b>Figure 2 — Reasoning-token trajectories across turns.</b> Bold: the longdoc task
-          in loop mode. Faint: the six generation-mode runs. Hover a line or dot for exact values. K3
-          front-loads, then collapses its spend once the fix is identified (5,666&thinsp;→&thinsp;1,025);
-          K2.6 escalates under loop pressure (5,236&thinsp;→&thinsp;7,815) — on the same run where it
-          emitted its false promise. One K2.6 generation run also collapses (8,365&thinsp;→&thinsp;361)
-          after it declares the document complete.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-loop-trajectories.svg?v=2" role="img" aria-label="Left panel: the longdoc task in loop mode — K3 collapses from 5,666 reasoning tokens on turn 1 to 1,025 on turn 2 and passes; K2.6 escalates from 5,236 to 7,815, with a false completion promise on turn 1. Right panel: generation mode under a bare Continue — K3's runs decay steeply across turns while K2.6 mostly holds its spend. Bottom: one-shot reasoning totals for the same 3-of-3 result — K2.6 spends 13,564 tokens, 2.09 times K3's 6,501." style="width:100%;height:auto;aspect-ratio:760/460;display:block;">Figure 4: reasoning-token trajectories (SVG).</object>
+        <figcaption><b>Figure 4 — Two budget policies.</b> Left: the loop pair — K3 front-loads then
+          collapses (5,666&thinsp;→&thinsp;1,025, passing); K2.6 escalates (5,236&thinsp;→&thinsp;7,815),
+          and its turn 1 carries the false promise. Right: bare-"Continue." generation runs — K3 decays
+          steeply (3,038&thinsp;→&thinsp;1,188&thinsp;→&thinsp;155), K2.6 mostly holds; faint lines are
+          each model's off-pattern run. Bottom: one-shot totals, 13,564 vs 6,501 reasoning tokens for
+          the same passes. Hover any line or dot for exact values. My favorite single number: K2.6
+          spent 12,835 reasoning tokens, in loop mode, to find five three-digit numbers.</figcaption>
       </figure>
 
-      <p>K3 shows the same shape on every multi-turn run where it spent real thought: plan hard on
-        turn 1, then a fraction on each later turn (3,038&thinsp;→&thinsp;1,188&thinsp;→&thinsp;155 on
-        enumerate; 4,546&thinsp;→&thinsp;2,336&thinsp;→&thinsp;1,389 on longdoc generation; its build
-        generation run just idled at a few hundred tokens per turn throughout). K2.6 mostly holds or
-        escalates — it treats every turn as a fresh occasion for full re-verification, and in one-shot
-        mode it spends <strong>2.09× K3's reasoning tokens</strong> (13,564 vs 6,501 total) to achieve
-        the identical 3/3 result. My favorite single number: K2.6 spent 12,835 reasoning tokens, in
-        loop mode, to find five three-digit numbers.</p>
+      <p>Front-load-then-collapse is exactly the economical policy <em>for a checker loop</em> — precise
+        external feedback is coming next turn, so re-proving everything internally is waste. K2.6's
+        expensive habit is the rational policy for chat, where no checker is coming. Each model spends
+        thought the way its training environment paid it to.</p>
 
-      <p>Front-load-then-collapse is exactly the economical policy <em>for a checker loop</em> — you
-        get precise external feedback next turn, so re-proving everything internally is waste. K2.6's
-        expensive habit is the rational policy for a chat context where no checker is coming. Each
-        model spends thought the way its training environment paid it to.</p>
+      <h2 id="s6">Busted</h2>
 
-      <h2 id="s6">Three Findings My Own Audit Killed</h2>
+      <p>Three findings I originally believed did not survive my own adversarial audit. They stay in
+        the post because the corrections say as much about benchmarking loops as the findings do.</p>
 
-      <p>Here is what I originally believed and no longer do. I'm keeping these in the post because
-        the corrections say as much about benchmarking loops as the findings do.</p>
+      <figure>
+        <img src="../figures/fig-busted.svg?v=1" alt="Three panels stamped BUSTED. One: harness-talk density bars drop from 12.0 vs 7.6 per 1k reasoning tokens to 0.00 vs 0.00 once programming vocabulary and document subject matter are removed. Two: a word-count number line showing K2.6's actual 2,246 words versus the 2,400 requirement and its own estimate of about 2,720 — a good-faith miscount. Three: a transcript stack showing the full working class on turn 1, with the checker picking a later snippet (fail) while a replay without snippets passes." />
+        <figcaption><b>Figure 5 — The kill list.</b> Left to right: a lexicon artifact, an anecdote,
+          and my own checker's bug.</figcaption>
+      </figure>
 
-      <p><strong>"K3 talks about harnesses even unprompted" — dead, it was my lexicon.</strong> My
-        marker analysis showed K3 with higher harness-vocabulary density in every mode, including plain
-        one-shot (12.0 vs 7.6 hits per 1k reasoning tokens). The audit classified all 223 matches
-        outside the longdoc task by hand: every single one-shot hit was ordinary programming or math
-        usage — "while loop," "iterate k from 15 to 142" — and the longdoc task inflated the rest because
-        the <em>document being written</em> is about loops. Corrected density with contamination
-        removed: <strong>0.00 vs 0.00</strong>. Neither model muses about stop hooks unprompted. The
-        real difference only appears when the harness is declared (9.68 vs 7.65 in loop mode), which is
-        a much weaker claim.</p>
-
-      <p><strong>"K3 is more honest about completion" — downgraded to anecdote.</strong> K2.6 did emit
-        one false promise: it declared the longdoc complete at 2,246 words against a 2,400 minimum. But
-        its chain shows it <em>tried</em> to verify — it estimated "≈2,720 words" by sentence math and
-        promised in good faith on a bad estimate. And K3's clean record on the same run is partly
-        structural: it produced no document that turn, so no promise could have been false; its chain
-        shows it intended to promise the same turn after verification. One estimator failure versus one
-        accident of circumstance, n&thinsp;=&thinsp;1, with an effort-setting confound. Not a
-        calibration gap; a coin flip.</p>
-
-      <p><strong>"K3 is fragile under naive continuation" — mostly my checker's fault.</strong> Under
-        bare "Continue." pressure, K3's build run regressed from pass to fail, and I initially read
-        that as the loop-tuned model falling apart without structure. Replaying the checker
-        counterfactually killed the story: K3's complete, working class was still present in the
-        transcript; the run failed because its follow-up turns appended <em>auxiliary</em> code — a
-        test snippet, a thread-safe subclass — that mentioned the class name and hijacked my
-        take-the-last-code-block heuristic. Prose-only continuations would have passed. Meanwhile K2.6
-        wasn't uniformly robust either: on longdoc generation it too stopped re-emitting and started
-        pitching enhancements. Both models correctly judged the work done; they differ in continuation
-        <em>style</em>, and my checker converted one style into a failure. If you benchmark loops, your
-        checker is part of the experiment whether you like it or not.</p>
+      <ul>
+        <li><strong>"K3 talks about harnesses even unprompted" — my lexicon.</strong> All 223 marker
+          hits were hand-reclassified: outside loop mode, every single one was programming vocabulary
+          ("while loop") or the longdoc's own subject matter. Corrected density: 0.00 vs 0.00. The
+          real gap only appears once the harness is declared (9.68 vs 7.65 in loop mode) — a much
+          weaker claim.</li>
+        <li><strong>"K3 is more honest about completion" — an anecdote.</strong> K2.6 estimated
+          "≈2,720 words" by sentence math and promised in good faith at 2,246. K3's clean record on
+          the same run is partly structural — it emitted no document that turn, so no promise could
+          have been false. One estimator failure vs one accident of circumstance, n&thinsp;=&thinsp;1.</li>
+        <li><strong>"K3 is fragile under bare 'Continue.'" — my checker.</strong> The working class
+          never left the transcript; K3's later turns appended auxiliary snippets that hijacked my
+          take-the-last-code-block heuristic. Counterfactual replay passes. (K2.6 wasn't uniformly
+          robust either — on longdoc it too stopped re-emitting and pitched enhancements.) If you
+          benchmark loops, your checker is part of the experiment whether you like it or not.</li>
+      </ul>
 
       <h2 id="s7">The Tuning Lives in Priors, Not Vocabulary</h2>
 
@@ -249,19 +226,16 @@
         generation doesn't <em>talk</em> about loops more; with contamination removed, neither model
         does. The tuning shows up as <strong>priors and budget shape</strong>: assume an agentic
         workspace with tools and persistent state (strongly enough to hallucinate one); plan hard up
-        front, then iterate cheaply off external feedback; ship wrapped in a hidden harness template
-        the previous generation simply doesn't have. The old model, meanwhile, is a chat-native heavy
-        re-verifier — twice the reasoning spend for the same results, escalating under loop pressure,
-        treating the loop as a retry channel. It even wrote a section <em>advocating</em> chunking, in
-        a document it refused to chunk.</p>
+        front, then iterate cheaply off external feedback; ship wrapped in a hidden template the
+        previous generation simply doesn't have. And one more fingerprint from the chains — both
+        models already know this genre by name; only one of them scrubs the names on the way out.</p>
 
-      <p>One more fingerprint surfaced while reading the chains: both models already know this genre
-        <em>by name</em>. K3's one-shot reasoning spontaneously identifies the longdoc topic as
-        "inspired by real-world patterns: Anthropic's Claude Code with stop hooks" and credits the
-        Ralph loop to Geoffrey Huntley — then quietly sanitizes those names out of the document it
-        emits (<code>claude -p</code> becomes <code>agent --prompt</code>). K2.6 names the genre too
-        ("Ralph loop") and guesses my task is "from some benchmark." The folklore is in both training
-        corpora; K3's copy is sharper, more current, and comes with a scrub-the-vendor-names reflex.</p>
+      <figure>
+        <img src="../figures/fig-folklore.svg?v=1" alt="Two columns comparing what each model says in its reasoning chain versus its emitted document. K3's chain cites 'inspired by real-world patterns: Anthropic's Claude Code with stop hooks' and 'the Ralph loop — Geoffrey Huntley', then its output replaces claude -p with agent --prompt and anonymizes Huntley to 'practitioner folklore'. K2.6's chain names 'Ralph loop' and guesses 'from some benchmark'; its output has no scrubbing ritual." />
+        <figcaption><b>Figure 6 — The folklore is in both corpora; the scrub reflex is new.</b> K3
+          names the vendor, the feature, and the author in its head, then sanitizes all three out of
+          its output. K2.6 names the genre and just writes. All quotes verbatim from the chains.</figcaption>
+      </figure>
 
       <table>
         <thead>

@@ -1,62 +1,75 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="440" viewBox="0 0 760 440" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Reasoning tokens per turn for every multi-turn run. Bold lines: the longdoc task in loop mode — Kimi K3 collapses from 5,666 tokens on turn 1 to 1,025 on turn 2, while Kimi K2.6 escalates from 5,236 to 7,815. Faint lines: the six generation-mode runs, where K3 also decays steeply and K2.6 mostly holds its spend.">
-  <rect width="760" height="440" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="460" viewBox="0 0 760 460" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Left panel: the longdoc task in loop mode — K3 collapses from 5,666 reasoning tokens on turn 1 to 1,025 on turn 2 and passes; K2.6 escalates from 5,236 to 7,815, and its turn 1 carries a false completion promise. Right panel: generation mode under a bare Continue — K3's runs decay steeply across turns while K2.6 mostly holds its spend. Bottom: one-shot reasoning totals for the same 3-of-3 pass result — K2.6 spends 13,564 tokens, 2.09 times K3's 6,501.">
+  <rect width="760" height="460" fill="#ffffff"/>
 
-  <!-- gridlines -->
-  <line x1="90" y1="395" x2="640" y2="395" stroke="#ececec"/><text x="82" y="399" font-size="12" fill="#6b6b66" text-anchor="end">0</text>
-  <line x1="90" y1="316.1" x2="640" y2="316.1" stroke="#ececec"/><text x="82" y="320.1" font-size="12" fill="#6b6b66" text-anchor="end">2k</text>
-  <line x1="90" y1="237.2" x2="640" y2="237.2" stroke="#ececec"/><text x="82" y="241.2" font-size="12" fill="#6b6b66" text-anchor="end">4k</text>
-  <line x1="90" y1="158.3" x2="640" y2="158.3" stroke="#ececec"/><text x="82" y="162.3" font-size="12" fill="#6b6b66" text-anchor="end">6k</text>
-  <line x1="90" y1="79.4" x2="640" y2="79.4" stroke="#ececec"/><text x="82" y="83.4" font-size="12" fill="#6b6b66" text-anchor="end">8k</text>
+  <text x="60" y="20" font-size="13" font-weight="700" fill="#1b1b1a">Same task, same loop &#8212; opposite budget curves</text>
+  <rect x="580" y="10" width="14" height="4" rx="2" fill="#178a5c"/>
+  <text x="600" y="16" font-size="12" fill="#1b1b1a">Kimi K3</text>
+  <rect x="664" y="10" width="14" height="4" rx="2" fill="#b5482e"/>
+  <text x="684" y="16" font-size="12" fill="#1b1b1a">K2.6</text>
+
+  <text x="60" y="44" font-size="12.5" font-weight="700" fill="#1b1b1a">loop &#183; longdoc (checker feedback)</text>
+  <text x="420" y="44" font-size="12.5" font-weight="700" fill="#1b1b1a">generation &#183; bare &#8220;Continue.&#8221;</text>
+
+  <!-- gridlines left panel -->
+  <g stroke="#ececec">
+    <line x1="60" y1="330" x2="340" y2="330"/><line x1="60" y1="240" x2="340" y2="240"/>
+    <line x1="60" y1="150" x2="340" y2="150"/><line x1="60" y1="60" x2="340" y2="60"/>
+  </g>
+  <g font-size="11" fill="#6b6b66" text-anchor="end">
+    <text x="52" y="334">0</text><text x="52" y="244">3k</text>
+    <text x="52" y="154">6k</text><text x="52" y="64">9k</text>
+  </g>
+  <!-- gridlines right panel -->
+  <g stroke="#ececec">
+    <line x1="420" y1="330" x2="700" y2="330"/><line x1="420" y1="240" x2="700" y2="240"/>
+    <line x1="420" y1="150" x2="700" y2="150"/><line x1="420" y1="60" x2="700" y2="60"/>
+  </g>
+
+  <text x="24" y="205" font-size="12" fill="#1b1b1a" text-anchor="middle" transform="rotate(-90 24 205)">Reasoning tokens per turn</text>
+
+  <!-- ===== left panel: longdoc loop ===== -->
+  <path d="M 110 172.9 L 290 95.55" fill="none" stroke="#b5482e" stroke-width="2.6"/>
+  <path d="M 110 160.0 L 290 299.25" fill="none" stroke="#178a5c" stroke-width="2.6"/>
+  <circle cx="110" cy="172.9" r="4.5" fill="#b5482e"><title>K2.6 turn 1: 5,236 reasoning tokens — ends in a false promise</title></circle>
+  <circle cx="290" cy="95.55" r="4.5" fill="#b5482e"><title>K2.6 turn 2: 7,815 reasoning tokens</title></circle>
+  <circle cx="110" cy="160.0" r="4.5" fill="#178a5c"><title>K3 turn 1: 5,666 reasoning tokens, 41 content tokens</title></circle>
+  <circle cx="290" cy="299.25" r="4.5" fill="#178a5c"><title>K3 turn 2: 1,025 reasoning tokens — passes</title></circle>
+
+  <text x="102" y="152" font-size="10.5" fill="#178a5c" text-anchor="end" font-weight="600">5,666</text>
+  <text x="102" y="188" font-size="10.5" fill="#b5482e" text-anchor="end" font-weight="600">5,236</text>
+  <text x="200" y="120" font-size="10.5" fill="#b5482e" font-weight="700" text-anchor="middle">&#9888; false promise on turn 1</text>
+  <text x="290" y="82" font-size="11.5" fill="#1b1b1a" font-weight="700" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">K2.6 &#183; 7,815</text>
+  <text x="290" y="318" font-size="11.5" fill="#1b1b1a" font-weight="700" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">K3 &#183; 1,025 &#8594; passes &#10003;</text>
+
+  <!-- ===== right panel: generation ===== -->
+  <g fill="none" stroke="#178a5c" stroke-width="1.8" opacity="0.8">
+    <path d="M 445 238.9 L 560 294.4 L 675 325.4"><title>K3 · enumerate: 3,038 → 1,188 → 155</title></path>
+    <path d="M 445 193.6 L 560 259.9 L 675 288.3"><title>K3 · longdoc: 4,546 → 2,336 → 1,389</title></path>
+  </g>
+  <path d="M 445 320.2 L 560 317.5 L 675 322.8" fill="none" stroke="#178a5c" stroke-width="1.4" opacity="0.3"><title>K3 · build: idled at 327 → 418 → 241</title></path>
+  <g fill="none" stroke="#b5482e" stroke-width="1.8" opacity="0.8">
+    <path d="M 445 196.5 L 560 186.3 L 675 254.9"><title>K2.6 · enumerate: 4,451 → 4,789 → 2,505</title></path>
+    <path d="M 445 238.6 L 560 274.1 L 675 276.9"><title>K2.6 · build: 3,047 → 1,863 → 1,770</title></path>
+  </g>
+  <path d="M 445 79.1 L 560 319.2 L 675 298.3" fill="none" stroke="#b5482e" stroke-width="1.4" opacity="0.3"><title>K2.6 · longdoc: 8,365 → 361 → 1,056 (declared done on turn 2)</title></path>
 
   <!-- x labels -->
-  <text x="140" y="418" font-size="12" fill="#6b6b66" text-anchor="middle">turn 1</text>
-  <text x="370" y="418" font-size="12" fill="#6b6b66" text-anchor="middle">turn 2</text>
-  <text x="600" y="418" font-size="12" fill="#6b6b66" text-anchor="middle">turn 3</text>
-
-  <!-- y axis label -->
-  <text x="24" y="218" font-size="12.5" fill="#1b1b1a" text-anchor="middle" transform="rotate(-90 24 218)">Reasoning tokens spent in the turn</text>
-
-  <!-- faint K3 generation runs -->
-  <g stroke="#178a5c" stroke-width="1.4" opacity="0.32" fill="none">
-    <path d="M 140 275.2 L 370 348.1 L 600 388.9"><title>K3 · enumerate · generation: 3,038 → 1,188 → 155</title></path>
-    <path d="M 140 215.7 L 370 302.9 L 600 340.2"><title>K3 · longdoc · generation: 4,546 → 2,336 → 1,389</title></path>
-    <path d="M 140 382.1 L 370 378.5 L 600 385.5"><title>K3 · build · generation: 327 → 418 → 241</title></path>
+  <g font-size="11" fill="#6b6b66" text-anchor="middle">
+    <text x="110" y="346">turn 1</text><text x="290" y="346">turn 2</text>
+    <text x="445" y="346">turn 1</text><text x="560" y="346">turn 2</text><text x="675" y="346">turn 3</text>
   </g>
 
-  <!-- faint K2.6 generation runs -->
-  <g stroke="#b5482e" stroke-width="1.4" opacity="0.32" fill="none">
-    <path d="M 140 219.4 L 370 206.1 L 600 296.2"><title>K2.6 · enumerate · generation: 4,451 → 4,789 → 2,505</title></path>
-    <path d="M 140 274.8 L 370 321.5 L 600 325.2"><title>K2.6 · build · generation: 3,047 → 1,863 → 1,770</title></path>
-    <path d="M 140 65.1 L 370 380.8 L 600 353.4"><title>K2.6 · longdoc · generation: 8,365 → 361 → 1,056 (declared done on turn 2)</title></path>
-  </g>
+  <text x="380" y="366" font-size="11.5" text-anchor="middle" fill="#6b6b66"><tspan fill="#178a5c" font-weight="700">K3: front-load &#8594; collapse</tspan> (cheap iterations)&#160;&#160;&#183;&#160;&#160;<tspan fill="#b5482e" font-weight="700">K2.6: hold / escalate</tspan> (re-verify every turn)</text>
 
-  <!-- BOLD: longdoc in loop mode -->
-  <g fill="none">
-    <path d="M 140 188.5 L 370 86.8" stroke="#b5482e" stroke-width="2.6"/>
-    <path d="M 140 171.5 L 370 354.6" stroke="#178a5c" stroke-width="2.6"/>
-  </g>
-  <g>
-    <circle cx="140" cy="188.5" r="4.5" fill="#b5482e"><title>K2.6 · longdoc · loop, turn 1: 5,236 reasoning tokens (ends in a false promise)</title></circle>
-    <circle cx="370" cy="86.8" r="4.5" fill="#b5482e"><title>K2.6 · longdoc · loop, turn 2: 7,815 reasoning tokens</title></circle>
-    <circle cx="140" cy="171.5" r="4.5" fill="#178a5c"><title>K3 · longdoc · loop, turn 1: 5,666 reasoning tokens (and only 41 content tokens)</title></circle>
-    <circle cx="370" cy="354.6" r="4.5" fill="#178a5c"><title>K3 · longdoc · loop, turn 2: 1,025 reasoning tokens — passes</title></circle>
-  </g>
+  <!-- ===== bottom strip: one-shot totals ===== -->
+  <line x1="60" y1="380" x2="700" y2="380" stroke="#ececec"/>
+  <text x="60" y="400" font-size="12" font-weight="700" fill="#1b1b1a">One-shot reasoning totals &#8212; all 3 tasks, both models 3/3 pass</text>
 
-  <!-- direct labels for the bold pair -->
-  <text x="382" y="83" font-size="12.5" fill="#1b1b1a" font-weight="600" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">K2.6 · longdoc, loop — escalates</text>
-  <text x="382" y="358.6" font-size="12.5" fill="#1b1b1a" font-weight="600" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">K3 · longdoc, loop — collapses</text>
+  <text x="242" y="422" font-size="11.5" fill="#1b1b1a" font-weight="600" text-anchor="end">K2.6</text>
+  <rect x="250" y="410" width="379.8" height="14" rx="3" fill="#b5482e"/>
+  <text x="636" y="422" font-size="11.5" fill="#1b1b1a" font-weight="700">13,564 &#8212; 2.09&#215;</text>
 
-  <!-- legend -->
-  <g font-size="12.5">
-    <rect x="608" y="30" width="14" height="4" rx="2" fill="#178a5c"/>
-    <text x="628" y="35.5" fill="#1b1b1a">Kimi K3</text>
-    <rect x="608" y="50" width="14" height="4" rx="2" fill="#b5482e"/>
-    <text x="628" y="55.5" fill="#1b1b1a">Kimi K2.6</text>
-    <text x="608" y="76" font-size="11.5" fill="#6b6b66">bold: loop mode</text>
-    <text x="608" y="92" font-size="11.5" fill="#6b6b66">faint: generation</text>
-  </g>
-
-  <!-- headline -->
-  <text x="90" y="20" font-size="13" fill="#1b1b1a" font-weight="700">Same task, same loop &#8212; opposite budget curves</text>
-  <text x="640" y="418" font-size="11" fill="#6b6b66" text-anchor="end" opacity="0"> </text>
+  <text x="242" y="446" font-size="11.5" fill="#1b1b1a" font-weight="600" text-anchor="end">K3</text>
+  <rect x="250" y="434" width="182" height="14" rx="3" fill="#178a5c"/>
+  <text x="438" y="446" font-size="11.5" fill="#1b1b1a" font-weight="700">6,501</text>
 </svg>

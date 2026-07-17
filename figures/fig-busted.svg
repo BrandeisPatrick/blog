@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="310" viewBox="0 0 760 310" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Three original findings stamped BUSTED. One: 'K3 talks about harnesses unprompted' — raw lexicon densities of 12.0 vs 7.6 per 1k reasoning tokens drop to 0.00 vs 0.00 once programming vocabulary and the longdoc's own subject are removed. Two: 'K3 is more honest about completion' — K2.6 estimated its document at about 2,720 words, above the 2,400 requirement, but the actual count was 2,246; a good-faith miscount, one instance. Three: 'K3 is fragile under bare Continue' — the working class never left the transcript; the checker's last-block heuristic picked a later snippet, and a replay without the snippets passes.">
+  <rect width="760" height="310" fill="#ffffff"/>
+  <text x="20" y="24" font-size="13" font-weight="700" fill="#1b1b1a">Three of my own findings, adversarially re-checked</text>
+
+  <!-- ============ Panel 1: lexicon artifact ============ -->
+  <rect x="20" y="40" width="226" height="250" rx="8" fill="#ffffff" stroke="#ececec"/>
+  <text x="32" y="64" font-size="11.5" font-weight="700" fill="#1b1b1a">&#8220;K3 talks about</text>
+  <text x="32" y="79" font-size="11.5" font-weight="700" fill="#1b1b1a">harnesses unprompted&#8221;</text>
+
+  <line x1="36" y1="210" x2="230" y2="210" stroke="#ececec"/>
+  <rect x="52" y="140" width="24" height="70" fill="#178a5c"/>
+  <rect x="84" y="166" width="24" height="44" fill="#b5482e"/>
+  <text x="64" y="133" font-size="10" fill="#1b1b1a" text-anchor="middle" font-weight="600">12.0</text>
+  <text x="96" y="159" font-size="10" fill="#1b1b1a" text-anchor="middle" font-weight="600">7.6</text>
+  <rect x="150" y="207" width="24" height="3" fill="#178a5c"/>
+  <rect x="182" y="207" width="24" height="3" fill="#b5482e"/>
+  <text x="162" y="200" font-size="10" fill="#1b1b1a" text-anchor="middle" font-weight="600">0.00</text>
+  <text x="194" y="200" font-size="10" fill="#1b1b1a" text-anchor="middle" font-weight="600">0.00</text>
+  <text x="80" y="226" font-size="10.5" fill="#6b6b66" text-anchor="middle">raw lexicon</text>
+  <text x="178" y="226" font-size="10.5" fill="#6b6b66" text-anchor="middle">harness-only</text>
+
+  <text x="32" y="256" font-size="10.5" fill="#6b6b66">my lexicon counted &#8220;while loop&#8221; &amp;</text>
+  <text x="32" y="270" font-size="10.5" fill="#6b6b66">the longdoc&#8217;s own subject matter</text>
+
+  <g transform="translate(152,50) rotate(-12)">
+    <rect x="0" y="-18" width="84" height="26" rx="3" fill="#ffffff" fill-opacity="0.92" stroke="#b5482e" stroke-width="2"/>
+    <text x="42" y="1" font-size="14" font-weight="800" fill="#b5482e" text-anchor="middle" letter-spacing="1">BUSTED</text>
+  </g>
+
+  <!-- ============ Panel 2: honesty anecdote ============ -->
+  <rect x="267" y="40" width="226" height="250" rx="8" fill="#ffffff" stroke="#ececec"/>
+  <text x="279" y="64" font-size="11.5" font-weight="700" fill="#1b1b1a">&#8220;K3 is more honest</text>
+  <text x="279" y="79" font-size="11.5" font-weight="700" fill="#1b1b1a">about completion&#8221;</text>
+
+  <line x1="287" y1="180" x2="473" y2="180" stroke="#c9c9c4"/>
+  <text x="287" y="168" font-size="9.5" fill="#6b6b66" text-anchor="middle">2k words</text>
+  <text x="473" y="168" font-size="9.5" fill="#6b6b66" text-anchor="middle">3k</text>
+  <line x1="361.4" y1="140" x2="361.4" y2="200" stroke="#1b1b1a" stroke-dasharray="4 3"/>
+  <text x="361" y="132" font-size="10.5" fill="#1b1b1a" text-anchor="middle" font-weight="600">2,400 required</text>
+  <circle cx="332.8" cy="180" r="4.5" fill="#b5482e"/>
+  <text x="330" y="200" font-size="10" fill="#b5482e" text-anchor="middle" font-weight="700">2,246</text>
+  <text x="330" y="213" font-size="9.5" fill="#6b6b66" text-anchor="middle">actual</text>
+  <circle cx="420.9" cy="180" r="4.5" fill="#ffffff" stroke="#b5482e" stroke-width="2"/>
+  <text x="421" y="200" font-size="10" fill="#b5482e" text-anchor="middle" font-weight="700">&#8776;2,720</text>
+  <text x="421" y="213" font-size="9.5" fill="#6b6b66" text-anchor="middle">its estimate</text>
+
+  <text x="279" y="256" font-size="10.5" fill="#6b6b66">promised in good faith on a bad</text>
+  <text x="279" y="270" font-size="10.5" fill="#6b6b66">count &#8212; one instance, n&#8201;=&#8201;1</text>
+
+  <g transform="translate(399,50) rotate(-12)">
+    <rect x="0" y="-18" width="84" height="26" rx="3" fill="#ffffff" fill-opacity="0.92" stroke="#b5482e" stroke-width="2"/>
+    <text x="42" y="1" font-size="14" font-weight="800" fill="#b5482e" text-anchor="middle" letter-spacing="1">BUSTED</text>
+  </g>
+
+  <!-- ============ Panel 3: checker artifact ============ -->
+  <rect x="514" y="40" width="226" height="250" rx="8" fill="#ffffff" stroke="#ececec"/>
+  <text x="526" y="64" font-size="11.5" font-weight="700" fill="#1b1b1a">&#8220;K3 is fragile under</text>
+  <text x="526" y="79" font-size="11.5" font-weight="700" fill="#1b1b1a">bare &#8216;Continue.&#8217;&#8221;</text>
+
+  <rect x="526" y="104" width="108" height="24" rx="4" fill="#f2f9f5" stroke="#178a5c"/>
+  <text x="532" y="120" font-size="10" fill="#1b1b1a">turn 1 &#183; full class &#10003;</text>
+  <rect x="526" y="134" width="108" height="24" rx="4" fill="#ffffff" stroke="#c9c9c4"/>
+  <text x="532" y="150" font-size="10" fill="#1b1b1a">turn 2 &#183; test snippet</text>
+  <rect x="526" y="164" width="108" height="24" rx="4" fill="#ffffff" stroke="#c9c9c4"/>
+  <text x="532" y="180" font-size="10" fill="#1b1b1a">turn 3 &#183; subclass</text>
+
+  <text x="640" y="120" font-size="10.5" fill="#178a5c" font-weight="700">&#8592; replay: class &#10003;</text>
+  <text x="640" y="180" font-size="10.5" fill="#b5482e" font-weight="700">&#8592; picks last &#10007;</text>
+
+  <text x="526" y="256" font-size="10.5" fill="#6b6b66">the class never left the transcript &#8212;</text>
+  <text x="526" y="270" font-size="10.5" fill="#6b6b66">my checker&#8217;s last-block heuristic</text>
+
+  <g transform="translate(646,50) rotate(-12)">
+    <rect x="0" y="-18" width="84" height="26" rx="3" fill="#ffffff" fill-opacity="0.92" stroke="#b5482e" stroke-width="2"/>
+    <text x="42" y="1" font-size="14" font-weight="800" fill="#b5482e" text-anchor="middle" letter-spacing="1">BUSTED</text>
+  </g>
+</svg>

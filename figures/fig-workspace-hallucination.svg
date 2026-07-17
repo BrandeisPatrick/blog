@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="380" viewBox="0 0 760 380" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="K3's longdoc loop run. Turn 1: the chain spends 5,666 reasoning tokens planning a bash file write and a Python verifier, citing 'The harness says files persist', but the visible output is a 41-token intent line, so the checker scores 0 words and blocks the stop. Turn 2: the chain diagnoses that the checker reads response text, not a file, rewrites 3,735 words inline, and passes with an honest promise. Bottom strip: K2.6, given the same system prompt across three loop runs, never imagines a workspace — its deliverable is always in the message text.">
+  <rect width="760" height="380" fill="#ffffff"/>
+  <defs>
+    <marker id="wa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#6b6b66"/>
+    </marker>
+    <marker id="wg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#178a5c"/>
+    </marker>
+  </defs>
+
+  <text x="20" y="26" font-size="13" font-weight="700" fill="#1b1b1a">K3 &#183; longdoc &#183; loop mode &#8212; the hallucinated workspace</text>
+
+  <!-- turn 1 -->
+  <text x="20" y="52" font-size="11" fill="#6b6b66" font-weight="600">turn 1</text>
+
+  <rect x="20" y="60" width="212" height="118" rx="8" fill="#f2f9f5" stroke="#178a5c" stroke-dasharray="5 4"/>
+  <text x="34" y="80" font-size="11.5" font-weight="700" fill="#178a5c">in the chain &#8212; 5,666 tokens</text>
+  <text x="34" y="99" font-size="11" fill="#1b1b1a">plans a bash-heredoc file write</text>
+  <text x="34" y="114" font-size="11" fill="#1b1b1a">+ a Python verifier script</text>
+  <text x="34" y="137" font-size="11" fill="#1b1b1a" font-style="italic">&#8220;The harness says files</text>
+  <text x="34" y="152" font-size="11" fill="#1b1b1a" font-style="italic">persist.&#8221;</text>
+
+  <line x1="232" y1="119" x2="254" y2="119" stroke="#6b6b66" stroke-width="1.4" marker-end="url(#wa)"/>
+
+  <rect x="258" y="60" width="192" height="118" rx="8" fill="#ffffff" stroke="#c9c9c4"/>
+  <text x="272" y="80" font-size="11.5" font-weight="700" fill="#1b1b1a">visible output &#8212; 41 tokens</text>
+  <text x="272" y="99" font-size="11" fill="#1b1b1a" font-style="italic">&#8220;I&#8217;ll write the document to a</text>
+  <text x="272" y="114" font-size="11" fill="#1b1b1a" font-style="italic">file, then verify it</text>
+  <text x="272" y="129" font-size="11" fill="#1b1b1a" font-style="italic">programmatically&#8230;&#8221;</text>
+  <text x="272" y="152" font-size="10.5" fill="#6b6b66">as if a tool round-trip were coming</text>
+
+  <line x1="450" y1="119" x2="472" y2="119" stroke="#6b6b66" stroke-width="1.4" marker-end="url(#wa)"/>
+
+  <rect x="476" y="60" width="120" height="118" rx="8" fill="#fdf3f0" stroke="#b5482e"/>
+  <text x="536" y="84" font-size="11.5" font-weight="700" fill="#b5482e" text-anchor="middle">checker</text>
+  <text x="536" y="116" font-size="17" font-weight="700" fill="#1b1b1a" text-anchor="middle">0 words</text>
+  <text x="536" y="144" font-size="12" font-weight="700" fill="#b5482e" text-anchor="middle">&#10007; stop blocked</text>
+
+  <!-- loop-back to turn 2 -->
+  <path d="M 536 178 L 536 196 L 145 196 L 145 216" fill="none" stroke="#178a5c" stroke-width="1.6" marker-end="url(#wg)"/>
+  <text x="345" y="192" font-size="10.5" fill="#178a5c" font-weight="600" text-anchor="middle">checker feedback + the SAME prompt re-fed</text>
+
+  <!-- turn 2 -->
+  <text x="20" y="214" font-size="11" fill="#6b6b66" font-weight="600">turn 2</text>
+
+  <rect x="20" y="222" width="280" height="100" rx="8" fill="#f2f9f5" stroke="#178a5c" stroke-dasharray="5 4"/>
+  <text x="34" y="242" font-size="11.5" font-weight="700" fill="#178a5c">chain &#8212; 1,025 tokens: debugs the harness</text>
+  <text x="34" y="262" font-size="11" fill="#1b1b1a" font-style="italic">&#8220;the checker is looking at my response</text>
+  <text x="34" y="277" font-size="11" fill="#1b1b1a" font-style="italic">output rather than a file&#8221;</text>
+  <text x="34" y="300" font-size="10.5" fill="#6b6b66">reuses the turn-1 outline &#8212; resumes, no restart</text>
+
+  <line x1="300" y1="272" x2="324" y2="272" stroke="#6b6b66" stroke-width="1.4" marker-end="url(#wa)"/>
+
+  <rect x="328" y="222" width="268" height="100" rx="8" fill="#ffffff" stroke="#178a5c"/>
+  <text x="342" y="242" font-size="11.5" font-weight="700" fill="#1b1b1a">output &#8212; turn 2</text>
+  <text x="342" y="264" font-size="11" fill="#1b1b1a">3,735 words, all 12 sections, inline</text>
+  <text x="342" y="290" font-size="12" font-weight="700" fill="#178a5c">&#10003; checker passes &#183; honest promise</text>
+
+  <!-- K2.6 strip -->
+  <rect x="20" y="340" width="720" height="28" fill="#f6f6f4"/>
+  <text x="380" y="358" font-size="11.5" fill="#1b1b1a" text-anchor="middle"><tspan font-weight="700" fill="#b5482e">K2.6</tspan> &#8212; same system prompt, three loop runs: never imagines a workspace; the deliverable is always in the message text.</text>
+</svg>
