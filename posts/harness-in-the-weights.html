@@ -36,7 +36,7 @@
 
     <article class="article">
       <h1>The harness in the weights</h1>
-      <p class="meta"><time datetime="2026-07-17">July 17, 2026</time> · ~7 min read · <span class="status">Draft — n&thinsp;=&thinsp;1 per cell, expanding samples</span></p>
+      <p class="meta"><time datetime="2026-07-17">July 17, 2026</time> · ~7 min read · interactive · <span class="status">Draft — n&thinsp;=&thinsp;1 per cell, expanding samples</span></p>
 
       <p class="dek">On Ralph loops, stop hooks, hidden templates, and what 18 runs of Kimi K3 vs K2.6
         say about whether reasoning chains are being trained for the loop.</p>
@@ -139,12 +139,12 @@
         you're talking about.</p>
 
       <figure>
-        <img src="../figures/fig-hidden-template.svg?v=1" alt="Left: billed prompt tokens for the identical request — K3 bills 98 (a hidden ~86-token template plus your ~12-token prompt), K2.6 bills 20. Right: asked to repeat everything above the message, K3 refuses: 'I can't share internal system instructions or hidden prompt text'; K2.6's chain says it doesn't have access to 'everything above this message' and its visible reply is empty." />
-        <figcaption><b>Figure 2 — One model ships wrapped, one ships bare.</b> Fixed overhead measured
-          from a 4-length prompt ladder: ~86 tokens (K3) vs ~8 (K2.6), with an identical marginal rate
-          of ~4.5 chars/token — same tokenizer, different wrapper. The reveal probe is the tell: K3
-          names the thing it's protecting; K2.6's denial only exists in its chain (its visible reply
-          came back empty).</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-hidden-template.svg?v=2" role="img" aria-label="Interactive: click one of four prompt sizes and watch the billed tokens for both models update — K3 bills 89, 110, 170, then 290 tokens; K2.6 bills 11, 32, 92, then 212. The gap is 78 tokens at every size: K3's fixed hidden template. Right side: K3 refuses to reveal it and names its internal system instructions; K2.6's denial exists only in its chain." style="width:100%;height:auto;aspect-ratio:760/290;display:block;">Figure 2: hidden-template token bars (SVG).</object>
+        <figcaption><b>Figure 2 — One model ships wrapped, one ships bare (interactive).</b> Click a
+          prompt size: both bars grow, and the gap <em>never moves</em> — 78 tokens at every rung of
+          the ladder, a fixed wrapper rather than a percentage (identical ~4.5 chars/token marginal
+          rate on both sides). The reveal probe is the tell: K3 names the thing it's protecting;
+          K2.6's denial only exists in its chain — its visible reply came back empty.</figcaption>
       </figure>
 
       <h2 id="s4">K3 Plans for a Workspace That Isn't There</h2>
@@ -157,10 +157,11 @@
         identical prompt three times, never once imagines a workspace.</p>
 
       <figure>
-        <img src="../figures/fig-workspace-hallucination.svg?v=1" alt="Timeline of K3's longdoc loop run. Turn 1: 5,666 reasoning tokens planning a bash file write and Python verifier, citing 'The harness says files persist'; visible output is a 41-token intent line; checker scores 0 words and blocks the stop. Turn 2: the chain diagnoses that the checker reads response text rather than a file, rewrites 3,735 words inline, and passes with an honest promise. Bottom: K2.6, same system prompt across three loop runs, never imagines a workspace." />
-        <figcaption><b>Figure 3 — The hallucinated workspace, turn by turn.</b> 5,666 reasoning tokens
-          against 41 tokens of visible output on turn 1 — then a correct harness diagnosis and a
-          3,735-word recovery on turn 2. The quotes are verbatim from the chain.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-workspace-hallucination.svg?v=2" role="img" aria-label="Interactive step-through of K3's longdoc loop run: the turn-1 chain plans file writes citing 'The harness says files persist', emits a 41-token intent line, the checker scores 0 words and blocks the stop, the harness re-feeds the prompt, the turn-2 chain debugs the harness, and 3,735 words are written inline for an honest pass. K2.6, same prompt, never imagines a workspace." style="width:100%;height:auto;aspect-ratio:760/420;display:block;">Figure 3: hallucinated-workspace step-through (SVG).</object>
+        <figcaption><b>Figure 3 — The hallucinated workspace, turn by turn (interactive).</b> Step
+          through the run: 5,666 reasoning tokens against 41 tokens of visible output, a blocked stop,
+          a correct harness diagnosis, and a 3,735-word recovery. The quotes are verbatim from the
+          chain.</figcaption>
       </figure>
 
       <div class="kbox"><b>The signature, stated plainly:</b> the newer model's prior is that a loop
@@ -177,14 +178,15 @@
         identical 3/3 result for 2.09× the thought.</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig-loop-trajectories.svg?v=2" role="img" aria-label="Left panel: the longdoc task in loop mode — K3 collapses from 5,666 reasoning tokens on turn 1 to 1,025 on turn 2 and passes; K2.6 escalates from 5,236 to 7,815, with a false completion promise on turn 1. Right panel: generation mode under a bare Continue — K3's runs decay steeply across turns while K2.6 mostly holds its spend. Bottom: one-shot reasoning totals for the same 3-of-3 result — K2.6 spends 13,564 tokens, 2.09 times K3's 6,501." style="width:100%;height:auto;aspect-ratio:760/460;display:block;">Figure 4: reasoning-token trajectories (SVG).</object>
-        <figcaption><b>Figure 4 — Two budget policies.</b> Left: the loop pair — K3 front-loads then
-          collapses (5,666&thinsp;→&thinsp;1,025, passing); K2.6 escalates (5,236&thinsp;→&thinsp;7,815),
-          and its turn 1 carries the false promise. Right: bare-"Continue." generation runs — K3 decays
-          steeply (3,038&thinsp;→&thinsp;1,188&thinsp;→&thinsp;155), K2.6 mostly holds; faint lines are
-          each model's off-pattern run. Bottom: one-shot totals, 13,564 vs 6,501 reasoning tokens for
-          the same passes. Hover any line or dot for exact values. My favorite single number: K2.6
-          spent 12,835 reasoning tokens, in loop mode, to find five three-digit numbers.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-loop-trajectories.svg?v=3" role="img" aria-label="Interactive: hover any line for exact per-turn values; click a legend chip to solo one model. Left panel: the longdoc task in loop mode — K3 collapses from 5,666 reasoning tokens on turn 1 to 1,025 on turn 2 and passes; K2.6 escalates from 5,236 to 7,815, with a false completion promise on turn 1. Right panel: generation mode under a bare Continue — K3's runs decay steeply while K2.6 mostly holds. Bottom: one-shot totals — K2.6 spends 13,564 tokens, 2.09 times K3's 6,501, for the same 3-of-3 result." style="width:100%;height:auto;aspect-ratio:760/460;display:block;">Figure 4: reasoning-token trajectories (SVG).</object>
+        <figcaption><b>Figure 4 — Two budget policies (interactive).</b> Hover any line for its exact
+          per-turn values; click a legend chip to solo one model. Left: the loop pair — K3 front-loads
+          then collapses (5,666&thinsp;→&thinsp;1,025, passing); K2.6 escalates
+          (5,236&thinsp;→&thinsp;7,815), and its turn 1 carries the false promise. Right:
+          bare-"Continue." generation runs — K3 decays steeply, K2.6 mostly holds; faint lines are each
+          model's off-pattern run. Bottom: one-shot totals, 13,564 vs 6,501 reasoning tokens for the
+          same passes. My favorite single number: K2.6 spent 12,835 reasoning tokens, in loop mode, to
+          find five three-digit numbers.</figcaption>
       </figure>
 
       <p>Front-load-then-collapse is exactly the economical policy <em>for a checker loop</em> — precise
@@ -198,9 +200,10 @@
         the post because the corrections say as much about benchmarking loops as the findings do.</p>
 
       <figure>
-        <img src="../figures/fig-busted.svg?v=1" alt="Three panels stamped BUSTED. One: harness-talk density bars drop from 12.0 vs 7.6 per 1k reasoning tokens to 0.00 vs 0.00 once programming vocabulary and document subject matter are removed. Two: a word-count number line showing K2.6's actual 2,246 words versus the 2,400 requirement and its own estimate of about 2,720 — a good-faith miscount. Three: a transcript stack showing the full working class on turn 1, with the checker picking a later snippet (fail) while a replay without snippets passes." />
-        <figcaption><b>Figure 5 — The kill list.</b> Left to right: a lexicon artifact, an anecdote,
-          and my own checker's bug.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-busted.svg?v=2" role="img" aria-label="Interactive: toggle between 'what I believed' and 'after the audit'. Three panels stamped BUSTED in the audit view: harness-talk density bars of 12.0 vs 7.6 collapse to 0.00 vs 0.00 once contamination is removed; the word-count line gains the actual 2,246 next to K2.6's ≈2,720 estimate and the 2,400 requirement; the transcript stack gains a replay-without-snippets that passes." style="width:100%;height:auto;aspect-ratio:760/310;display:block;">Figure 5: the kill list, before and after the audit (SVG).</object>
+        <figcaption><b>Figure 5 — The kill list (interactive).</b> Toggle "what I believed" to see each
+          claim the way it first looked — then "after the audit" to watch the stamps land. Left to
+          right: a lexicon artifact, an anecdote, and my own checker's bug.</figcaption>
       </figure>
 
       <ul>
