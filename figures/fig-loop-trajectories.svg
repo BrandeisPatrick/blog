@@ -1,169 +1,38 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="400" viewBox="0 0 760 400" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive, three views switched by buttons. View one, loop on the longdoc task: K3 collapses from 5,666 reasoning tokens on turn 1 to 1,025 on turn 2 and passes, while K2.6 escalates from 5,236 to 7,815 and its turn 1 carries a false completion promise. View two, generation under a bare Continue: K3's runs decay steeply across three turns while K2.6 mostly holds its spend. View three, one-shot totals: K2.6 spends 13,564 reasoning tokens to K3's 6,501 — 2.09 times — for the identical three-of-three pass. Hover lines for exact values.">
-  <rect width="760" height="400" fill="#ffffff"/>
-  <style>
-    .bt{cursor:pointer}
-    .run{transition:opacity .2s ease, stroke-width .2s ease}
-    .hit{cursor:pointer}
-  </style>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="360" viewBox="0 0 760 360" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Reasoning tokens per turn on the longdoc task in the loop condition. Kimi K3 falls from 5,666 tokens on turn 1 to 1,025 on turn 2, when it passes. Kimi K2.6 rises from 5,236 to 7,815; a dagger marks its turn 1, whose response contained a false completion promise.">
+  <rect width="760" height="360" fill="#ffffff"/>
 
-  <text x="60" y="18" font-size="13" font-weight="700" fill="#1b1b1a">How each generation spends thought</text>
-  <rect x="580" y="10" width="14" height="4" rx="2" fill="#178a5c"/>
-  <text x="600" y="16" font-size="12" fill="#1b1b1a">Kimi K3</text>
-  <rect x="664" y="10" width="14" height="4" rx="2" fill="#b5482e"/>
-  <text x="684" y="16" font-size="12" fill="#1b1b1a">K2.6</text>
+  <!-- gridlines -->
+  <g stroke="#ececec">
+    <line x1="120" y1="300" x2="640" y2="300"/>
+    <line x1="120" y1="235" x2="640" y2="235"/>
+    <line x1="120" y1="170" x2="640" y2="170"/>
+    <line x1="120" y1="105" x2="640" y2="105"/>
+    <line x1="120" y1="40" x2="640" y2="40"/>
+  </g>
+  <g font-size="11" fill="#6b6b66" text-anchor="end">
+    <text x="112" y="304">0</text><text x="112" y="239">2k</text><text x="112" y="174">4k</text>
+    <text x="112" y="109">6k</text><text x="112" y="44">8k</text>
+  </g>
+  <text x="34" y="170" font-size="12" fill="#1b1b1a" text-anchor="middle" transform="rotate(-90 34 170)">Reasoning tokens per turn</text>
 
-  <g id="bt0" class="bt"><rect id="br0" x="60" y="28" width="132" height="26" rx="5" fill="#f6f6f4" stroke="#1b1b1a"/><text id="bx0" x="126" y="45" font-size="11.5" fill="#1b1b1a" text-anchor="middle" font-weight="700">loop &#183; longdoc</text></g>
-  <g id="bt1" class="bt"><rect id="br1" x="200" y="28" width="170" height="26" rx="5" fill="#f6f6f4" stroke="#ececec"/><text id="bx1" x="285" y="45" font-size="11.5" fill="#1b1b1a" text-anchor="middle">generation &#183; &#8220;Continue.&#8221;</text></g>
-  <g id="bt2" class="bt"><rect id="br2" x="378" y="28" width="140" height="26" rx="5" fill="#f6f6f4" stroke="#ececec"/><text id="bx2" x="448" y="45" font-size="11.5" fill="#1b1b1a" text-anchor="middle">one-shot totals</text></g>
-  <text x="700" y="45" font-size="11" fill="#6b6b66" text-anchor="end">click a view</text>
+  <!-- K2.6: 5,236 -> 7,815 -->
+  <path d="M 190 129.8 L 570 46.0" fill="none" stroke="#b5482e" stroke-width="2.2"/>
+  <circle cx="190" cy="129.8" r="4.5" fill="#b5482e"><title>K2.6 turn 1: 5,236 reasoning tokens &#8224;</title></circle>
+  <circle cx="570" cy="46.0" r="4.5" fill="#b5482e"><title>K2.6 turn 2: 7,815 reasoning tokens</title></circle>
+  <text x="182" y="122" font-size="11" fill="#1b1b1a" text-anchor="end">5,236&#8224;</text>
+  <text x="580" y="50" font-size="11.5" fill="#1b1b1a" font-weight="600">K2.6&#8195;7,815</text>
 
-  <text id="ro" x="60" y="74" font-size="11" fill="#6b6b66">hover a line for exact per-turn values</text>
+  <!-- K3: 5,666 -> 1,025 -->
+  <path d="M 190 115.9 L 570 266.7" fill="none" stroke="#178a5c" stroke-width="2.2"/>
+  <circle cx="190" cy="115.9" r="4.5" fill="#178a5c"><title>K3 turn 1: 5,666 reasoning tokens</title></circle>
+  <circle cx="570" cy="266.7" r="4.5" fill="#178a5c"><title>K3 turn 2: 1,025 reasoning tokens; run passes</title></circle>
+  <text x="182" y="106" font-size="11" fill="#1b1b1a" text-anchor="end">5,666</text>
+  <text x="580" y="271" font-size="11.5" fill="#1b1b1a" font-weight="600">K3&#8195;1,025</text>
 
-  <!-- ================= VIEW 0: loop · longdoc ================= -->
-  <g id="v0">
-    <g stroke="#ececec">
-      <line x1="90" y1="340" x2="680" y2="340"/><line x1="90" y1="277.5" x2="680" y2="277.5"/>
-      <line x1="90" y1="215" x2="680" y2="215"/><line x1="90" y1="152.5" x2="680" y2="152.5"/>
-      <line x1="90" y1="90" x2="680" y2="90"/>
-    </g>
-    <g font-size="11" fill="#6b6b66" text-anchor="end">
-      <text x="82" y="344">0</text><text x="82" y="281.5">2k</text><text x="82" y="219">4k</text>
-      <text x="82" y="156.5">6k</text><text x="82" y="94">8k</text>
-    </g>
-    <text x="30" y="215" font-size="12" fill="#1b1b1a" text-anchor="middle" transform="rotate(-90 30 215)">Reasoning tokens per turn</text>
-
-    <path id="pk26L" class="run" d="M 200 176.37 L 560 95.78" fill="none" stroke="#b5482e" stroke-width="2.8" data-w="2.8" data-op="1"/>
-    <path id="pk3L" class="run" d="M 200 162.94 L 560 307.97" fill="none" stroke="#178a5c" stroke-width="2.8" data-w="2.8" data-op="1"/>
-    <g id="dk26L" class="run" data-op="1">
-      <circle cx="200" cy="176.37" r="5" fill="#b5482e"/><circle cx="560" cy="95.78" r="5" fill="#b5482e"/>
-    </g>
-    <g id="dk3L" class="run" data-op="1">
-      <circle cx="200" cy="162.94" r="5" fill="#178a5c"/><circle cx="560" cy="307.97" r="5" fill="#178a5c"/>
-    </g>
-    <g id="lk3" class="run" data-op="1">
-      <text x="192" y="156" font-size="11" fill="#178a5c" text-anchor="end" font-weight="600">5,666</text>
-      <text x="560" y="330" font-size="12.5" fill="#1b1b1a" font-weight="700" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">K3 &#183; 1,025 &#8594; passes &#10003;</text>
-    </g>
-    <g id="lk26" class="run" data-op="1">
-      <text x="192" y="194" font-size="11" fill="#b5482e" text-anchor="end" font-weight="600">5,236</text>
-      <text x="380" y="122" font-size="11" fill="#b5482e" font-weight="700" text-anchor="middle">&#9888; false promise emitted here &#8212; caught by the checker</text>
-      <text x="560" y="84" font-size="12.5" fill="#1b1b1a" font-weight="700" text-anchor="middle" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">K2.6 &#183; 7,815</text>
-    </g>
-    <g font-size="11" fill="#6b6b66" text-anchor="middle">
-      <text x="200" y="358">turn 1</text><text x="560" y="358">turn 2</text>
-    </g>
-    <g fill="none" stroke="#ffffff" stroke-opacity="0" stroke-width="18" pointer-events="stroke">
-      <path class="hit" data-run="pk26L" d="M 200 176.37 L 560 95.78"/>
-      <path class="hit" data-run="pk3L" d="M 200 162.94 L 560 307.97"/>
-    </g>
+  <!-- x labels -->
+  <g font-size="11" fill="#6b6b66" text-anchor="middle">
+    <text x="190" y="322">turn 1</text><text x="570" y="322">turn 2</text>
   </g>
 
-  <!-- ================= VIEW 1: generation ================= -->
-  <g id="v1" display="none">
-    <g stroke="#ececec">
-      <line x1="90" y1="340" x2="680" y2="340"/><line x1="90" y1="256.7" x2="680" y2="256.7"/>
-      <line x1="90" y1="173.3" x2="680" y2="173.3"/><line x1="90" y1="90" x2="680" y2="90"/>
-    </g>
-    <g font-size="11" fill="#6b6b66" text-anchor="end">
-      <text x="82" y="344">0</text><text x="82" y="260.7">3k</text><text x="82" y="177.3">6k</text><text x="82" y="94">9k</text>
-    </g>
-    <text x="30" y="215" font-size="12" fill="#1b1b1a" text-anchor="middle" transform="rotate(-90 30 215)">Reasoning tokens per turn</text>
-
-    <path id="pk3a" class="run" d="M 170 255.6 L 385 307.0 L 600 335.7" fill="none" stroke="#178a5c" stroke-width="2" opacity="0.85" data-w="2" data-op="0.85"/>
-    <path id="pk3b" class="run" d="M 170 213.7 L 385 275.1 L 600 301.4" fill="none" stroke="#178a5c" stroke-width="2" opacity="0.85" data-w="2" data-op="0.85"/>
-    <path id="pk3c" class="run" d="M 170 330.9 L 385 328.4 L 600 333.3" fill="none" stroke="#178a5c" stroke-width="1.4" opacity="0.3" data-w="1.4" data-op="0.3"/>
-    <path id="pk26a" class="run" d="M 170 216.4 L 385 207.0 L 600 270.4" fill="none" stroke="#b5482e" stroke-width="2" opacity="0.85" data-w="2" data-op="0.85"/>
-    <path id="pk26b" class="run" d="M 170 255.4 L 385 288.3 L 600 290.8" fill="none" stroke="#b5482e" stroke-width="2" opacity="0.85" data-w="2" data-op="0.85"/>
-    <path id="pk26c" class="run" d="M 170 107.6 L 385 330.0 L 600 310.7" fill="none" stroke="#b5482e" stroke-width="1.4" opacity="0.3" data-w="1.4" data-op="0.3"/>
-
-    <g font-size="10.5">
-      <line x1="600" y1="270.4" x2="606" y2="266" stroke="#ececec"/><text id="ek26a" class="run" data-op="1" x="608" y="269" fill="#1b1b1a">K2.6 enumerate &#183; 2,505</text>
-      <line x1="600" y1="290.8" x2="606" y2="288" stroke="#ececec"/><text id="ek26b" class="run" data-op="1" x="608" y="291" fill="#1b1b1a">K2.6 build &#183; 1,770</text>
-      <line x1="600" y1="301.4" x2="606" y2="303" stroke="#ececec"/><text id="ek3b" class="run" data-op="1" x="608" y="306" fill="#1b1b1a">K3 longdoc &#183; 1,389</text>
-      <line x1="600" y1="310.7" x2="606" y2="318" stroke="#ececec"/><text id="ek26c" class="run" data-op="0.55" opacity="0.55" x="608" y="321" fill="#6b6b66">K2.6 longdoc &#183; 1,056</text>
-      <line x1="600" y1="333.3" x2="606" y2="333" stroke="#ececec"/><text id="ek3c" class="run" data-op="0.55" opacity="0.55" x="608" y="336" fill="#6b6b66">K3 build &#183; 241</text>
-      <line x1="600" y1="335.7" x2="606" y2="346" stroke="#ececec"/><text id="ek3a" class="run" data-op="1" x="608" y="349" fill="#1b1b1a">K3 enumerate &#183; 155</text>
-    </g>
-    <g font-size="11" fill="#6b6b66" text-anchor="middle">
-      <text x="170" y="361">turn 1</text><text x="385" y="361">turn 2</text><text x="588" y="361">turn 3</text>
-    </g>
-    <g fill="none" stroke="#ffffff" stroke-opacity="0" stroke-width="16" pointer-events="stroke">
-      <path class="hit" data-run="pk3a" d="M 170 255.6 L 385 307.0 L 600 335.7"/>
-      <path class="hit" data-run="pk3b" d="M 170 213.7 L 385 275.1 L 600 301.4"/>
-      <path class="hit" data-run="pk3c" d="M 170 330.9 L 385 328.4 L 600 333.3"/>
-      <path class="hit" data-run="pk26a" d="M 170 216.4 L 385 207.0 L 600 270.4"/>
-      <path class="hit" data-run="pk26b" d="M 170 255.4 L 385 288.3 L 600 290.8"/>
-      <path class="hit" data-run="pk26c" d="M 170 107.6 L 385 330.0 L 600 310.7"/>
-    </g>
-  </g>
-
-  <!-- ================= VIEW 2: one-shot totals ================= -->
-  <g id="v2" display="none">
-    <text x="162" y="162" font-size="13" fill="#1b1b1a" font-weight="600" text-anchor="end">K2.6</text>
-    <rect x="170" y="140" width="439.5" height="36" rx="4" fill="#b5482e"/>
-    <text x="616" y="163" font-size="14" fill="#1b1b1a" font-weight="700">13,564</text>
-    <text x="170" y="205" font-size="12.5" fill="#1b1b1a"><tspan font-weight="700" fill="#b5482e">2.09&#215; the reasoning</tspan> &#8212; for the identical 3/3 pass across all three tasks</text>
-    <text x="162" y="247" font-size="13" fill="#1b1b1a" font-weight="600" text-anchor="end">K3</text>
-    <rect x="170" y="225" width="210.6" height="36" rx="4" fill="#178a5c"/>
-    <text x="387" y="248" font-size="14" fill="#1b1b1a" font-weight="700">6,501</text>
-    <text x="170" y="300" font-size="11" fill="#6b6b66">Total reasoning tokens across the three one-shot runs. Same tasks, same pass rate &#8212; half the thought.</text>
-  </g>
-
-  <text id="vcap" x="380" y="388" font-size="11.5" fill="#6b6b66" text-anchor="middle">Same task, same loop: K3 front-loads then collapses; K2.6 holds and escalates &#8212; its turn 1 carries the false promise.</text>
-
-  <script><![CDATA[
-    var RUNS = {
-      pk26L: { label:'K2.6 · longdoc · loop: 5,236 → 7,815 — escalates; false promise on turn 1', extra:['dk26L','lk26'] },
-      pk3L:  { label:'K3 · longdoc · loop: 5,666 → 1,025 — collapses; passes on turn 2', extra:['dk3L','lk3'] },
-      pk3a:  { label:'K3 · enumerate: 3,038 → 1,188 → 155', extra:['ek3a'] },
-      pk3b:  { label:'K3 · longdoc: 4,546 → 2,336 → 1,389', extra:['ek3b'] },
-      pk3c:  { label:'K3 · build: 327 → 418 → 241 (idled — its one off-pattern run)', extra:['ek3c'] },
-      pk26a: { label:'K2.6 · enumerate: 4,451 → 4,789 → 2,505', extra:['ek26a'] },
-      pk26b: { label:'K2.6 · build: 3,047 → 1,863 → 1,770', extra:['ek26b'] },
-      pk26c: { label:'K2.6 · longdoc: 8,365 → 361 → 1,056 (declared done on turn 2)', extra:['ek26c'] }
-    };
-    var VIEW_RUNS = [['pk26L','pk3L'], ['pk3a','pk3b','pk3c','pk26a','pk26b','pk26c'], []];
-    var CAPS = [
-      'Same task, same loop: K3 front-loads then collapses; K2.6 holds and escalates — its turn 1 carries the false promise.',
-      'No checker, no goal — K3’s decay is a trait, not a response to feedback; K2.6 keeps re-verifying.',
-      '13,564 vs 6,501 reasoning tokens, one-shot, for the identical 3/3 pass.'
-    ];
-    var RO = ['hover a line for exact per-turn values', 'hover a line for exact per-turn values', ''];
-    var view = 0, hovered = null;
-    function $(id){ return document.getElementById(id); }
-    function applyHover(){
-      var ids = VIEW_RUNS[view];
-      for (var i = 0; i < ids.length; i++){
-        var id = ids[i], el = $(id), r = RUNS[id];
-        var op = parseFloat(el.getAttribute('data-op')), w = el.getAttribute('data-w');
-        if (hovered){ if (id === hovered){ op = 1; w = (parseFloat(w) + 1).toFixed(1); } else op = 0.12; }
-        el.style.opacity = op;
-        if (el.tagName === 'path') el.setAttribute('stroke-width', w);
-        for (var k = 0; k < r.extra.length; k++){
-          var ex = $(r.extra[k]);
-          if (ex) ex.style.opacity = hovered ? (id === hovered ? 1 : 0.12) : (ex.getAttribute('data-op') || 1);
-        }
-      }
-      $('ro').textContent = hovered ? RUNS[hovered].label : RO[view];
-      $('ro').setAttribute('fill', hovered ? '#1b1b1a' : '#6b6b66');
-      $('ro').setAttribute('font-weight', hovered ? '600' : '400');
-    }
-    function show(i){
-      view = i; hovered = null;
-      for (var v = 0; v < 3; v++){
-        $('v'+v).setAttribute('display', v === i ? 'inline' : 'none');
-        $('br'+v).setAttribute('stroke', v === i ? '#1b1b1a' : '#ececec');
-        $('bx'+v).setAttribute('font-weight', v === i ? '700' : '400');
-      }
-      $('vcap').textContent = CAPS[i];
-      applyHover();
-    }
-    var hits = document.getElementsByClassName('hit');
-    for (var i = 0; i < hits.length; i++)(function(h){
-      h.addEventListener('pointerenter', function(){ hovered = h.getAttribute('data-run'); applyHover(); });
-      h.addEventListener('pointerleave', function(){ hovered = null; applyHover(); });
-    })(hits[i]);
-    for (var b = 0; b < 3; b++)(function(b){ $('bt'+b).addEventListener('click', function(){ show(b); }); })(b);
-    show(0);
-  ]]></script>
+  <text x="120" y="348" font-size="10.5" fill="#6b6b66">&#8224; K2.6&#8217;s turn-1 response contained a false completion promise, rejected by the checker. K3&#8217;s turn 2 passed.</text>
 </svg>

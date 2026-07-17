@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="380" viewBox="0 0 760 380" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Reasoning tokens per turn in the generation condition, where a bare Continue message separates turns. Kimi K3's two substantive runs decay steeply — enumerate 3,038 to 1,188 to 155, longdoc 4,546 to 2,336 to 1,389 — while Kimi K2.6 largely holds: enumerate 4,451 to 4,789 to 2,505, build 3,047 to 1,863 to 1,770. Lighter series are each model's off-pattern run: K3's build run idled near 300 tokens per turn, and K2.6's longdoc run collapsed from 8,365 after declaring the document complete.">
+  <rect width="760" height="380" fill="#ffffff"/>
+
+  <!-- gridlines -->
+  <g stroke="#ececec">
+    <line x1="110" y1="300" x2="600" y2="300"/>
+    <line x1="110" y1="213.3" x2="600" y2="213.3"/>
+    <line x1="110" y1="126.7" x2="600" y2="126.7"/>
+    <line x1="110" y1="40" x2="600" y2="40"/>
+  </g>
+  <g font-size="11" fill="#6b6b66" text-anchor="end">
+    <text x="102" y="304">0</text><text x="102" y="217.3">3k</text>
+    <text x="102" y="130.7">6k</text><text x="102" y="44">9k</text>
+  </g>
+  <text x="30" y="170" font-size="12" fill="#1b1b1a" text-anchor="middle" transform="rotate(-90 30 170)">Reasoning tokens per turn</text>
+
+  <!-- K3 substantive runs -->
+  <path d="M 170 212.2 L 385 265.7 L 600 295.5" fill="none" stroke="#178a5c" stroke-width="2"><title>K3 enumerate: 3,038 &#8594; 1,188 &#8594; 155</title></path>
+  <path d="M 170 168.7 L 385 232.5 L 600 259.9" fill="none" stroke="#178a5c" stroke-width="2"><title>K3 longdoc: 4,546 &#8594; 2,336 &#8594; 1,389</title></path>
+  <!-- K3 off-pattern -->
+  <path d="M 170 290.6 L 385 287.9 L 600 293.0" fill="none" stroke="#178a5c" stroke-width="1.4" opacity="0.4"><title>K3 build: 327 &#8594; 418 &#8594; 241</title></path>
+
+  <!-- K2.6 substantive runs -->
+  <path d="M 170 171.4 L 385 161.6 L 600 227.6" fill="none" stroke="#b5482e" stroke-width="2"><title>K2.6 enumerate: 4,451 &#8594; 4,789 &#8594; 2,505</title></path>
+  <path d="M 170 212.0 L 385 246.2 L 600 248.9" fill="none" stroke="#b5482e" stroke-width="2"><title>K2.6 build: 3,047 &#8594; 1,863 &#8594; 1,770</title></path>
+  <!-- K2.6 off-pattern -->
+  <path d="M 170 58.3 L 385 289.6 L 600 269.5" fill="none" stroke="#b5482e" stroke-width="1.4" opacity="0.4"><title>K2.6 longdoc: 8,365 &#8594; 361 &#8594; 1,056 (declared the document complete on turn 2)</title></path>
+
+  <!-- end labels with leaders -->
+  <g font-size="10.5" fill="#1b1b1a">
+    <line x1="600" y1="227.6" x2="606" y2="225" stroke="#ececec"/><text x="608" y="228">K2.6 enumerate (2,505)</text>
+    <line x1="600" y1="248.9" x2="606" y2="246" stroke="#ececec"/><text x="608" y="249">K2.6 build (1,770)</text>
+    <line x1="600" y1="259.9" x2="606" y2="262" stroke="#ececec"/><text x="608" y="265">K3 longdoc (1,389)</text>
+    <line x1="600" y1="269.5" x2="606" y2="277" stroke="#ececec"/><text x="608" y="280" fill="#6b6b66" opacity="0.75">K2.6 longdoc (1,056)</text>
+    <line x1="600" y1="293.0" x2="606" y2="292" stroke="#ececec"/><text x="608" y="295" fill="#6b6b66" opacity="0.75">K3 build (241)</text>
+    <line x1="600" y1="295.5" x2="606" y2="307" stroke="#ececec"/><text x="608" y="310">K3 enumerate (155)</text>
+  </g>
+
+  <!-- x labels -->
+  <g font-size="11" fill="#6b6b66" text-anchor="middle">
+    <text x="170" y="322">turn 1</text><text x="385" y="322">turn 2</text><text x="588" y="322">turn 3</text>
+  </g>
+
+  <!-- legend -->
+  <rect x="480" y="14" width="14" height="4" rx="2" fill="#178a5c"/>
+  <text x="500" y="20" font-size="11.5" fill="#1b1b1a">Kimi K3</text>
+  <rect x="564" y="14" width="14" height="4" rx="2" fill="#b5482e"/>
+  <text x="584" y="20" font-size="11.5" fill="#1b1b1a">Kimi K2.6</text>
+
+  <text x="110" y="352" font-size="10.5" fill="#6b6b66">Lighter series are each model&#8217;s off-pattern run: K3&#8217;s build run idled near 300 tokens/turn;</text>
+  <text x="110" y="366" font-size="10.5" fill="#6b6b66">K2.6&#8217;s longdoc run collapsed after declaring the document complete on turn 2.</text>
+</svg>

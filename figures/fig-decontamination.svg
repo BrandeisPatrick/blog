@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="320" viewBox="0 0 760 320" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Harness-vocabulary marker density in one-shot reasoning, before and after decontamination. Raw lexicon counts: 12.0 per 1,000 reasoning tokens for K3 and 7.6 for K2.6. After manually reclassifying all 223 matches and removing programming vocabulary and document subject matter, both models measure 0.00.">
+  <rect width="760" height="320" fill="#ffffff"/>
+
+  <!-- gridlines -->
+  <g stroke="#ececec">
+    <line x1="120" y1="280" x2="680" y2="280"/>
+    <line x1="120" y1="217.1" x2="680" y2="217.1"/>
+    <line x1="120" y1="154.3" x2="680" y2="154.3"/>
+    <line x1="120" y1="91.4" x2="680" y2="91.4"/>
+  </g>
+  <g font-size="11" fill="#6b6b66" text-anchor="end">
+    <text x="112" y="284">0</text><text x="112" y="221.1">4</text>
+    <text x="112" y="158.3">8</text><text x="112" y="95.4">12</text>
+  </g>
+  <text x="30" y="165" font-size="12" fill="#1b1b1a" text-anchor="middle" transform="rotate(-90 30 165)">Marker density (per 1,000 reasoning tokens)</text>
+
+  <!-- legend -->
+  <rect x="500" y="16" width="12" height="12" fill="#178a5c"/>
+  <text x="518" y="26" font-size="11.5" fill="#1b1b1a">Kimi K3</text>
+  <rect x="592" y="16" width="12" height="12" fill="#b5482e"/>
+  <text x="610" y="26" font-size="11.5" fill="#1b1b1a">Kimi K2.6</text>
+
+  <!-- raw group -->
+  <rect x="200" y="91.4" width="44" height="188.6" fill="#178a5c"><title>K3, raw lexicon count: 12.0 per 1k reasoning tokens</title></rect>
+  <text x="222" y="84" font-size="11" fill="#1b1b1a" text-anchor="middle" font-weight="600">12.0</text>
+  <rect x="256" y="160.6" width="44" height="119.4" fill="#b5482e"><title>K2.6, raw lexicon count: 7.6 per 1k reasoning tokens</title></rect>
+  <text x="278" y="153" font-size="11" fill="#1b1b1a" text-anchor="middle" font-weight="600">7.6</text>
+  <text x="250" y="302" font-size="11.5" fill="#1b1b1a" text-anchor="middle">raw lexicon count</text>
+
+  <!-- corrected group -->
+  <rect x="460" y="277" width="44" height="3" fill="#178a5c"><title>K3, harness references only: 0.00</title></rect>
+  <text x="482" y="270" font-size="11" fill="#1b1b1a" text-anchor="middle" font-weight="600">0.00</text>
+  <rect x="516" y="277" width="44" height="3" fill="#b5482e"><title>K2.6, harness references only: 0.00</title></rect>
+  <text x="538" y="270" font-size="11" fill="#1b1b1a" text-anchor="middle" font-weight="600">0.00</text>
+  <text x="510" y="302" font-size="11.5" fill="#1b1b1a" text-anchor="middle">harness references only</text>
+
+  <text x="120" y="46" font-size="11" fill="#6b6b66">One-shot condition. All 223 matches manually reclassified; removed: programming vocabulary</text>
+  <text x="120" y="60" font-size="11" fill="#6b6b66">(&#8220;while loop&#8221;) and the longdoc task&#8217;s own subject matter.</text>
+</svg>

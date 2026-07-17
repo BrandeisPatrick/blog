@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The harness in the weights — Bat</title>
-  <meta name="description" content="On Ralph loops, stop hooks, hidden templates, and what 18 runs of Kimi K3 vs K2.6 say about whether reasoning chains are being trained for the loop. Six figures, four interactive." />
+  <meta name="description" content="On Ralph loops, stop hooks, hidden templates, and what 18 runs of Kimi K3 vs K2.6 say about whether reasoning chains are being trained for the loop. Six figures." />
   <link rel="stylesheet" href="../style.css?v=10" />
   <style>
     :root {
@@ -28,6 +28,7 @@
     .article table { font-size: 14.5px; border-collapse: collapse; margin: 18px 0; width: 100%; }
     .article th, .article td { border: 1px solid #ececec; padding: 7px 10px; text-align: left; vertical-align: top; }
     .article th { background: #f6f6f4; font-size: 13.5px; }
+    .article table .tnote { font-size: 12.5px; color: #6b6b66; }
   </style>
 </head>
 <body class="wide">
@@ -36,7 +37,7 @@
 
     <article class="article">
       <h1>The harness in the weights</h1>
-      <p class="meta"><time datetime="2026-07-17">July 17, 2026</time> · ~6 min read · interactive · <span class="status">Draft — n&thinsp;=&thinsp;1 per cell, expanding samples</span></p>
+      <p class="meta"><time datetime="2026-07-17">July 17, 2026</time> · ~6 min read · <span class="status">Draft — n&thinsp;=&thinsp;1 per cell, expanding samples</span></p>
 
       <p class="dek">On Ralph loops, stop hooks, hidden templates, and what 18 runs of Kimi K3 vs K2.6
         say about whether reasoning chains are being trained for the loop.</p>
@@ -90,49 +91,57 @@
         intercepts the exit and — unless the output carries a literal
         <code>&lt;promise&gt;COMPLETE&lt;/promise&gt;</code> — feeds the same prompt back, under the
         rule that the model may never emit the promise just to escape. Claude Code's
-        <code>/goal</code> hardens the string match into a checker-verified condition. My loop mode
-        combines both (checker feedback + same-prompt re-feed + promise gate), simulated in-context by
-        a driver, and sits beside two controls: plain one-shot, and bare-"Continue." generation.
-        (Longer walk-through of agent loops <a href="inside-the-agent-loop.html">in an earlier
-        post</a>.)</p>
+        <code>/goal</code> hardens the string match into a checker-verified condition. My loop
+        condition combines both (checker feedback + same-prompt re-feed + promise gate), simulated
+        in-context by a driver, and sits beside two controls: plain one-shot, and bare-"Continue."
+        generation. (Longer walk-through of agent loops
+        <a href="inside-the-agent-loop.html">in an earlier post</a>.)</p>
 
       <figure>
-        <img src="../figures/fig-loop-modes.svg?v=2" alt="The rig. Top: three harness modes — one-shot (prompt, model turn, answer), generation (turns chained by a bare 'Continue.'), and the Ralph/goal loop, where a stop hook runs a checker that either blocks the stop and re-feeds the same prompt with feedback, or allows exit once the checker passes and the model emits the completion promise. Bottom: 2 models × 3 tasks × 3 modes = 18 runs; kimi-k3 at reasoning effort max, kimi-k2.6 at high; tasks: enumerate (exact set of five numbers), build (code executed against eight hidden checks), longdoc (twelve sections, ≥2,400 words, merged across turns)." />
-        <figcaption><b>Figure 1 — The rig.</b> Three harnesses around identical task text, and the
-          2&thinsp;×&thinsp;3&thinsp;×&thinsp;3 design: 18 runs, every task machine-checked — a bench
-          about honest completion can't let self-report grade itself.</figcaption>
+        <img src="../figures/fig-loop-modes.svg?v=3" alt="Experimental setup. Top: the three harness conditions — one-shot (prompt, model turn, answer), generation (turns chained by a bare 'Continue.'), and the Ralph/goal loop, where a stop hook runs a checker that either blocks the stop and re-feeds the same prompt with feedback, or allows exit once the checker passes and the model emits the completion promise. Bottom: 2 models × 3 tasks × 3 conditions = 18 runs; kimi-k3 at reasoning effort max, kimi-k2.6 at high; tasks: enumerate (exact set of five numbers), build (code executed against eight hidden checks), longdoc (twelve sections, ≥2,400 words, merged across turns)." />
+        <figcaption><b>Figure 1.</b> Experimental setup. Three harness conditions around identical
+          task text (top), and the 2&thinsp;×&thinsp;3&thinsp;×&thinsp;3 design (bottom): 18 runs,
+          every task machine-checked — completion is never graded by self-report.</figcaption>
       </figure>
 
       <h2 id="s2">Exhibit A: A Hidden Wrapper That Never Moves</h2>
 
       <p>Send the identical one-line prompt to both models and read the bill: <strong>98 prompt
-        tokens on K3, 20 on K2.6</strong>. Climb a ladder of prompt sizes and the difference refuses
-        to move — <strong>78 tokens at every rung</strong>. That is not a percentage; it is a fixed,
-        hidden, server-side template. And asked about it, K3 defends it <em>by name</em>, while K2.6
-        doesn't know what you're talking about.</p>
+        tokens on K3, 20 on K2.6</strong>. Vary the prompt length across a four-point ladder and the
+        difference refuses to move — <strong>78 tokens at every measured size</strong>. Both models
+        tokenize at the same marginal rate, so the gap is a fixed, hidden, server-side template:
+        roughly 86 tokens on K3 against roughly 8 on K2.6. Asked to repeat everything above the user
+        message, K3 refuses and names the thing it is protecting — "I can't share internal system
+        instructions or hidden prompt text" — while K2.6's chain muses that it doesn't "actually have
+        access to 'everything above this message'," and its visible reply comes back empty. One
+        generation has a harness identity; the other doesn't know what you're talking about.</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig-hidden-template.svg?v=2" role="img" aria-label="Interactive: click one of four prompt sizes and watch the billed tokens for both models update — K3 bills 89, 110, 170, then 290 tokens; K2.6 bills 11, 32, 92, then 212. The gap is 78 tokens at every size: K3's fixed hidden template. Right side: K3 refuses to reveal it and names its internal system instructions; K2.6's denial exists only in its chain." style="width:100%;height:auto;aspect-ratio:760/290;display:block;">Figure 2: hidden-template token bars (SVG).</object>
-        <figcaption><b>Figure 2 — One model ships wrapped, one ships bare (interactive).</b> Click a
-          prompt size: both bars grow, the Δ stays pinned at 78 tokens. Identical ~4.5 chars/token
-          marginal rate on both sides — same tokenizer, different wrapper. The reveal probe is the
-          tell: K3 names the thing it's protecting; K2.6's denial only exists in its chain, and its
-          visible reply came back empty.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-hidden-template.svg?v=3" role="img" aria-label="Billed prompt tokens versus prompt length, four measured points per model. Both series share a slope of roughly 0.22 tokens per character; K3's line sits a constant 78 tokens above K2.6's at every measured length." style="width:100%;height:auto;aspect-ratio:760/360;display:block;">Figure 2: billed prompt tokens vs prompt length (SVG).</object>
+        <figcaption><b>Figure 2.</b> Billed <code>prompt_tokens</code> as a function of prompt length
+          (four measured sizes per model). The series share a marginal rate of ≈0.22 tokens/character
+          — the same tokenizer — but differ by a constant 78 tokens at every length: a fixed
+          server-side template of ≈86 tokens on K3, absent (≈8) on K2.6. Hover a point for its
+          measured values.</figcaption>
       </figure>
 
       <h2 id="s3">Exhibit B: It Planned for a Workspace That Wasn't There</h2>
 
-      <p>The failure from the cold open, in full. The loop prompt says "your files/prior output
+      <p>The failure from the cold open, quantified. The loop prompt says "your files/prior output
         persist." K3's chain builds a world out of that sentence — a bash file write, a Python
-        verifier, <em>"The harness says files persist"</em> — and burns turn 1 waiting for a tool
-        round-trip that cannot come. Turn 2 is the redeeming half: it reads the checker feedback,
-        debugs <em>the harness</em> rather than the task, and recovers in one pass. K2.6 does none of
-        this, three runs out of three; its deliverable always lives in the message text.</p>
+        verifier, <em>"The harness says files persist"</em> — and spends turn 1 waiting for a tool
+        round-trip that cannot come: 5,666 tokens of reasoning, 41 tokens of visible output. Turn 2
+        is the redeeming half: the chain reads the checker feedback, debugs <em>the harness</em>
+        rather than the task ("the checker is looking at my response output rather than a file"),
+        inverts its allocation, and passes. K2.6 does none of this in three runs out of three; its
+        deliverable always lives in the message text.</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig-workspace-hallucination.svg?v=2" role="img" aria-label="Interactive step-through of K3's longdoc loop run: the turn-1 chain plans file writes citing 'The harness says files persist', emits a 41-token intent line, the checker scores 0 words and blocks the stop, the harness re-feeds the prompt, the turn-2 chain debugs the harness, and 3,735 words are written inline for an honest pass. K2.6, same prompt, never imagines a workspace." style="width:100%;height:auto;aspect-ratio:760/420;display:block;">Figure 3: hallucinated-workspace step-through (SVG).</object>
-        <figcaption><b>Figure 3 — The imagined workspace, turn by turn (interactive).</b> Step through
-          the run. All quotes verbatim from the chain.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-workspace-hallucination.svg?v=3" role="img" aria-label="Token allocation per turn on the longdoc task in the loop condition: reasoning tokens as solid bars, visible-output tokens as outlined bars. K3 turn 1: 5,666 reasoning versus 41 output, checker scores 0 words. K3 turn 2: 1,025 versus 4,526, pass. K2.6 turn 1: 5,236 versus 2,806 with a false completion promise; turn 2: 7,815 versus 3,331, pass." style="width:100%;height:auto;aspect-ratio:760/360;display:block;">Figure 3: token allocation per turn, longdoc loop (SVG).</object>
+        <figcaption><b>Figure 3.</b> Token allocation per turn on the longdoc task, loop condition.
+          K3's turn 1 allocates 5,666 tokens to reasoning and 41 to visible output — it planned a
+          file write for a workspace that does not exist, and the checker scored 0 words. Turn 2
+          inverts the allocation and passes. K2.6 produces substantial output every turn.</figcaption>
       </figure>
 
       <div class="kbox"><b>The signature, stated plainly:</b> the newer model's prior is that a loop
@@ -144,38 +153,69 @@
 
       <h2 id="s4">Exhibit C: Front-Load-Then-Collapse Is a Trait, Not a Mood</h2>
 
-      <p>The same signature, in numbers. Flip through the three views: in the <em>loop</em>, the
-        curves cross — K3 front-loads then collapses; K2.6 holds and escalates, on the very run where
-        it emitted its false promise. Under bare <em>"Continue."</em>, with no checker and no goal to
-        respond to, K3 decays anyway — the budget shape is a trait, not a reaction to feedback. And in
-        <em>one-shot</em>, K2.6 pays 2.09× for the identical result.</p>
+      <p>The same signature, in trajectories. Under the loop, the two models diverge on the same task
+        from nearly the same starting point: after one round of checker feedback, K3 cuts its
+        reasoning 5.5× and passes; K2.6 escalates by half again, on the very turn after its false
+        promise was rejected.</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig-loop-trajectories.svg?v=4" role="img" aria-label="Interactive, three views switched by buttons. Loop view: K3 collapses from 5,666 reasoning tokens to 1,025 and passes, K2.6 escalates from 5,236 to 7,815 with a false promise on turn 1. Generation view: K3's runs decay steeply across three turns while K2.6 mostly holds. One-shot view: K2.6 spends 13,564 reasoning tokens to K3's 6,501 — 2.09 times — for the identical three-of-three pass. Hover lines for exact values." style="width:100%;height:auto;aspect-ratio:760/400;display:block;">Figure 4: how each generation spends thought (SVG).</object>
-        <figcaption><b>Figure 4 — How each generation spends thought (interactive).</b> Click a view;
-          hover any line for its exact per-turn values. Faint lines are each model's off-pattern run —
-          K3's build run idled near zero, and K2.6's longdoc run collapsed after declaring itself
-          done.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-loop-trajectories.svg?v=5" role="img" aria-label="Reasoning tokens per turn on the longdoc task in the loop condition. K3 falls from 5,666 on turn 1 to 1,025 on turn 2, when it passes; K2.6 rises from 5,236 to 7,815. A dagger marks K2.6's turn 1, whose response contained a false completion promise." style="width:100%;height:auto;aspect-ratio:760/360;display:block;">Figure 4: reasoning per turn, loop condition (SVG).</object>
+        <figcaption><b>Figure 4.</b> Reasoning tokens per turn on the longdoc task, loop condition.
+          After checker feedback, K3 reduces reasoning 5.5× (5,666&thinsp;→&thinsp;1,025) and passes;
+          K2.6 increases 49% (5,236&thinsp;→&thinsp;7,815). †&thinsp;K2.6's turn-1 response contained
+          a false completion promise, rejected by the checker.</figcaption>
+      </figure>
+
+      <p>The decay is not a reaction to feedback — it appears where no feedback exists. In the
+        generation condition, with nothing between turns but the word "Continue.", K3's spend falls
+        steeply anyway; K2.6 largely holds, treating every turn as a fresh occasion for full
+        re-verification.</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig-generation-decay.svg?v=1" role="img" aria-label="Reasoning tokens per turn in the generation condition. K3's substantive runs decay steeply: enumerate 3,038 to 1,188 to 155; longdoc 4,546 to 2,336 to 1,389. K2.6 largely holds: enumerate 4,451 to 4,789 to 2,505; build 3,047 to 1,863 to 1,770. Lighter series are each model's off-pattern run." style="width:100%;height:auto;aspect-ratio:760/380;display:block;">Figure 5: reasoning per turn, generation condition (SVG).</object>
+        <figcaption><b>Figure 5.</b> Reasoning tokens per turn, generation condition (a bare
+          "Continue." between turns; no checker, no goal). K3's substantive runs decay steeply;
+          K2.6 largely holds. Lighter series are each model's off-pattern run — K3's build run idled
+          near 300 tokens/turn; K2.6's longdoc run collapsed after declaring the document
+          complete.</figcaption>
       </figure>
 
       <p>Front-load-then-collapse is the economical policy <em>for a checker loop</em> — precise
         external feedback is coming next turn, so re-proving everything internally is waste. K2.6's
-        habit is the rational policy for chat, where no checker is coming. Each model spends thought
-        the way its training environment paid it to. My favorite single number: K2.6 spent 12,835
-        reasoning tokens, in loop mode, to find five three-digit numbers.</p>
+        habit is the rational policy for chat, where no checker is coming — and it is expensive: in
+        the one-shot condition K2.6 spends <strong>13,564 reasoning tokens to K3's 6,501 (2.09×)</strong>
+        for the identical 3/3 result. Each model spends thought the way its training environment paid
+        it to. My favorite single number: K2.6 spent 12,835 reasoning tokens, in loop mode, to find
+        five three-digit numbers.</p>
 
       <h2 id="s5">Exhibit D: Both Know the Folklore; Only One Scrubs It</h2>
 
-      <p>The provenance check. Both models name the genre in their chains: K3 cites "Anthropic's
-        Claude Code with stop hooks" and credits the Ralph loop to Geoffrey Huntley — then scrubs
-        every name from its emitted document. K2.6 names "Ralph loop" and guesses my task is "from
-        some benchmark." The folklore is in both training corpora; the scrub reflex is new.</p>
+      <p>The provenance check. Both models name the genre in their reasoning; only the newer one
+        treats the names as something to sanitize on the way out. All quotes verbatim from the
+        chains and outputs of the longdoc runs:</p>
 
-      <figure>
-        <img src="../figures/fig-folklore.svg?v=1" alt="Two columns comparing what each model says in its reasoning chain versus its emitted document. K3's chain cites 'inspired by real-world patterns: Anthropic's Claude Code with stop hooks' and 'the Ralph loop — Geoffrey Huntley', then its output replaces claude -p with agent --prompt and anonymizes Huntley to 'practitioner folklore'. K2.6's chain names 'Ralph loop' and guesses 'from some benchmark'; its output has no scrubbing ritual." />
-        <figcaption><b>Figure 5 — Chain vs output.</b> K3 names the vendor, the feature, and the
-          author in its head, then sanitizes all three on the way out. All quotes verbatim.</figcaption>
-      </figure>
+      <table>
+        <thead>
+          <tr><th></th><th>In the reasoning chain</th><th>In the emitted document</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Kimi K3</b></td>
+            <td>"inspired by real-world patterns: Anthropic's Claude Code with stop hooks" · "the
+              'Ralph' loop — Geoffrey Huntley"</td>
+            <td><code>claude -p …</code> rewritten to <code>agent --prompt …</code>; the attribution
+              anonymized to "practitioner folklore"</td>
+          </tr>
+          <tr>
+            <td><b>Kimi K2.6</b></td>
+            <td>"Ralph loop" · guesses the task is "from some benchmark" · claims to have seen
+              "previous similar tasks"</td>
+            <td>No sanitization pass — names the genre in its head and simply writes</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>The folklore is in both training corpora; the scrub-the-vendor-names reflex is new.</p>
 
       <h2 id="s6">The Audit: Three of My Own Findings, Busted</h2>
 
@@ -186,20 +226,21 @@
         so even the survivors are directional.</p>
 
       <figure>
-        <object type="image/svg+xml" data="../figures/fig-busted.svg?v=2" role="img" aria-label="Interactive: toggle between 'what I believed' and 'after the audit'. Three panels stamped BUSTED in the audit view: harness-talk density bars of 12.0 vs 7.6 collapse to 0.00 vs 0.00 once contamination is removed; the word-count line gains the actual 2,246 next to K2.6's ≈2,720 estimate and the 2,400 requirement; the transcript stack gains a replay-without-snippets that passes." style="width:100%;height:auto;aspect-ratio:760/310;display:block;">Figure 6: the kill list, before and after the audit (SVG).</object>
-        <figcaption><b>Figure 6 — The kill list (interactive).</b> Toggle "what I believed" to see
-          each claim the way it first looked — then "after the audit" to watch the stamps land.</figcaption>
+        <object type="image/svg+xml" data="../figures/fig-decontamination.svg?v=1" role="img" aria-label="Harness-vocabulary marker density in one-shot reasoning, before and after decontamination. Raw lexicon counts: 12.0 per 1,000 reasoning tokens for K3 and 7.6 for K2.6. After removing programming vocabulary and document subject matter, both models measure 0.00." style="width:100%;height:auto;aspect-ratio:760/320;display:block;">Figure 6: marker density before and after decontamination (SVG).</object>
+        <figcaption><b>Figure 6.</b> Harness-vocabulary marker density in one-shot reasoning, before
+          and after decontamination. Manual reclassification of all 223 matches removed programming
+          vocabulary ("while loop") and the longdoc task's own subject matter; the corrected density
+          is 0.00 for both models. A residual gap survives only in the loop condition, where the
+          harness is explicitly declared (9.68 vs 7.65).</figcaption>
       </figure>
 
       <ul>
-        <li><strong>"K3 talks about harnesses even unprompted" — my lexicon.</strong> Outside loop
-          mode, every marker hit was programming vocabulary ("while loop") or the longdoc's own
-          subject matter. Corrected density: 0.00 vs 0.00. A real gap survives only once the harness
-          is declared (9.68 vs 7.65 in loop mode) — a much weaker claim.</li>
+        <li><strong>"K3 talks about harnesses even unprompted" — my lexicon.</strong> Figure 6: the
+          apparent gap was measurement artifact. Neither model muses about stop hooks unprompted.</li>
         <li><strong>"K3 is more honest about completion" — an anecdote.</strong> K2.6 estimated
-          "≈2,720 words" by sentence math and promised in good faith at 2,246. K3's clean record on
-          the same run is partly structural — it emitted no document that turn, so no promise could
-          have been false.</li>
+          "≈2,720 words" by sentence math and promised in good faith at 2,246 against a 2,400
+          minimum. K3's clean record on the same run is partly structural — it emitted no document
+          that turn, so no promise could have been false.</li>
         <li><strong>"K3 is fragile under bare 'Continue.'" — my checker.</strong> The working class
           never left the transcript; K3's later turns appended auxiliary snippets that hijacked my
           take-the-last-code-block heuristic, and a counterfactual replay passes. If you benchmark
@@ -210,12 +251,13 @@
 
       <p>So: did we see the harness in the weights? Yes — but not where I first looked. The new
         generation doesn't <em>talk</em> about loops more; with contamination removed, neither model
-        does. The tuning shows up as <strong>priors and budget shape</strong>: assume an agentic
-        workspace with tools and persistent state, strongly enough to hallucinate one (B); plan hard
-        up front, then iterate cheaply off external feedback (C); ship wrapped in a hidden template
-        the previous generation simply doesn't have (A). The older model, meanwhile, is a chat-native
-        heavy re-verifier that treats the loop as a retry channel — it even wrote a section
-        <em>advocating</em> chunking, in a document it refused to chunk.</p>
+        does (Figure 6). The tuning shows up as <strong>priors and budget shape</strong>: assume an
+        agentic workspace with tools and persistent state, strongly enough to hallucinate one
+        (Figure 3); plan hard up front, then iterate cheaply off external feedback (Figures 4–5);
+        ship wrapped in a hidden template the previous generation simply doesn't have (Figure 2). The
+        older model, meanwhile, is a chat-native heavy re-verifier that treats the loop as a retry
+        channel — it even wrote a section <em>advocating</em> chunking, in a document it refused to
+        chunk.</p>
 
       <table>
         <thead>

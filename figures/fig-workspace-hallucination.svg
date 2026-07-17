@@ -1,108 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="420" viewBox="0 0 760 420" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive step-through of K3's longdoc loop run. Step 1: the turn-1 chain spends 5,666 reasoning tokens planning a bash file write and a Python verifier, citing 'The harness says files persist'. Step 2: the visible output is a 41-token intent line. Step 3: the checker reads response text, finds 0 words, and blocks the stop. Step 4: the harness re-feeds the same prompt with feedback. Step 5: the turn-2 chain debugs the harness itself in 1,025 tokens. Step 6: 3,735 words written inline, checker passes, honest promise. Bottom strip: K2.6, same system prompt across three loop runs, never imagines a workspace.">
-  <rect width="760" height="420" fill="#ffffff"/>
-  <defs>
-    <marker id="wa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 1 L 9 5 L 0 9 z" fill="#6b6b66"/>
-    </marker>
-    <marker id="wg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 1 L 9 5 L 0 9 z" fill="#178a5c"/>
-    </marker>
-  </defs>
-  <style>
-    .bt{cursor:pointer}
-    .st{transition:opacity .3s ease}
-  </style>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="360" viewBox="0 0 760 360" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Token allocation per turn on the longdoc task in the loop condition, reasoning tokens as solid bars and visible-output tokens as outlined bars. Kimi K3 turn 1: 5,666 reasoning versus 41 output — the near-zero output is annotated 'planned a file write; no file system exists' and the checker scored 0 words. K3 turn 2: 1,025 reasoning versus 4,526 output, which passes. Kimi K2.6 turn 1: 5,236 versus 2,806; turn 2: 7,815 versus 3,331 — substantial output every turn.">
+  <rect width="760" height="360" fill="#ffffff"/>
 
-  <text x="20" y="24" font-size="13" font-weight="700" fill="#1b1b1a">K3 &#183; longdoc &#183; loop &#8212; the hallucinated workspace</text>
-  <text id="nar" x="20" y="46" font-size="11.5" fill="#6b6b66">Turn 1 &#8212; the chain spends 5,666 tokens planning file writes for a workspace the harness never gave it.</text>
-
-  <!-- controls -->
-  <g id="bback" class="bt"><rect id="bbr" x="560" y="6" width="76" height="24" rx="5" fill="#f6f6f4" stroke="#ececec"/><text x="598" y="22" font-size="11.5" fill="#6b6b66" text-anchor="middle" id="bbx">&#9664; back</text></g>
-  <g id="bnext" class="bt"><rect id="bnr" x="644" y="6" width="76" height="24" rx="5" fill="#f6f6f4" stroke="#1b1b1a"/><text x="682" y="22" font-size="11.5" fill="#1b1b1a" text-anchor="middle" font-weight="700" id="bnx">next &#9654;</text></g>
-  <text id="ctr" x="740" y="46" font-size="11" fill="#6b6b66" text-anchor="end">step 1 / 6</text>
-
-  <!-- ===== stage 0: turn-1 chain ===== -->
-  <g id="s0" class="st">
-    <text x="20" y="72" font-size="11" fill="#6b6b66" font-weight="600">turn 1</text>
-    <rect x="20" y="80" width="212" height="118" rx="8" fill="#f2f9f5" stroke="#178a5c" stroke-dasharray="5 4"/>
-    <text x="34" y="100" font-size="11.5" font-weight="700" fill="#178a5c">in the chain &#8212; 5,666 tokens</text>
-    <text x="34" y="119" font-size="11" fill="#1b1b1a">plans a bash-heredoc file write</text>
-    <text x="34" y="134" font-size="11" fill="#1b1b1a">+ a Python verifier script</text>
-    <text x="34" y="157" font-size="11" fill="#1b1b1a" font-style="italic">&#8220;The harness says files</text>
-    <text x="34" y="172" font-size="11" fill="#1b1b1a" font-style="italic">persist.&#8221;</text>
+  <!-- gridlines -->
+  <g stroke="#ececec">
+    <line x1="90" y1="300" x2="700" y2="300"/>
+    <line x1="90" y1="237.5" x2="700" y2="237.5"/>
+    <line x1="90" y1="175" x2="700" y2="175"/>
+    <line x1="90" y1="112.5" x2="700" y2="112.5"/>
+    <line x1="90" y1="50" x2="700" y2="50"/>
   </g>
-
-  <!-- ===== stage 1: visible output ===== -->
-  <g id="s1" class="st">
-    <line x1="232" y1="139" x2="254" y2="139" stroke="#6b6b66" stroke-width="1.4" marker-end="url(#wa)"/>
-    <rect x="258" y="80" width="192" height="118" rx="8" fill="#ffffff" stroke="#c9c9c4"/>
-    <text x="272" y="100" font-size="11.5" font-weight="700" fill="#1b1b1a">visible output &#8212; 41 tokens</text>
-    <text x="272" y="119" font-size="11" fill="#1b1b1a" font-style="italic">&#8220;I&#8217;ll write the document to a</text>
-    <text x="272" y="134" font-size="11" fill="#1b1b1a" font-style="italic">file, then verify it</text>
-    <text x="272" y="149" font-size="11" fill="#1b1b1a" font-style="italic">programmatically&#8230;&#8221;</text>
-    <text x="272" y="172" font-size="10.5" fill="#6b6b66">as if a tool round-trip were coming</text>
+  <g font-size="11" fill="#6b6b66" text-anchor="end">
+    <text x="82" y="304">0</text><text x="82" y="241.5">2k</text><text x="82" y="179">4k</text>
+    <text x="82" y="116.5">6k</text><text x="82" y="54">8k</text>
   </g>
+  <text x="26" y="175" font-size="12" fill="#1b1b1a" text-anchor="middle" transform="rotate(-90 26 175)">Tokens in turn</text>
 
-  <!-- ===== stage 2: checker ===== -->
-  <g id="s2" class="st">
-    <line x1="450" y1="139" x2="472" y2="139" stroke="#6b6b66" stroke-width="1.4" marker-end="url(#wa)"/>
-    <rect x="476" y="80" width="120" height="118" rx="8" fill="#fdf3f0" stroke="#b5482e"/>
-    <text x="536" y="104" font-size="11.5" font-weight="700" fill="#b5482e" text-anchor="middle">checker</text>
-    <text x="536" y="136" font-size="17" font-weight="700" fill="#1b1b1a" text-anchor="middle">0 words</text>
-    <text x="536" y="164" font-size="12" font-weight="700" fill="#b5482e" text-anchor="middle">&#10007; stop blocked</text>
-  </g>
+  <!-- legend -->
+  <rect x="480" y="14" width="12" height="12" fill="#1b1b1a"/>
+  <text x="498" y="24" font-size="11" fill="#1b1b1a">reasoning tokens</text>
+  <rect x="612" y="14" width="12" height="12" fill="#ffffff" stroke="#1b1b1a" stroke-width="1.5"/>
+  <text x="630" y="24" font-size="11" fill="#1b1b1a">visible output</text>
 
-  <!-- ===== stage 3: re-feed ===== -->
-  <g id="s3" class="st">
-    <path d="M 536 198 L 536 216 L 145 216 L 145 236" fill="none" stroke="#178a5c" stroke-width="1.6" marker-end="url(#wg)"/>
-    <text x="345" y="212" font-size="10.5" fill="#178a5c" font-weight="600" text-anchor="middle">checker feedback + the SAME prompt re-fed</text>
-  </g>
+  <!-- ===== K3 group ===== -->
+  <text x="215" y="30" font-size="12.5" fill="#178a5c" font-weight="700">Kimi K3</text>
 
-  <!-- ===== stage 4: turn-2 chain ===== -->
-  <g id="s4" class="st">
-    <text x="20" y="234" font-size="11" fill="#6b6b66" font-weight="600">turn 2</text>
-    <rect x="20" y="242" width="280" height="100" rx="8" fill="#f2f9f5" stroke="#178a5c" stroke-dasharray="5 4"/>
-    <text x="34" y="262" font-size="11.5" font-weight="700" fill="#178a5c">chain &#8212; 1,025 tokens: debugs the harness</text>
-    <text x="34" y="282" font-size="11" fill="#1b1b1a" font-style="italic">&#8220;the checker is looking at my response</text>
-    <text x="34" y="297" font-size="11" fill="#1b1b1a" font-style="italic">output rather than a file&#8221;</text>
-    <text x="34" y="320" font-size="10.5" fill="#6b6b66">reuses the turn-1 outline &#8212; resumes, no restart</text>
-  </g>
+  <!-- turn 1: reasoning 5666 (h 177.1), output 41 (h ~1.3, drawn 2) -->
+  <rect x="120" y="122.9" width="34" height="177.1" fill="#178a5c"><title>K3 turn 1 reasoning: 5,666 tokens</title></rect>
+  <text x="137" y="116" font-size="10.5" fill="#1b1b1a" text-anchor="middle" font-weight="600">5,666</text>
+  <rect x="160" y="298" width="34" height="2" fill="#ffffff" stroke="#178a5c" stroke-width="1.5"><title>K3 turn 1 visible output: 41 tokens</title></rect>
+  <text x="177" y="290" font-size="10.5" fill="#1b1b1a" text-anchor="middle" font-weight="600">41</text>
+  <text x="157" y="320" font-size="11" fill="#6b6b66" text-anchor="middle">turn 1</text>
+  <text x="157" y="336" font-size="10" fill="#b5482e" text-anchor="middle">checker: 0 words</text>
 
-  <!-- ===== stage 5: recovery ===== -->
-  <g id="s5" class="st">
-    <line x1="300" y1="292" x2="324" y2="292" stroke="#6b6b66" stroke-width="1.4" marker-end="url(#wa)"/>
-    <rect x="328" y="242" width="268" height="100" rx="8" fill="#ffffff" stroke="#178a5c"/>
-    <text x="342" y="262" font-size="11.5" font-weight="700" fill="#1b1b1a">output &#8212; turn 2</text>
-    <text x="342" y="284" font-size="11" fill="#1b1b1a">3,735 words, all 12 sections, inline</text>
-    <text x="342" y="310" font-size="12" font-weight="700" fill="#178a5c">&#10003; checker passes &#183; honest promise</text>
-  </g>
+  <!-- turn 2: reasoning 1025 (h 32), output 4526 (h 141.4) -->
+  <rect x="240" y="268" width="34" height="32" fill="#178a5c"><title>K3 turn 2 reasoning: 1,025 tokens</title></rect>
+  <text x="257" y="261" font-size="10.5" fill="#1b1b1a" text-anchor="middle" font-weight="600">1,025</text>
+  <rect x="280" y="158.6" width="34" height="141.4" fill="#ffffff" stroke="#178a5c" stroke-width="1.5"><title>K3 turn 2 visible output: 4,526 tokens (3,735 words)</title></rect>
+  <text x="297" y="152" font-size="10.5" fill="#1b1b1a" text-anchor="middle" font-weight="600">4,526</text>
+  <text x="277" y="320" font-size="11" fill="#6b6b66" text-anchor="middle">turn 2</text>
+  <text x="277" y="336" font-size="10" fill="#178a5c" text-anchor="middle">pass</text>
 
-  <!-- K2.6 strip (always on) -->
-  <rect x="20" y="378" width="720" height="28" fill="#f6f6f4"/>
-  <text x="380" y="396" font-size="11.5" fill="#1b1b1a" text-anchor="middle"><tspan font-weight="700" fill="#b5482e">K2.6</tspan> &#8212; same system prompt, three loop runs: never imagines a workspace; the deliverable is always in the message text.</text>
+  <!-- annotation for the 41-token bar -->
+  <path d="M 208 226 L 182 284" fill="none" stroke="#6b6b66" stroke-width="1"/>
+  <text x="212" y="222" font-size="10.5" fill="#1b1b1a">planned a file write;</text>
+  <text x="212" y="236" font-size="10.5" fill="#1b1b1a">no file system exists</text>
 
-  <script><![CDATA[
-    var NARR = [
-      'Turn 1 — the chain spends 5,666 tokens planning file writes for a workspace the harness never gave it.',
-      'Its entire visible output: a 41-token intent line — as if a tool round-trip were coming.',
-      'The checker reads response text, not files: 0 words. Stop blocked.',
-      'The harness re-feeds the SAME prompt, plus the checker’s feedback.',
-      'Turn 2 — the chain debugs the harness itself (1,025 tokens), not the task.',
-      'Recovery: 3,735 words inline — checker passes, honest promise. One turn lost to an imagined workspace.'
-    ];
-    var cur = 0, N = 6;
-    function $(id){ return document.getElementById(id); }
-    function render(){
-      for (var j = 0; j < N; j++) $('s'+j).style.opacity = (j <= cur) ? 1 : 0.12;
-      $('nar').textContent = NARR[cur];
-      $('ctr').textContent = 'step ' + (cur+1) + ' / ' + N;
-      $('bbr').setAttribute('stroke', cur > 0 ? '#1b1b1a' : '#ececec');
-      $('bbx').setAttribute('fill', cur > 0 ? '#1b1b1a' : '#6b6b66');
-      $('bnr').setAttribute('stroke', cur < N-1 ? '#1b1b1a' : '#ececec');
-      $('bnx').setAttribute('fill', cur < N-1 ? '#1b1b1a' : '#6b6b66');
-    }
-    $('bnext').addEventListener('click', function(){ if (cur < N-1){ cur++; render(); } });
-    $('bback').addEventListener('click', function(){ if (cur > 0){ cur--; render(); } });
-    render();
-  ]]></script>
+  <!-- ===== K2.6 group ===== -->
+  <text x="510" y="30" font-size="12.5" fill="#b5482e" font-weight="700">Kimi K2.6</text>
+
+  <!-- turn 1: reasoning 5236 (h 163.6), output 2806 (h 87.7) -->
+  <rect x="430" y="136.4" width="34" height="163.6" fill="#b5482e"><title>K2.6 turn 1 reasoning: 5,236 tokens</title></rect>
+  <text x="447" y="129" font-size="10.5" fill="#1b1b1a" text-anchor="middle" font-weight="600">5,236</text>
+  <rect x="470" y="212.3" width="34" height="87.7" fill="#ffffff" stroke="#b5482e" stroke-width="1.5"><title>K2.6 turn 1 visible output: 2,806 tokens (2,246 words; false completion promise)</title></rect>
+  <text x="487" y="205" font-size="10.5" fill="#1b1b1a" text-anchor="middle" font-weight="600">2,806</text>
+  <text x="467" y="320" font-size="11" fill="#6b6b66" text-anchor="middle">turn 1&#8224;</text>
+  <text x="467" y="336" font-size="10" fill="#b5482e" text-anchor="middle">154 words short</text>
+
+  <!-- turn 2: reasoning 7815 (h 244.2), output 3331 (h 104.1) -->
+  <rect x="550" y="55.8" width="34" height="244.2" fill="#b5482e"><title>K2.6 turn 2 reasoning: 7,815 tokens</title></rect>
+  <text x="567" y="49" font-size="10.5" fill="#1b1b1a" text-anchor="middle" font-weight="600">7,815</text>
+  <rect x="590" y="195.9" width="34" height="104.1" fill="#ffffff" stroke="#b5482e" stroke-width="1.5"><title>K2.6 turn 2 visible output: 3,331 tokens</title></rect>
+  <text x="607" y="189" font-size="10.5" fill="#1b1b1a" text-anchor="middle" font-weight="600">3,331</text>
+  <text x="587" y="320" font-size="11" fill="#6b6b66" text-anchor="middle">turn 2</text>
+  <text x="587" y="336" font-size="10" fill="#178a5c" text-anchor="middle">pass</text>
+
+  <text x="90" y="354" font-size="10.5" fill="#6b6b66">&#8224; turn-1 response ended with a false completion promise (2,246 words vs. the required 2,400).</text>
 </svg>
