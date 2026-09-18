@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 470" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive chart of the effective parameter multiplier of a looped block against loop count, for four values of the recurrence-equivalence exponent phi: 1.0, 0.65, 0.46 as measured, and 0.38 under truncated backpropagation. Click a value of phi and drag across the chart to read off, for each loop count, how many fresh blocks a recurrence is worth and how many times the FLOPs it costs.">
+<style>.ov{cursor:grab}.ov:active{cursor:grabbing}.btn{cursor:pointer}.btn rect{transition:fill .12s,stroke .12s}.nop{pointer-events:none}</style>
+<rect width="760" height="470" fill="#ffffff"/>
+<text x="24" y="28" font-size="13" fill="#1b1b1a" font-weight="700">What is one recurrence worth?</text>
+<text x="24" y="46" font-size="11" fill="#6b6b66">Effective parameter multiplier on the looped block. Pick &#966;, then drag across the chart.</text>
+<line x1="92" y1="330.0" x2="596" y2="330.0" stroke="#ececec" stroke-width="1"/>
+<text x="82" y="334.0" font-size="11.5" fill="#6b6b66" text-anchor="end">1&#215;</text>
+<line x1="92" y1="293.14285714285717" x2="596" y2="293.14285714285717" stroke="#ececec" stroke-width="1"/>
+<text x="82" y="297.14285714285717" font-size="11.5" fill="#6b6b66" text-anchor="end">2&#215;</text>
+<line x1="92" y1="256.2857142857143" x2="596" y2="256.2857142857143" stroke="#ececec" stroke-width="1"/>
+<text x="82" y="260.2857142857143" font-size="11.5" fill="#6b6b66" text-anchor="end">3&#215;</text>
+<line x1="92" y1="219.42857142857144" x2="596" y2="219.42857142857144" stroke="#ececec" stroke-width="1"/>
+<text x="82" y="223.42857142857144" font-size="11.5" fill="#6b6b66" text-anchor="end">4&#215;</text>
+<line x1="92" y1="182.57142857142858" x2="596" y2="182.57142857142858" stroke="#ececec" stroke-width="1"/>
+<text x="82" y="186.57142857142858" font-size="11.5" fill="#6b6b66" text-anchor="end">5&#215;</text>
+<line x1="92" y1="145.71428571428572" x2="596" y2="145.71428571428572" stroke="#ececec" stroke-width="1"/>
+<text x="82" y="149.71428571428572" font-size="11.5" fill="#6b6b66" text-anchor="end">6&#215;</text>
+<line x1="92" y1="108.85714285714286" x2="596" y2="108.85714285714286" stroke="#ececec" stroke-width="1"/>
+<text x="82" y="112.85714285714286" font-size="11.5" fill="#6b6b66" text-anchor="end">7&#215;</text>
+<line x1="92" y1="72.0" x2="596" y2="72.0" stroke="#ececec" stroke-width="1"/>
+<text x="82" y="76.0" font-size="11.5" fill="#6b6b66" text-anchor="end">8&#215;</text>
+<text x="92.0" y="349" font-size="11.5" fill="#6b6b66" text-anchor="middle">1</text>
+<text x="164.0" y="349" font-size="11.5" fill="#6b6b66" text-anchor="middle">2</text>
+<text x="236.0" y="349" font-size="11.5" fill="#6b6b66" text-anchor="middle">3</text>
+<text x="308.0" y="349" font-size="11.5" fill="#6b6b66" text-anchor="middle">4</text>
+<text x="380.0" y="349" font-size="11.5" fill="#6b6b66" text-anchor="middle">5</text>
+<text x="452.0" y="349" font-size="11.5" fill="#6b6b66" text-anchor="middle">6</text>
+<text x="524.0" y="349" font-size="11.5" fill="#6b6b66" text-anchor="middle">7</text>
+<text x="596.0" y="349" font-size="11.5" fill="#6b6b66" text-anchor="middle">8</text>
+<text x="344.0" y="368" font-size="12" fill="#1b1b1a" text-anchor="middle">loops (r)</text>
+<text x="26" y="201.0" font-size="12" fill="#1b1b1a" text-anchor="middle" transform="rotate(-90 26 201.0)">worth this many fresh blocks</text>
+<polyline id="c0" points="92.0,330.0 164.0,293.1 236.0,256.3 308.0,219.4 380.0,182.6 452.0,145.7 524.0,108.9 596.0,72.0" fill="none" stroke="#6b6b66" stroke-width="1.6" stroke-dasharray="3 4" opacity="0.5"/>
+<text id="cl0" x="602.0" y="76.0" font-size="11" fill="#6b6b66" font-weight="600" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">1.0</text>
+<polyline id="c1" points="92.0,330.0 164.0,309.0 236.0,291.6 308.0,276.1 380.0,261.9 452.0,248.7 524.0,236.3 596.0,224.5" fill="none" stroke="#2f6db5" stroke-width="1.6" opacity="0.5"/>
+<text id="cl1" x="602.0" y="228.4505297927942" font-size="11" fill="#2f6db5" font-weight="600" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">0.65</text>
+<polyline id="c2" points="92.0,330.0 164.0,316.2 236.0,305.8 308.0,297.1 380.0,289.6 452.0,282.8 524.0,276.6 596.0,270.9" fill="none" stroke="#b5482e" stroke-width="1.6" opacity="0.5"/>
+<text id="cl2" x="602.0" y="274.92965751313744" font-size="11" fill="#b5482e" font-weight="600" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">0.46</text>
+<polyline id="c3" points="92.0,330.0 164.0,318.9 236.0,310.9 308.0,304.4 380.0,298.9 452.0,294.0 524.0,289.6 596.0,285.6" fill="none" stroke="#178a5c" stroke-width="1.6" opacity="0.5"/>
+<text id="cl3" x="602.0" y="289.63099431538126" font-size="11" fill="#178a5c" font-weight="600" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">0.38</text>
+<line id="cur" x1="92.0" y1="68" x2="92.0" y2="330" stroke="#b5482e" stroke-width="1" stroke-dasharray="3 3"/>
+<circle id="mk" cx="92.0" cy="330.0" r="5" fill="#b5482e" class="nop"/>
+<text id="mt" x="0" y="0" font-size="12" fill="#1b1b1a" font-weight="700" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round"></text>
+<g id="b0" class="btn"><rect x="664" y="96" width="88" height="34" rx="6" fill="#ffffff" stroke="#c9c9c4"/><text x="708" y="110" font-size="12" fill="#6b6b66" text-anchor="middle" font-weight="700">&#966; = 1.0</text><text x="708" y="123" font-size="9" fill="#6b6b66" text-anchor="middle">a fresh block each time</text></g>
+<g id="b1" class="btn"><rect x="664" y="140" width="88" height="34" rx="6" fill="#ffffff" stroke="#c9c9c4"/><text x="708" y="154" font-size="12" fill="#2f6db5" text-anchor="middle" font-weight="700">&#966; = 0.65</text><text x="708" y="167" font-size="9" fill="#6b6b66" text-anchor="middle">with hyperconnections</text></g>
+<g id="b2" class="btn"><rect x="664" y="184" width="88" height="34" rx="6" fill="#ffffff" stroke="#c9c9c4"/><text x="708" y="198" font-size="12" fill="#b5482e" text-anchor="middle" font-weight="700">&#966; = 0.46</text><text x="708" y="211" font-size="9" fill="#6b6b66" text-anchor="middle">as measured</text></g>
+<g id="b3" class="btn"><rect x="664" y="228" width="88" height="34" rx="6" fill="#ffffff" stroke="#c9c9c4"/><text x="708" y="242" font-size="12" fill="#178a5c" text-anchor="middle" font-weight="700">&#966; = 0.38</text><text x="708" y="255" font-size="9" fill="#6b6b66" text-anchor="middle">truncated backprop</text></g>
+<text id="ro" x="380" y="392" font-size="13" fill="#1b1b1a" text-anchor="middle" font-weight="600"></text>
+<line x1="20" y1="418" x2="740" y2="418" stroke="#ececec" stroke-width="1"/>
+<text x="24" y="438" font-size="10.5" fill="#6b6b66">&#966; = 0.46 is the fitted exponent of Schwethelm et al. (2026); 0.38 and 0.65 are their ablations.</text>
+<text x="24" y="454" font-size="10.5" fill="#6b6b66">r&#185; is the line looping would follow if a recurrence bought a fresh block.</text>
+<rect id="ov" class="ov" x="72" y="62" width="544" height="288" fill="#ffffff" fill-opacity="0" style="touch-action:pan-y"/>
+<script><![CDATA[
+(function(){var svg=document.documentElement;
+function toX(e){var pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse()).x;}
+var X0=92,PPT=72.0,YB=330,YT=72;var PH=[1.0,0.65,0.46,0.38];var sel=2,R=4;
+function py(v){return YB-(v-1)*(YB-YT)/7;}function px(r){return X0+(r-1)*PPT;}
+var cur=document.getElementById('cur'),mk=document.getElementById('mk'),mt=document.getElementById('mt'),ro=document.getElementById('ro');
+function paint(){for(var i=0;i<4;i++){var c=document.getElementById('c'+i),l=document.getElementById('cl'+i),b=document.getElementById('b'+i).querySelector('rect');
+c.setAttribute('stroke-width',i===sel?2.8:1.5);c.setAttribute('opacity',i===sel?1:0.4);l.setAttribute('font-weight',i===sel?700:400);l.setAttribute('opacity',i===sel?1:0.55);
+b.setAttribute('fill',i===sel?'#f6f6f4':'#ffffff');b.setAttribute('stroke',i===sel?'#1b1b1a':'#c9c9c4');}
+var phi=PH[sel],v=Math.pow(R,phi),x=px(R),y=py(v);cur.setAttribute('x1',x);cur.setAttribute('x2',x);mk.setAttribute('cx',x);mk.setAttribute('cy',y);
+mt.setAttribute('x',x+(R>5?-10:10));mt.setAttribute('text-anchor',R>5?'end':'start');mt.setAttribute('y',y-12);mt.textContent=v.toFixed(2).replace(/\.?0+$/,'')+'\u00d7';
+ro.textContent='r = '+R+', \u03c6 = '+phi+' \u2192 worth '+v.toFixed(1)+'\u00d7 its parameters \u2014 for '+R+'\u00d7 the FLOPs';}
+function upd(r){R=Math.max(1,Math.min(8,Math.round(r)));paint();}
+for(var i=0;i<4;i++)(function(i){document.getElementById('b'+i).addEventListener('click',function(){sel=i;paint();});})(i);
+var drag=false;var ov=document.getElementById('ov');
+ov.addEventListener('pointerdown',function(e){drag=true;ov.setPointerCapture(e.pointerId);upd((toX(e)-X0)/PPT);});
+ov.addEventListener('pointermove',function(e){if(drag||e.pointerType==='mouse')upd((toX(e)-X0)/PPT);});
+addEventListener('pointerup',function(){drag=false;});
+paint();})();
+]]></script>
+</svg>

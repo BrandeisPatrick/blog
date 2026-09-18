@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive diagram: a looped transformer stores two blocks of weights and applies them r times. Drag the slider from 1 to 8 loops: the column of block applications grows, the bar for stored parameters stays fixed, and the bar for compute per token grows in proportion to r.">
+<style>.ov{cursor:grab}.ov:active{cursor:grabbing}.nop{pointer-events:none}</style>
+<rect width="760" height="400" fill="#ffffff"/>
+<defs><marker id="ara" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 1 L 9 5 L 0 9 z" fill="#b5482e"/></marker></defs>
+<text x="24" y="28" font-size="13" fill="#1b1b1a" font-weight="700">Same weights, again</text>
+<text x="24" y="46" font-size="11" fill="#6b6b66">A looped transformer stores a block once and runs it r times. Drag to change r.</text>
+<text x="60" y="78" font-size="12" fill="#1b1b1a" font-weight="600">stored</text>
+<rect x="60" y="90" width="120" height="30" rx="6" fill="#fbeeea" stroke="#b5482e"/>
+<text x="120" y="110" font-size="12" fill="#1b1b1a" text-anchor="middle">block 1</text>
+<rect x="60" y="128" width="120" height="30" rx="6" fill="#eaf6f0" stroke="#178a5c"/>
+<text x="120" y="148" font-size="12" fill="#1b1b1a" text-anchor="middle">block 2</text>
+<path d="M 190 158 L 206 158 L 206 90 L 190 90" fill="none" stroke="#b5482e" stroke-width="1.5" marker-end="url(#ara)"/>
+<text id="rl" x="211" y="128" font-size="12" fill="#b5482e" font-weight="700">&#215;r</text>
+<text x="120" y="182" font-size="10.5" fill="#6b6b66" text-anchor="middle">2 blocks &#8212; never changes</text>
+<text x="300" y="78" font-size="12" fill="#1b1b1a" font-weight="600">what actually runs</text>
+<rect id="ub0" x="300" y="86.0" width="120" height="12" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<rect id="ub1" x="300" y="101.5" width="120" height="12" rx="3" fill="#eaf6f0" stroke="#178a5c"/>
+<rect id="ub2" x="300" y="117.0" width="120" height="12" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<rect id="ub3" x="300" y="132.5" width="120" height="12" rx="3" fill="#eaf6f0" stroke="#178a5c"/>
+<rect id="ub4" x="300" y="148.0" width="120" height="12" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<rect id="ub5" x="300" y="163.5" width="120" height="12" rx="3" fill="#eaf6f0" stroke="#178a5c"/>
+<rect id="ub6" x="300" y="179.0" width="120" height="12" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<rect id="ub7" x="300" y="194.5" width="120" height="12" rx="3" fill="#eaf6f0" stroke="#178a5c"/>
+<rect id="ub8" x="300" y="210.0" width="120" height="12" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<rect id="ub9" x="300" y="225.5" width="120" height="12" rx="3" fill="#eaf6f0" stroke="#178a5c"/>
+<rect id="ub10" x="300" y="241.0" width="120" height="12" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<rect id="ub11" x="300" y="256.5" width="120" height="12" rx="3" fill="#eaf6f0" stroke="#178a5c"/>
+<rect id="ub12" x="300" y="272.0" width="120" height="12" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<rect id="ub13" x="300" y="287.5" width="120" height="12" rx="3" fill="#eaf6f0" stroke="#178a5c"/>
+<rect id="ub14" x="300" y="303.0" width="120" height="12" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<rect id="ub15" x="300" y="318.5" width="120" height="12" rx="3" fill="#eaf6f0" stroke="#178a5c"/>
+<text x="470" y="78" font-size="12" fill="#1b1b1a" font-weight="600">parameters stored</text>
+<rect x="470" y="88" width="240" height="12" rx="3" fill="none" stroke="#ececec"/>
+<rect x="470" y="88" width="30" height="12" rx="3" fill="#c9c9c4" stroke="none"/>
+<text x="470" y="116" font-size="10.5" fill="#6b6b66">the same 2 blocks, whatever r is</text>
+<text x="470" y="142" font-size="12" fill="#1b1b1a" font-weight="600">compute per token</text>
+<rect x="470" y="152" width="240" height="12" rx="3" fill="none" stroke="#ececec"/>
+<rect id="cb" x="470" y="152" width="30" height="12" rx="3" fill="#b5482e" stroke="none"/>
+<text id="cl" x="470" y="180" font-size="10.5" fill="#b5482e" font-weight="700"></text>
+<text x="470" y="210" font-size="12" fill="#1b1b1a" font-weight="600">effective depth</text>
+<text id="dl" x="470" y="230" font-size="12.5" fill="#1b1b1a" font-weight="700"></text>
+<text x="470" y="262" font-size="11" fill="#6b6b66">A loop trades parameters for compute:</text>
+<text x="470" y="278" font-size="11" fill="#6b6b66">depth grows, the weight file does not.</text>
+<rect x="120" y="316" width="520" height="8" rx="4" fill="#f6f6f4" stroke="#ececec"/>
+<rect id="fb" x="120" y="316" width="0" height="8" rx="4" fill="#b5482e" stroke="none" opacity="0.28"/>
+<line x1="120" y1="332" x2="640" y2="332" stroke="#ececec" stroke-width="1.5"/>
+<line x1="120.0" y1="332" x2="120.0" y2="338" stroke="#ececec" stroke-width="1"/>
+<text x="120.0" y="351" font-size="11" fill="#6b6b66" text-anchor="middle">1</text>
+<line x1="194.28571428571428" y1="332" x2="194.28571428571428" y2="338" stroke="#ececec" stroke-width="1"/>
+<text x="194.28571428571428" y="351" font-size="11" fill="#6b6b66" text-anchor="middle">2</text>
+<line x1="268.57142857142856" y1="332" x2="268.57142857142856" y2="338" stroke="#ececec" stroke-width="1"/>
+<text x="268.57142857142856" y="351" font-size="11" fill="#6b6b66" text-anchor="middle">3</text>
+<line x1="342.8571428571429" y1="332" x2="342.8571428571429" y2="338" stroke="#ececec" stroke-width="1"/>
+<text x="342.8571428571429" y="351" font-size="11" fill="#6b6b66" text-anchor="middle">4</text>
+<line x1="417.14285714285717" y1="332" x2="417.14285714285717" y2="338" stroke="#ececec" stroke-width="1"/>
+<text x="417.14285714285717" y="351" font-size="11" fill="#6b6b66" text-anchor="middle">5</text>
+<line x1="491.42857142857144" y1="332" x2="491.42857142857144" y2="338" stroke="#ececec" stroke-width="1"/>
+<text x="491.42857142857144" y="351" font-size="11" fill="#6b6b66" text-anchor="middle">6</text>
+<line x1="565.7142857142858" y1="332" x2="565.7142857142858" y2="338" stroke="#ececec" stroke-width="1"/>
+<text x="565.7142857142858" y="351" font-size="11" fill="#6b6b66" text-anchor="middle">7</text>
+<line x1="640.0" y1="332" x2="640.0" y2="338" stroke="#ececec" stroke-width="1"/>
+<text x="640.0" y="351" font-size="11" fill="#6b6b66" text-anchor="middle">8</text>
+<g id="kg" class="nop" transform="translate(120,320)"><circle r="9" fill="#ffffff" stroke="#b5482e" stroke-width="2.2"/><circle r="3.2" fill="#b5482e"/></g>
+<text x="380" y="366" font-size="11.5" fill="#6b6b66" text-anchor="middle">loops (r) &#8212; drag</text>
+<text id="ro" x="380" y="390" font-size="13" fill="#1b1b1a" text-anchor="middle" font-weight="600"></text>
+<rect id="ov" class="ov" x="80" y="294" width="600" height="60" fill="#ffffff" fill-opacity="0" style="touch-action:pan-y"/>
+<script><![CDATA[
+(function(){var svg=document.documentElement;
+function toX(e){var pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse()).x;}
+var X0=120,PPT=74.28571428571429;
+var ub=[];for(var i=0;i<16;i++)ub.push(document.getElementById('ub'+i));
+var kg=document.getElementById('kg'),fb=document.getElementById('fb'),ro=document.getElementById('ro'),rl=document.getElementById('rl'),cb=document.getElementById('cb'),cl=document.getElementById('cl'),dl=document.getElementById('dl');
+function upd(r){r=Math.max(1,Math.min(8,Math.round(r)));
+for(var i=0;i<16;i++)ub[i].setAttribute('display',i<2*r?'':'none');
+kg.setAttribute('transform','translate('+(X0+PPT*(r-1))+',320)');fb.setAttribute('width',PPT*(r-1));
+rl.textContent='\u00d7'+r;cb.setAttribute('width',30*r);cl.textContent=r+'\u00d7 the stored model';
+dl.textContent=(2*r)+' block applications';
+ro.textContent='r = '+r+' \u2014 2 blocks stored \u00b7 '+(2*r)+' applications \u00b7 '+r+'\u00d7 the compute';}
+var drag=false;var ov=document.getElementById('ov');
+ov.addEventListener('pointerdown',function(e){drag=true;ov.setPointerCapture(e.pointerId);upd((toX(e)-X0)/PPT);});
+ov.addEventListener('pointermove',function(e){if(drag||e.pointerType==='mouse')upd((toX(e)-X0)/PPT);});
+addEventListener('pointerup',function(){drag=false;});
+upd(3);})();
+]]></script>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" width="760" height="330" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Horizontal bar chart of the percentage of the quality gap that a looped model recovers, by task group. Perplexity 34 percent, closed-book question answering 37 percent, open-book question answering 56 percent, reasoning primitives 131 percent, math word problems 282 percent. A dashed line at 100 percent marks the point where the looped model matches the baseline that has twice its parameters.">
+<rect width="760" height="330" fill="#ffffff"/>
+<text x="24" y="30" font-size="13" fill="#1b1b1a" font-weight="700">How much of the gap does looping recover?</text>
+<text x="24" y="49" font-size="11" fill="#6b6b66">Saunshi et al. 2025, 1B models on the Pile: a 12-layer block looped twice, against the 12-layer</text>
+<text x="24" y="64" font-size="11" fill="#6b6b66">model it shares parameters with and the 24-layer model it matches in FLOPs.</text>
+<line x1="400.0" y1="86" x2="400.0" y2="304" stroke="#6b6b66" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="400.0" y="78" font-size="10.5" fill="#6b6b66" text-anchor="middle">matches the 2&#215;-parameter baseline</text>
+<rect x="250" y="92" width="51.0" height="26" rx="3" fill="#f6f6f4" stroke="#c9c9c4"/>
+<text x="238" y="110" font-size="12.5" fill="#1b1b1a" text-anchor="end">Perplexity</text>
+<text x="309.0" y="110" font-size="12" fill="#6b6b66" font-weight="600">34%</text>
+<rect x="250" y="136" width="55.5" height="26" rx="3" fill="#f6f6f4" stroke="#c9c9c4"/>
+<text x="238" y="154" font-size="12.5" fill="#1b1b1a" text-anchor="end">Closed-book QA</text>
+<text x="313.5" y="154" font-size="12" fill="#6b6b66" font-weight="600">37%</text>
+<rect x="250" y="180" width="84.0" height="26" rx="3" fill="#f6f6f4" stroke="#c9c9c4"/>
+<text x="238" y="198" font-size="12.5" fill="#1b1b1a" text-anchor="end">Open-book QA</text>
+<text x="342.0" y="198" font-size="12" fill="#6b6b66" font-weight="600">56%</text>
+<rect x="250" y="224" width="196.5" height="26" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<text x="238" y="242" font-size="12.5" fill="#1b1b1a" text-anchor="end">Reasoning primitives</text>
+<text x="454.5" y="242" font-size="12" fill="#b5482e" font-weight="600">131%</text>
+<rect x="250" y="268" width="423.0" height="26" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<text x="238" y="286" font-size="12.5" fill="#1b1b1a" text-anchor="end">Math word problems</text>
+<text x="681.0" y="286" font-size="12" fill="#b5482e" font-weight="600">282%</text>
+<line x1="250" y1="86" x2="250" y2="304" stroke="#ececec" stroke-width="1"/>
+<text x="24" y="308" font-size="11" fill="#6b6b66">Above 100%: the looped model beats a baseline with twice its parameters.</text>
+</svg>

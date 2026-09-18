@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive stacked bar chart of memory needed for a generation, as the context length is dragged from one thousand to sixty-four thousand tokens. Qwen3-1.7B and MELT-1.6B keep a single key-value cache and stay small; Ouro-1.4B-Thinking keeps one cache per loop and its cache grows four times as fast, passing 24 gigabytes before 32 thousand tokens.">
+<style>.ov{cursor:grab}.ov:active{cursor:grabbing}.nop{pointer-events:none}</style>
+<rect width="760" height="380" fill="#ffffff"/>
+<text x="24" y="28" font-size="13" fill="#1b1b1a" font-weight="700">The loop multiplies your KV cache, not your weights</text>
+<text x="24" y="46" font-size="11" fill="#6b6b66">Memory for a generation of the chosen length. Weights are fixed; the cache grows with every token &#8212; 4&#215; faster with one cache per loop.</text>
+<line x1="210.0" y1="82" x2="210.0" y2="248" stroke="#ececec" stroke-width="1"/>
+<text x="210.0" y="76" font-size="10.5" fill="#6b6b66" text-anchor="middle">0 GB</text>
+<line x1="280.0" y1="82" x2="280.0" y2="248" stroke="#ececec" stroke-width="1"/>
+<text x="280.0" y="76" font-size="10.5" fill="#6b6b66" text-anchor="middle">8</text>
+<line x1="350.0" y1="82" x2="350.0" y2="248" stroke="#ececec" stroke-width="1"/>
+<text x="350.0" y="76" font-size="10.5" fill="#6b6b66" text-anchor="middle">16</text>
+<line x1="420.0" y1="82" x2="420.0" y2="248" stroke="#ececec" stroke-width="1"/>
+<text x="420.0" y="76" font-size="10.5" fill="#6b6b66" text-anchor="middle">24</text>
+<line x1="490.0" y1="82" x2="490.0" y2="248" stroke="#ececec" stroke-width="1"/>
+<text x="490.0" y="76" font-size="10.5" fill="#6b6b66" text-anchor="middle">32</text>
+<line x1="560.0" y1="82" x2="560.0" y2="248" stroke="#ececec" stroke-width="1"/>
+<text x="560.0" y="76" font-size="10.5" fill="#6b6b66" text-anchor="middle">40</text>
+<line x1="630.0" y1="82" x2="630.0" y2="248" stroke="#ececec" stroke-width="1"/>
+<text x="630.0" y="76" font-size="10.5" fill="#6b6b66" text-anchor="middle">48</text>
+<line x1="700.0" y1="82" x2="700.0" y2="248" stroke="#ececec" stroke-width="1"/>
+<text x="700.0" y="76" font-size="10.5" fill="#6b6b66" text-anchor="middle">56</text>
+<line x1="420.0" y1="82" x2="420.0" y2="248" stroke="#6b6b66" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="424.0" y="242" font-size="10.5" fill="#6b6b66">24 GB card</text>
+<rect x="210" y="88" width="30.1175" height="26" rx="3" fill="#f6f6f4" stroke="#c9c9c4"/>
+<rect id="kv0" x="240.1175" y="88" width="1" height="26" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<text x="198" y="106" font-size="12.5" fill="#1b1b1a" text-anchor="end" font-weight="600">Qwen3-1.7B</text>
+<text x="198" y="122" font-size="10" fill="#6b6b66" text-anchor="end">dense</text>
+<text id="tl0" x="0" y="106" font-size="12" fill="#1b1b1a" font-weight="700" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round"></text>
+<rect x="210" y="146" width="28.63" height="26" rx="3" fill="#f6f6f4" stroke="#c9c9c4"/>
+<rect id="kv1" x="238.63" y="146" width="1" height="26" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<text x="198" y="164" font-size="12.5" fill="#1b1b1a" text-anchor="end" font-weight="600">MELT-1.6B</text>
+<text x="198" y="180" font-size="10" fill="#6b6b66" text-anchor="end">looped, one gated cache</text>
+<text id="tl1" x="0" y="164" font-size="12" fill="#1b1b1a" font-weight="700" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round"></text>
+<rect x="210" y="204" width="25.10375" height="26" rx="3" fill="#f6f6f4" stroke="#c9c9c4"/>
+<rect id="kv2" x="235.10375" y="204" width="1" height="26" rx="3" fill="#fbeeea" stroke="#b5482e"/>
+<text x="198" y="222" font-size="12.5" fill="#1b1b1a" text-anchor="end" font-weight="600">Ouro-1.4B-Thinking</text>
+<text x="198" y="238" font-size="10" fill="#6b6b66" text-anchor="end">looped, one cache per loop</text>
+<text id="tl2" x="0" y="222" font-size="12" fill="#1b1b1a" font-weight="700" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round"></text>
+<rect x="120" y="292" width="520" height="8" rx="4" fill="#f6f6f4" stroke="#ececec"/>
+<rect id="fb" x="120" y="292" width="0" height="8" rx="4" fill="#b5482e" stroke="none" opacity="0.28"/>
+<line x1="120" y1="308" x2="640" y2="308" stroke="#ececec" stroke-width="1.5"/>
+<line x1="120.0" y1="308" x2="120.0" y2="314" stroke="#ececec" stroke-width="1"/>
+<text x="120.0" y="327" font-size="11" fill="#6b6b66" text-anchor="middle">1K</text>
+<line x1="206.66666666666669" y1="308" x2="206.66666666666669" y2="314" stroke="#ececec" stroke-width="1"/>
+<text x="206.66666666666669" y="327" font-size="11" fill="#6b6b66" text-anchor="middle">2K</text>
+<line x1="293.33333333333337" y1="308" x2="293.33333333333337" y2="314" stroke="#ececec" stroke-width="1"/>
+<text x="293.33333333333337" y="327" font-size="11" fill="#6b6b66" text-anchor="middle">4K</text>
+<line x1="380.0" y1="308" x2="380.0" y2="314" stroke="#ececec" stroke-width="1"/>
+<text x="380.0" y="327" font-size="11" fill="#6b6b66" text-anchor="middle">8K</text>
+<line x1="466.6666666666667" y1="308" x2="466.6666666666667" y2="314" stroke="#ececec" stroke-width="1"/>
+<text x="466.6666666666667" y="327" font-size="11" fill="#6b6b66" text-anchor="middle">16K</text>
+<line x1="553.3333333333333" y1="308" x2="553.3333333333333" y2="314" stroke="#ececec" stroke-width="1"/>
+<text x="553.3333333333333" y="327" font-size="11" fill="#6b6b66" text-anchor="middle">32K</text>
+<line x1="640.0" y1="308" x2="640.0" y2="314" stroke="#ececec" stroke-width="1"/>
+<text x="640.0" y="327" font-size="11" fill="#6b6b66" text-anchor="middle">64K</text>
+<g id="kg" class="nop" transform="translate(120,296)"><circle r="9" fill="#ffffff" stroke="#b5482e" stroke-width="2.2"/><circle r="3.2" fill="#b5482e"/></g>
+<text x="380" y="343" font-size="11.5" fill="#6b6b66" text-anchor="middle">context length (tokens) &#8212; drag</text>
+<text id="ro" x="380" y="366" font-size="13" fill="#1b1b1a" text-anchor="middle" font-weight="600"></text>
+<rect id="ov" class="ov" x="80" y="270" width="600" height="60" fill="#ffffff" fill-opacity="0" style="touch-action:pan-y"/>
+<script><![CDATA[
+(function(){var svg=document.documentElement;
+function toX(e){var pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse()).x;}
+var X0=120,PPT=86.66666666666667,SC=8.75,BX=210;var WG=[3.442,3.272,2.869],MB=[0.114688,0.196608,0.786432],NM=['Qwen3-1.7B','MELT-1.6B','Ouro-1.4B-Thinking'];
+var kg=document.getElementById('kg'),fb=document.getElementById('fb'),ro=document.getElementById('ro');
+function upd(p){p=Math.max(0,Math.min(6,p));var tok=1024*Math.pow(2,p);var k=Math.round(p*4)/4;p=k;tok=1024*Math.pow(2,p);
+kg.setAttribute('transform','translate('+(X0+PPT*p)+',296)');fb.setAttribute('width',PPT*p);var out=[];
+for(var i=0;i<3;i++){var kv=MB[i]*tok/1024,tot=WG[i]+kv;var e=document.getElementById('kv'+i),l=document.getElementById('tl'+i);
+e.setAttribute('width',Math.max(1,kv*SC));l.setAttribute('x',BX+tot*SC+8);l.textContent=tot.toFixed(1)+' GB';l.setAttribute('fill',tot>24?'#b5482e':'#1b1b1a');out.push(NM[i]+' '+tot.toFixed(1)+' GB');}
+var lab=tok>=1024?(Math.round(tok/1024*10)/10)+'K':tok;ro.textContent=lab+' tokens \u2014 '+out.reverse().join(' \u00b7 ');}
+var drag=false;var ov=document.getElementById('ov');
+ov.addEventListener('pointerdown',function(e){drag=true;ov.setPointerCapture(e.pointerId);upd((toX(e)-X0)/PPT);});
+ov.addEventListener('pointermove',function(e){if(drag||e.pointerType==='mouse')upd((toX(e)-X0)/PPT);});
+addEventListener('pointerup',function(){drag=false;});
+upd(5);})();
+]]></script>
+</svg>

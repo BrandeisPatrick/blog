@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 446" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Interactive chart. Left: three Ouro accuracy curves against loops used at inference, from one to eight, trained with depth capped at four: the reasoning-tuned checkpoints rise steeply, peak near four, and fall by roughly half at eight; the base checkpoint peaks at four and drifts down gently. Drag across the chart to read the accuracies at each loop count. Right: Huginn, trained with a random loop count averaging 32, rises from four to 32 loops and flattens.">
+<style>.ov{cursor:grab}.ov:active{cursor:grabbing}.nop{pointer-events:none}</style>
+<rect width="760" height="446" fill="#ffffff"/>
+<text x="24" y="28" font-size="13" fill="#1b1b1a" font-weight="700">The test-time depth dial turns about as far as you trained it</text>
+<text x="24" y="46" font-size="11" fill="#6b6b66">Accuracy against loops run at inference. Drag across the left chart. Dashed line: the training depth.</text>
+<rect x="197.1" y="100" width="158.9" height="210" fill="#fbeeea" opacity="0.6"/>
+<text x="78" y="70" font-size="12" fill="#1b1b1a" font-weight="600">Ouro &#8212; depth capped at T = 4 in training</text>
+<text x="197.14285714285714" y="88" font-size="10.5" fill="#6b6b66" text-anchor="end">trained depth &#8594;</text>
+<line x1="78" y1="310.0" x2="356" y2="310.0" stroke="#ececec" stroke-width="1"/>
+<text x="70" y="314.0" font-size="11" fill="#6b6b66" text-anchor="end">0</text>
+<line x1="78" y1="257.5" x2="356" y2="257.5" stroke="#ececec" stroke-width="1"/>
+<text x="70" y="261.5" font-size="11" fill="#6b6b66" text-anchor="end">20</text>
+<line x1="78" y1="205.0" x2="356" y2="205.0" stroke="#ececec" stroke-width="1"/>
+<text x="70" y="209.0" font-size="11" fill="#6b6b66" text-anchor="end">40</text>
+<line x1="78" y1="152.5" x2="356" y2="152.5" stroke="#ececec" stroke-width="1"/>
+<text x="70" y="156.5" font-size="11" fill="#6b6b66" text-anchor="end">60</text>
+<line x1="78" y1="100.0" x2="356" y2="100.0" stroke="#ececec" stroke-width="1"/>
+<text x="70" y="104.0" font-size="11" fill="#6b6b66" text-anchor="end">80</text>
+<text x="78.0" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">1</text>
+<text x="117.71428571428572" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">2</text>
+<text x="157.42857142857144" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">3</text>
+<text x="197.14285714285714" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">4</text>
+<text x="236.85714285714286" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">5</text>
+<text x="276.57142857142856" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">6</text>
+<text x="316.2857142857143" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">7</text>
+<text x="356.0" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">8</text>
+<text x="217.0" y="348" font-size="11.5" fill="#1b1b1a" text-anchor="middle">loops at inference (T) &#8212; drag</text>
+<line x1="197.14285714285714" y1="100" x2="197.14285714285714" y2="310" stroke="#6b6b66" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="284.51428571428573" y="298" font-size="10.5" fill="#b5482e" text-anchor="middle" font-weight="600" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">beyond the trained depth</text>
+<polyline points="78.0,310.0 117.7,212.0 157.4,146.4 197.1,139.4 236.9,150.7 276.6,177.0 316.3,198.9 356.0,208.5" fill="none" stroke="#b5482e" stroke-width="2"/>
+<circle cx="78.0" cy="310.0" r="2.4" fill="#b5482e"/>
+<circle cx="117.7" cy="212.0" r="2.4" fill="#b5482e"/>
+<circle cx="157.4" cy="146.4" r="2.4" fill="#b5482e"/>
+<circle cx="197.1" cy="139.4" r="2.4" fill="#b5482e"/>
+<circle cx="236.9" cy="150.7" r="2.4" fill="#b5482e"/>
+<circle cx="276.6" cy="177.0" r="2.4" fill="#b5482e"/>
+<circle cx="316.3" cy="198.9" r="2.4" fill="#b5482e"/>
+<circle cx="356.0" cy="208.5" r="2.4" fill="#b5482e"/>
+<polyline points="78.0,260.2 117.7,130.0 157.4,111.7 197.1,109.3 236.9,121.4 276.6,128.4 316.3,158.7 356.0,206.9" fill="none" stroke="#2f6db5" stroke-width="2"/>
+<circle cx="78.0" cy="260.2" r="2.4" fill="#2f6db5"/>
+<circle cx="117.7" cy="130.0" r="2.4" fill="#2f6db5"/>
+<circle cx="157.4" cy="111.7" r="2.4" fill="#2f6db5"/>
+<circle cx="197.1" cy="109.3" r="2.4" fill="#2f6db5"/>
+<circle cx="236.9" cy="121.4" r="2.4" fill="#2f6db5"/>
+<circle cx="276.6" cy="128.4" r="2.4" fill="#2f6db5"/>
+<circle cx="316.3" cy="158.7" r="2.4" fill="#2f6db5"/>
+<circle cx="356.0" cy="206.9" r="2.4" fill="#2f6db5"/>
+<polyline points="78.0,201.8 117.7,151.4 157.4,134.9 197.1,132.9 236.9,135.1 276.6,137.4 316.3,138.6 356.0,140.7" fill="none" stroke="#178a5c" stroke-width="2"/>
+<circle cx="78.0" cy="201.8" r="2.4" fill="#178a5c"/>
+<circle cx="117.7" cy="151.4" r="2.4" fill="#178a5c"/>
+<circle cx="157.4" cy="134.9" r="2.4" fill="#178a5c"/>
+<circle cx="197.1" cy="132.9" r="2.4" fill="#178a5c"/>
+<circle cx="236.9" cy="135.1" r="2.4" fill="#178a5c"/>
+<circle cx="276.6" cy="137.4" r="2.4" fill="#178a5c"/>
+<circle cx="316.3" cy="138.6" r="2.4" fill="#178a5c"/>
+<circle cx="356.0" cy="140.7" r="2.4" fill="#178a5c"/>
+<line id="cur" x1="197.14285714285714" y1="100" x2="197.14285714285714" y2="310" stroke="#b5482e" stroke-width="1.4"/>
+<circle id="m0" cx="197.1" cy="139.4" r="5" fill="#b5482e" class="nop"/>
+<text id="v0" x="0" y="0" font-size="11" fill="#b5482e" font-weight="700" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round"></text>
+<circle id="m1" cx="197.1" cy="109.3" r="5" fill="#2f6db5" class="nop"/>
+<text id="v1" x="0" y="0" font-size="11" fill="#2f6db5" font-weight="700" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round"></text>
+<circle id="m2" cx="197.1" cy="132.9" r="5" fill="#178a5c" class="nop"/>
+<text id="v2" x="0" y="0" font-size="11" fill="#178a5c" font-weight="700" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round"></text>
+<text x="470" y="70" font-size="12" fill="#1b1b1a" font-weight="600">Huginn &#8212; random depth in training, mean 32</text>
+<text x="700.0" y="88" font-size="10.5" fill="#6b6b66" text-anchor="end">&#8592; mean training depth</text>
+<line x1="470" y1="310.0" x2="700" y2="310.0" stroke="#ececec" stroke-width="1"/>
+<text x="462" y="314.0" font-size="11" fill="#6b6b66" text-anchor="end">0</text>
+<line x1="470" y1="257.5" x2="700" y2="257.5" stroke="#ececec" stroke-width="1"/>
+<text x="462" y="261.5" font-size="11" fill="#6b6b66" text-anchor="end">20</text>
+<line x1="470" y1="205.0" x2="700" y2="205.0" stroke="#ececec" stroke-width="1"/>
+<text x="462" y="209.0" font-size="11" fill="#6b6b66" text-anchor="end">40</text>
+<line x1="470" y1="152.5" x2="700" y2="152.5" stroke="#ececec" stroke-width="1"/>
+<text x="462" y="156.5" font-size="11" fill="#6b6b66" text-anchor="end">60</text>
+<line x1="470" y1="100.0" x2="700" y2="100.0" stroke="#ececec" stroke-width="1"/>
+<text x="462" y="104.0" font-size="11" fill="#6b6b66" text-anchor="end">80</text>
+<text x="470.0" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">4</text>
+<text x="546.6666666666666" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">8</text>
+<text x="623.3333333333334" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">16</text>
+<text x="700.0" y="328" font-size="11" fill="#6b6b66" text-anchor="middle">32</text>
+<text x="585.0" y="348" font-size="11.5" fill="#1b1b1a" text-anchor="middle">loops at inference (r)</text>
+<line x1="700.0" y1="100" x2="700.0" y2="310" stroke="#6b6b66" stroke-width="1" stroke-dasharray="3 3"/>
+<polyline points="470.0,181.2 546.7,139.1 623.3,127.6 700.0,126.5" fill="none" stroke="#b5482e" stroke-width="2"/>
+<circle cx="470.0" cy="181.2" r="2.6" fill="#b5482e"/>
+<circle cx="546.7" cy="139.1" r="2.6" fill="#b5482e"/>
+<circle cx="623.3" cy="127.6" r="2.6" fill="#b5482e"/>
+<circle cx="700.0" cy="126.5" r="2.6" fill="#b5482e"/>
+<rect x="482" y="248.5" width="12" height="3" fill="#b5482e"/>
+<text x="500" y="257.5" font-size="10.5" fill="#b5482e" font-weight="600" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">ARC-Easy</text>
+<polyline points="470.0,195.9 546.7,156.3 623.3,140.2 700.0,138.8" fill="none" stroke="#2f6db5" stroke-width="2"/>
+<circle cx="470.0" cy="195.9" r="2.6" fill="#2f6db5"/>
+<circle cx="546.7" cy="156.3" r="2.6" fill="#2f6db5"/>
+<circle cx="623.3" cy="140.2" r="2.6" fill="#2f6db5"/>
+<circle cx="700.0" cy="138.8" r="2.6" fill="#2f6db5"/>
+<rect x="482" y="264.5" width="12" height="3" fill="#2f6db5"/>
+<text x="500" y="273.5" font-size="10.5" fill="#2f6db5" font-weight="600" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">HellaSwag</text>
+<rect x="78" y="368" width="12" height="3" fill="#b5482e"/>
+<text x="96" y="376" font-size="10.5" fill="#b5482e" font-weight="600">1.4B-Thinking, AIME 2024</text>
+<rect x="78" y="383" width="12" height="3" fill="#2f6db5"/>
+<text x="96" y="391" font-size="10.5" fill="#2f6db5" font-weight="600">2.6B-Thinking, OlympiadBench</text>
+<rect x="78" y="398" width="12" height="3" fill="#178a5c"/>
+<text x="96" y="406" font-size="10.5" fill="#178a5c" font-weight="600">1.4B base, MMLU</text>
+<text id="ro0" x="470" y="372" font-size="12" fill="#1b1b1a" font-weight="600"></text>
+<text id="ro1" x="470" y="388" font-size="11" fill="#6b6b66"></text>
+<text id="ro2" x="470" y="403" font-size="11" fill="#6b6b66"></text>
+<text id="ro3" x="470" y="418" font-size="11" fill="#6b6b66"></text>
+<text x="24" y="438" font-size="10.5" fill="#6b6b66">Ouro: Zhu et al. 2025, Tables 10 and 12&#8211;13. Huginn: Geiping et al. 2025, Table 1, one checkpoint throughout.</text>
+<rect id="ov" class="ov" x="62" y="86" width="310" height="244" fill="#ffffff" fill-opacity="0" style="touch-action:pan-y"/>
+<script><![CDATA[
+(function(){var svg=document.documentElement;
+function toX(e){var pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse()).x;}
+var X0=78,PPT=39.714285714285715,YB=310,YT=100;
+var D=[[0.0, 37.33, 62.33, 65.0, 60.67, 50.67, 42.33, 38.67], [18.96, 68.59, 75.56, 76.44, 71.85, 69.19, 57.63, 39.26], [41.21, 60.43, 66.71, 67.45, 66.64, 65.77, 65.28, 64.49]];var NM=['AIME 2024 (1.4B-Thinking)','OlympiadBench (2.6B-Thinking)','MMLU (1.4B base)'];
+var PK=D.map(function(a){return Math.max.apply(null,a);});
+function sy(v){return YB-v*(YB-YT)/80;}function px(t){return X0+(t-1)*PPT;}
+var cur=document.getElementById('cur');var ro=[0,1,2,3].map(function(i){return document.getElementById('ro'+i);});
+function upd(t){t=Math.max(1,Math.min(8,Math.round(t)));var x=px(t);cur.setAttribute('x1',x);cur.setAttribute('x2',x);
+for(var i=0;i<3;i++){var v=D[i][t-1],m=document.getElementById('m'+i),l=document.getElementById('v'+i);m.setAttribute('cx',x);m.setAttribute('cy',sy(v));
+l.setAttribute('x',x+(t>=6?-9:9));l.setAttribute('text-anchor',t>=6?'end':'start');l.setAttribute('y',sy(v)+(i===0?14:i===1?-8:-8));l.textContent=v.toFixed(1);}
+ro[0].textContent='T = '+t+(t>4?' \u2014 past the trained depth':t===4?' \u2014 the trained depth':'');
+for(var i=0;i<3;i++){var v=D[i][t-1],d=v-PK[i];ro[i+1].textContent=NM[i]+': '+v.toFixed(1)+(d<-0.05?' ('+d.toFixed(1)+' from peak)':' (peak)');}}
+var drag=false;var ov=document.getElementById('ov');
+ov.addEventListener('pointerdown',function(e){drag=true;ov.setPointerCapture(e.pointerId);upd((toX(e)-X0)/PPT);});
+ov.addEventListener('pointermove',function(e){if(drag||e.pointerType==='mouse')upd((toX(e)-X0)/PPT);});
+addEventListener('pointerup',function(){drag=false;});
+upd(4);})();
+]]></script>
+</svg>

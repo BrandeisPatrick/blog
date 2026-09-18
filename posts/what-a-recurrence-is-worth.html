@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Looped transformers: what a recurrence is worth — Bat</title>
+  <meta name="description" content="Weight-tied depth, from Universal Transformers to Huginn and Ouro — what looping buys, the exchange rate between parameters and FLOPs, why the test-time depth dial stops turning, and what the KV cache really costs. Four interactive figures." />
+  <link rel="stylesheet" href="../style.css?v=12" />
+  <style>
+    /* Post-local: figures run the full text-column width; tables get a little more air */
+    .article figure { max-width: none; }
+    .article table { font-size: 14.5px; }
+    .article td:first-child { font-weight: 600; }
+    .article th:nth-child(n+2) { font-weight: 400; }
+    .article table.plain td:first-child { font-weight: 400; }
+    .article h3 { margin-top: 36px; }
+    .tw { overflow-x: auto; margin: 24px 0; }
+    .tw table { margin: 0; min-width: 560px; }
+    .zoo th, .zoo td { font-size: 12.5px; padding: 7px 8px; }
+    .zoo th:nth-child(1), .zoo td:nth-child(1) { width: 19%; }
+    .zoo th:nth-child(5), .zoo td:nth-child(5) { width: 9%; }
+    .zoo th:nth-child(6), .zoo td:nth-child(6) { width: 26%; }
+    .zoo tr.grp td { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); padding-top: 18px; font-weight: 600; }
+  </style>
+</head>
+<body class="wide">
+  <main>
+    <a class="backlink" href="../index.html">← all writing</a>
+
+    <article class="article">
+      <h1>Looped transformers: what a recurrence is worth</h1>
+      <p class="meta"><time datetime="2026-09-06">September 6, 2026</time> · ~15 min read · <span class="status">Draft — figures first, prose still being trimmed</span></p>
+
+      <p class="dek">On weight-tied depth, the exchange rate between parameters and FLOPs, and why the loop turns out to be an architecture decision rather than an inference-time dial.</p>
+
+      <details class="toc" open>
+        <summary>Table of Contents</summary>
+        <nav class="inner">
+          <ol>
+            <li><a href="#s1">The Idea Is Eight Years Old and It Lost on the Merits</a></li>
+            <li><a href="#s2">What Changed Was the Accounting, Not the Architecture</a></li>
+            <li><a href="#s2b">Every Trained Looped Model I Could Find — and Yes, Some Have Shipped</a></li>
+            <li><a href="#s3">Loops Buy Reasoning, Not Knowledge</a></li>
+            <li><a href="#s4">A Recurrence Is Worth About the Square Root of a Fresh Block</a></li>
+            <li><a href="#s5">A Loop Is Easy to Train Into a No-Op</a></li>
+            <li><a href="#s6">The Test-Time Dial Turns About as Far as You Trained It</a></li>
+            <li><a href="#s7">Adaptive Depth Is Mostly a Threshold, and the KV Cache Is the Real Bill</a></li>
+            <li><a href="#s8">Loops Buy Serial Time; Only Tokens Buy Space</a></li>
+            <li><a href="#s9">Scorecard</a></li>
+            <li><a href="#r">References &amp; Further Reading</a></li>
+          </ol>
+        </nav>
+      </details>
+
+      <p>Here is a result that should be strange. <b>Ouro-1.4B</b>, a 1.4-billion-parameter base model
+        from a ByteDance Seed-led collaboration, scores <b>82.4</b> on MATH500 against Qwen3-4B-Base’s
+        59.6 — a model with three times its parameters and five times its training tokens. On MMLU the
+        same two models go the other way: <b>67.4</b> against <b>73.2</b>
+        (<a href="https://arxiv.org/abs/2510.25741">Zhu et al., 2025</a>, Table 7). It wins by 22.8
+        points on the maths benchmark and loses by 5.8 on the knowledge one.</p>
+
+      <p>The architecture behind that split is the simplest idea in the field: take a block of layers
+        and run it more than once. <b>Same weights, again.</b> Drag the slider.</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig-loop-dial.svg?v=1" role="img" aria-label="Interactive diagram: a looped transformer stores two blocks of weights and applies them r times. Drag the slider from 1 to 8 loops: the column of block applications grows, the bar for stored parameters stays fixed, and the bar for compute per token grows in proportion to r." style="width:100%;height:auto;aspect-ratio:760/400;display:block;">Figure 1: the loop dial (SVG).</object>
+        <figcaption><b>Figure 1 — A loop trades parameters for compute (interactive).</b> Two stored blocks, applied <i>r</i> times: the weight file never changes, the depth and the FLOPs per token scale with <i>r</i>. Ouro loops its whole 24- or 48-layer stack four times; <a href="https://arxiv.org/abs/2502.05171">Huginn</a> wraps a 4-layer core, looped ~32 times, in an untied prelude and coda. Everything below is an argument about the exchange rate.</figcaption>
+      </figure>
+
+      <p>In code the whole idea is one <code>for</code> loop. This is the Huginn layout — a prelude
+        computed once, a core applied <i>r</i> times with the input re-injected on every pass, a coda —
+        with <code>Block</code> an ordinary pre-norm attention-plus-MLP layer. Small enough to run on a
+        laptop, and it does — open the block to see it.</p>
+
+      <details class="code">
+        <summary>Code &#8212; a looped language model in PyTorch, runs on a laptop (34 lines)</summary>
+        <pre><code>class LoopedLM(nn.Module):
+    """Prelude -&gt; core x r -&gt; coda, the Huginn layout (Geiping et al., 2025)."""
+    def __init__(self, vocab, d, heads=4, n_prelude=2, n_core=4, n_coda=2):
+        super().__init__()
+        self.embed = nn.Embedding(vocab, d)
+        self.prelude = nn.ModuleList(Block(d, heads) for _ in range(n_prelude))
+        self.adapter = nn.Linear(2 * d, d)      # A: concat(s, e) -&gt; core input
+        # the only weights the loop ever touches:
+        self.core = nn.ModuleList(Block(d, heads) for _ in range(n_core))
+        self.coda = nn.ModuleList(Block(d, heads) for _ in range(n_coda))
+        self.head = nn.Linear(d, vocab)
+
+    def run_prelude(self, tokens):
+        T = tokens.shape[1]
+        self.mask = torch.triu(torch.full((T, T), float("-inf")), diagonal=1)
+        e = self.embed(tokens)
+        for blk in self.prelude: e = blk(e, self.mask)
+        return e                            # e = P(x), computed once per token
+
+    def run_core(self, e, s):               # s_i = R(e, s_{i-1})
+        h = self.adapter(torch.cat([s, e], dim=-1))   # input injected EVERY pass
+        for blk in self.core: h = blk(h, self.mask)
+        return h
+
+    def run_coda(self, s):
+        for blk in self.coda: s = blk(s, self.mask)
+        return self.head(s)                 # p = C(s_r)
+
+    def forward(self, tokens, r):
+        e = self.run_prelude(tokens)
+        s = torch.randn_like(e) * 0.4       # s_0 ~ N(0, 2/5): noise, not e
+        for _ in range(r):
+            s = self.run_core(e, s)
+        return self.run_coda(s)</code></pre>
+        <pre class="out"><code>stored: 537K parameters, of which the core is 200K
+at r = 32 the core runs 32 times: 6735K parameter-applications per token
+logits: (2, 16, 1000)</code></pre>
+      </details>
+
+      <p>Three choices in those lines carry the paper. The input <code>e</code> is concatenated back in
+        at every iteration — without it the fixed point would depend only on the starting state, which
+        is why the uninjected models in §2’s table diverge. The starting state is <i>noise</i>, not the
+        embedding, so that different starts converge to the same trajectory (the “path independence”
+        Huginn borrows from the deep-thinking line). And the core is the only weight matrix the loop
+        touches — the block prints Figure 1 in numbers: 537K parameters stored, 6.7M applied per token. The real model
+        adds a second norm after every sublayer; at 3.5B that turned out to be required.</p>
+
+      <p>And one thread I did not expect: the story most people absorbed from 2025 is that loops give
+        you a <i>dial</i> — run more iterations at inference, get more accuracy, a third axis of
+        test-time compute. That is the part the 2026 evidence is least kind to.</p>
+
+      <hr />
+
+      <h2 id="s1">The Idea Is Eight Years Old and It Lost on the Merits</h2>
+
+      <p>Weight-tied depth was tried, measured carefully, and set aside. The
+        <a href="https://arxiv.org/abs/1807.03819">Universal Transformer</a> (2018) had striking
+        headline numbers — LAMBADA perplexity 142 against a vanilla Transformer’s 7,321 — but always
+        at <i>matched parameters</i>. Matched compute told a different story, and by 2022 the
+        Universal Transformer’s own co-author had run the comparison that closed the programme.</p>
+
+      <div class="tw"><table>
+        <thead><tr><th>The 2018–2022 verdict</th><th>Measured</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>A parameter-matched loop costs <i>L</i>× the FLOPs</td><td>1,998M vs 604M MACs at equal parameters, for +2.0 BLEU</td><td><a href="https://arxiv.org/abs/2310.07096">Sparse UT</a>, Table 1</td></tr>
+          <tr><td>Tying costs quality, mostly in the FFN</td><td>&minus;1.5 to &minus;2.5 average points; sharing attention alone is nearly free</td><td><a href="https://arxiv.org/abs/1909.11942">ALBERT</a>, Table 4</td></tr>
+          <tr><td>…and much more in a decoder</td><td>14.3 vs 27.7 BLEU all-shared; untying the first and last layers recovers it</td><td><a href="https://arxiv.org/abs/2101.00234">Subformer</a>, Table 2</td></tr>
+          <tr><td>Wall-clock is worse than FLOPs suggest</td><td>Half the training throughput; shrunk to vanilla’s width it loses 1.38 BLEU</td><td><a href="https://arxiv.org/abs/2104.06022">Takase &amp; Kiyono</a>, Table 1</td></tr>
+          <tr><td>It scales worse than a vanilla stack</td><td>20.3 vs 11.4 FLOPs, worse on every quality metric at 57% of the params; no UT-XL was runnable</td><td><a href="https://arxiv.org/abs/2207.10551">Tay, Dehghani et al.</a>, Table 1</td></tr>
+          <tr><td>Halting is nearly free to drop — on translation</td><td>Removing it costs 0.1 BLEU on WMT14 En–De (worth +1.5 on CFQ)</td><td>Sparse UT, Tables 2 and 4</td></tr>
+          <tr><td>A loop does not generalise off its trained depth</td><td>Six-loop model decoded at one loop: 2.56 BLEU vs 25.84</td><td><a href="https://arxiv.org/abs/1807.05353">Dabre &amp; Fujita</a>, Table 2</td></tr>
+        </tbody>
+      </table></div>
+
+      <p>Tay et al.’s summary line: “amongst all ten architectures that we consider, the vanilla
+        Transformer has the best scaling behaviour.” Hold on to the last row — a loop count is a depth
+        the model was fitted to, not a knob. That footnote from 2018 becomes the main event in §7.</p>
+
+      <hr />
+
+      <h2 id="s2">What Changed Was the Accounting, Not the Architecture</h2>
+
+      <p>Nothing above was refuted. What changed is what the numbers are worth.</p>
+
+      <div class="tw"><table class="plain">
+        <thead><tr><th></th><th>2020 accounting</th><th>2025 accounting</th></tr></thead>
+        <tbody>
+          <tr><td>You buy quality with…</td><td>parameters (Kaplan-era scaling)</td><td>inference compute (test-time scaling)</td></tr>
+          <tr><td>A loop spends…</td><td>FLOPs to save parameters — the wrong direction</td><td>FLOPs without adding parameters — the point</td></tr>
+          <tr><td>Verdict on “FLOPs without parameters”</td><td>a liability</td><td>“a third axis on which to scale model performance” — <a href="https://arxiv.org/abs/2502.05171">Geiping et al.</a></td></tr>
+        </tbody>
+      </table></div>
+
+      <p>The second change is a training recipe that survives a billion-parameter run — three
+        ingredients, the first two borrowed from the “deep thinking” line, none standard in pre-2024
+        looped transformers:</p>
+
+      <div class="tw"><table>
+        <thead><tr><th>Ingredient</th><th>What it does</th><th>Why it is load-bearing</th></tr></thead>
+        <tbody>
+          <tr><td>Input injection</td><td>Re-add the embedded input at every iteration: <i>Y</i><sub><i>t</i>+1</sub> = <i>M</i>(<i>Y</i><sub><i>t</i></sub> + <i>P</i>)</td><td>Without it “the influence of the initial input diminishes, and the solution becomes essentially random” — the uninjected model diverges past its trained loop count (<a href="https://arxiv.org/abs/2311.12424">Yang et al., 2023</a>)</td></tr>
+          <tr><td>Randomised depth</td><td>Sample the loop count per sequence in training; Huginn draws from a log-normal Poisson with mean 32</td><td>The only known route to a model that still works off its trained depth (§7)</td></tr>
+          <tr><td>Sandwich norm</td><td>Normalise before <i>and</i> after each sublayer</td><td>At small scale every norm works; at scale Huginn found this one “<i>required</i> to train the recurrence”. Ouro adopted it and cites them</td></tr>
+        </tbody>
+      </table></div>
+
+      <p>Two of the three ingredients are a dozen lines each. Draw the depth per sequence from a
+        distribution with a heavy right tail, and cut the gradient before the last <i>k</i> iterations:</p>
+
+      <details class="code">
+        <summary>Code &#8212; depth sampling and truncated backprop (18 lines)</summary>
+        <pre><code>import math, torch
+
+def sample_depth(r_bar=32, sigma=0.5):
+    """Log-normal Poisson unrolling (Huginn): most draws below r_bar, a heavy tail."""
+    tau = torch.normal(math.log(r_bar) - sigma ** 2 / 2, sigma, size=())
+    return int(torch.poisson(tau.exp())) + 1
+
+def looped_loss(model, tokens, targets, r, k=8):
+    """Backprop through only the last k of r iterations; memory stops growing with r."""
+    e = model.run_prelude(tokens)
+    s = torch.randn_like(e) * 0.4
+    with torch.no_grad():                   # iterations 1..r-k: forward only, no graph
+        for _ in range(max(0, r - k)):
+            s = model.run_core(e, s)
+    for _ in range(min(r, k)):              # the last k keep their activations
+        s = model.run_core(e, s)            # e still carries gradient into the prelude
+    logits = model.run_coda(s)
+    return torch.nn.functional.cross_entropy(logits.flatten(0, 1), targets.flatten())</code></pre>
+        <pre class="out"><code>sampled depths: [61, 27, 37, 43, 19, 48, 15, 9, 33, 60]
+loss 7.05; gradient reaches prelude=True core=True coda=True</code></pre>
+      </details>
+
+      <p>Ten draws at <i>r̄</i> = 32 range from 9 to 61, and that spread is the whole reason Huginn
+        tolerates depths it was not trained at (§7). The <code>no_grad</code> block is what makes
+        <i>r</i> = 61 affordable: activations are kept for the last eight iterations only, so memory does
+        not grow with depth. The prelude still gets a gradient — <code>e</code> is re-injected inside the
+        graph — and this is exactly the shortcut the φ paper found costs capacity: truncation lowers the
+        exchange rate from 0.45 to 0.38 (§5). Huginn additionally locks one <i>r</i> per micro-batch
+        across workers, so no GPU waits on the deepest draw.</p>
+
+      <hr />
+
+      <h2 id="s2b">Every Trained Looped Model I Could Find — and Yes, Some Have Shipped</h2>
+
+      <p>Before the analysis, the cast: every model I found that was actually <i>trained</i> with
+        weight-tied depth. Two patterns. The research models loop many times and stop under 2B
+        parameters. The ones that shipped with open weights — a 40B coder in December 2025, a 7B coder
+        trained on 18T tokens and a 3B generalist trained on 28T tokens in mid-2026 — loop exactly
+        <b>twice</b>, at a fixed depth, with a separate KV cache per pass. Nanbeige reports that more
+        passes gave “only marginal additional improvement” and made optimisation less stable; LoopCoder-V2
+        found its third loop regressed. The practitioners landed on the same two loops the
+        compute-matched studies in §5 point to.</p>
+
+      <div class="tw"><table class="zoo">
+        <thead><tr><th>Model (date · org)</th><th>Stored → effective</th><th>What loops</th><th>Depth in training · exit</th><th>Weights</th><th>What it showed</th></tr></thead>
+        <tbody>
+          <tr class="grp"><td colspan="6">2018–2024 · the first wave</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/1807.03819">Universal Transformer</a> (2018 · Google Brain)</td><td>base-size (matches Transformer base) → depth set by halting</td><td>all encoder and decoder layers, one shared block</td><td>ACT halting per position</td><td>code only (Tensor2Tensor)</td><td>LAMBADA ppl 142 vs a Transformer’s 7,321; +0.9 BLEU on WMT14 at matched parameters — at ~3× the compute</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/1909.11942">ALBERT</a> (2019 · Google)</td><td>12M–235M</td><td>one block ×12 or ×24 (all layers shared)</td><td>fixed</td><td>yes — <a href="https://huggingface.co/albert/albert-base-v2">HF</a></td><td>18× fewer parameters than BERT-large; all-sharing costs 1.5–2.5 points, mostly in the FFN</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2101.00234">Subformer</a> (2021 · U. Tokyo)</td><td>38M / 52M / 197M</td><td>“sandwich”: first and last layers untied, the middle shared</td><td>fixed</td><td>code only</td><td>all-shared 14.3 vs 27.7 BLEU; sandwich recovers 27.7 at 38M</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2310.07096">Sparse Universal Transformer</a> (2023 · Mila / IBM)</td><td>66M base</td><td>UT with MoE attention and FFN; stick-breaking halting</td><td>adaptive (halting)</td><td>code only</td><td>29.2 BLEU at 787M MACs where a dense UT needs 1,998M for 29.3</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2310.10845">CoTFormer</a> (2023 · EPFL)</td><td>12 or 24 layers, repeated 2–5× (params not stated)</td><td>the stack, with attention able to see earlier iterations</td><td>fixed; budget-adaptive variant</td><td>code only</td><td>24.11 ppl vs 24.17 for a 48-layer standard model with twice the parameters</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2402.14905">MobileLLM-LS</a> (2024 · Meta)</td><td>125M / 350M → 60 / 64 effective layers</td><td>each block run twice back-to-back (“immediate block-wise sharing”)</td><td>fixed</td><td>yes — <a href="https://huggingface.co/facebook/MobileLLM-125M-layer-share">HF</a></td><td>+0.7 / +0.8 points at no size increase — the first one on a phone</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2409.14199">Loop Neural Networks</a> (2024 · affiliation not stated)</td><td>GPT-2-81M (6 layers ×6), 67M (4 ×12)</td><td>the stack, predicting a residual each pass</td><td>fixed</td><td>none found</td><td>val loss 3.11 on OpenWebText vs 3.12 for GPT-2-124M</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2410.20672">Relaxed Recursive Transformer</a> (2024 · Google DeepMind / KAIST)</td><td>Gemma 2B → 1B recursive, 2 loops (+ per-loop LoRA)</td><td>one block of unique layers repeated, with a LoRA delta per loop</td><td>fixed; early-exit training; depth-wise batching</td><td>none found</td><td>recursive Gemma 1B 51.7% few-shot vs Pythia-1B 48.8 after 15B uptraining tokens; at LoRA rank 512, 58.4 vs the full 2B’s 58.6</td></tr>
+
+          <tr class="grp"><td colspan="6">2025 · recurrent-depth language models</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2502.05171">Huginn-0125</a> (Feb 2025 · ELLIS Tübingen / MPI-IS / UMD)</td><td><b>3.5B</b> → 132 effective layers at r = 32 (the FLOPs of a ~32B dense)</td><td>a 4-layer core inside a 2-layer prelude and coda; input re-injected each step</td><td><b>random</b>, log-normal Poisson, mean 32; backprop through the last 8; zero-shot KL exit</td><td>yes — <a href="https://huggingface.co/tomg-group-umd/huginn-0125">HF</a></td><td>800B tokens; ≈ first-gen OLMo-7B on most tasks; GSM8K-CoT 34.8 at 3.5B</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2502.13842">Inner Thinking Transformer</a> (Feb 2025 · CAS / Baidu)</td><td>162M–466M</td><td>per-token routed extra “thinking steps”, with a step encoding</td><td>adaptive (token routing)</td><td>none found</td><td>162M reaches 96.5% of a 466M model with 43% less data</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2507.10524">Mixture-of-Recursions</a> (Jul 2025 · KAIST / Google DeepMind)</td><td>135M–1.7B (non-embedding)</td><td>the middle block cycled 2–4×; a router picks each token’s depth</td><td>adaptive per token; recursion-wise KV caching</td><td>360M only (Google Drive)</td><td>at 16.5e18 FLOPs, MoR-2 (167M) beats a 315M vanilla model, 43.1 vs 42.3; 2.06× decode throughput</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2510.07358">Encode-Think-Decode</a> (Oct 2025 · Meta FAIR / UCL)</td><td>OLMo-2 1B</td><td>4 middle layers iterated 5× between 7 encoder and 5 decoder layers; mid-training only (50B tokens)</td><td>fixed</td><td>not stated</td><td>+28.4% relative on GSM8K, +36% on MATH, same parameters and data</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2510.24824">Parallel Loop Transformer</a> (Oct 2025 · ByteDance Seed)</td><td>680M-active / 13B and 1.7B / 40B MoE</td><td>2–3 loops computed for <i>different tokens</i> in one pass; first-loop KV shared</td><td>fixed</td><td>not stated</td><td>matches a sequential looped model’s 39.7 average at 4.9 ms vs 9.4 ms and half the KV cache</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2510.25741">Ouro 1.4B / 2.6B</a> (Oct 2025 · ByteDance Seed + collaborators)</td><td>1.4B (24 layers) / 2.6B (48, upcycled) → ×4</td><td>the whole stack, four times</td><td><b>fixed T = 4</b> (cut from 8); learned entropy-regularised exit gate</td><td>yes, research-only — <a href="https://huggingface.co/ByteDance/Ouro-2.6B">HF</a>, plus Thinking variants</td><td><b>7.7T tokens</b>; 1.4B ≈ Qwen3-4B-Base on reasoning benchmarks, behind on MMLU; degrades past T = 4</td></tr>
+          <tr><td><a href="https://huggingface.co/IQuestLab/IQuest-Coder-V1-40B-Loop-Instruct">IQuest-Coder-V1-40B-Loop</a> (Dec 2025 · IQuest / Ubiquant)</td><td><b>40B dense</b> → 160 block applications</td><td>all 80 layers, twice; iteration 2 attends to iteration 1’s KV through a gated global + local mix</td><td>fixed 2</td><td>yes (custom license)</td><td>the largest looped model with open weights; Instruct and Thinking coding variants (<a href="https://arxiv.org/abs/2603.16733">report</a>, Mar 2026)</td></tr>
+
+          <tr class="grp"><td colspan="6">2026</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2604.12946">Parcae</a> (Apr 2026 · UCSD / Together AI)</td><td>140M–1.3B</td><td>prelude / core / coda with a spectrally-constrained injection</td><td>sampled per sequence, mean 2–12; backprop through half</td><td>yes — <a href="https://huggingface.co/SandyResearch/parcae-1.3b">HF</a></td><td>+2.99 Core over a parameter-matched Transformer at 1.3B; test-time gains plateau at the training depth</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2605.09165">Sparse Layers</a> (May 2026 · USC ISI)</td><td>isoFLOP sweep, ≤711M stored</td><td>8 unique layers ×2, dense or MoE</td><td>fixed; training-free entropy early exit</td><td>none found</td><td>a looped MoE matches the dense baseline’s scaling exponent (0.077 vs 0.076); a dense looped model does not</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2605.07721">MELT-1.6B</a> (May 2026 · Qualcomm)</td><td>Ouro-1.4B-Thinking + 0.2B gate</td><td>Ouro’s loop with one gated KV cache shared across loops</td><td>fixed T = 4; ~256M tokens of conversion</td><td>not yet (“soon”)</td><td>4× less KV memory (28.0 → 9.5 GB at 32K) for ~3 points of AIME</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2605.20613">HRM-Text-1B</a> (May 2026 · Sapient)</td><td>~1.2B</td><td>two 16-layer stacks in a nested recurrence (the HRM recipe as a language model)</td><td>fixed nesting (2 × 3)</td><td>yes — <a href="https://huggingface.co/sapientinc/HRM-Text-1B">HF</a></td><td>40B tokens; released as a pre-alignment base checkpoint</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.01495">CART</a> (May 2026 · independent)</td><td>14M–125M stored</td><td>one shared block ×6–10, cross-attending to K/V frozen from a 6-layer prelude</td><td>fixed; no halting by design</td><td>code + results db</td><td>negative: 1–2% worse perplexity than a parameter-matched dense model; prelude depth matters more than loop count</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.04438">LoopMoE</a> (Jun 2026 · HKUST-GZ / Huawei)</td><td>3B and 9B total MoE (0.8B / 1.9B active)</td><td>2 prefix + a 2- or 3-layer shared block ×4 + suffix</td><td>fixed K = 4</td><td>none found</td><td>+1.05 (3B) and +2.81 (9B) average over a matched vanilla MoE, 200–300B tokens</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.18023">LoopCoder-V2</a> (Jun 2026 · Beihang / IQuest / Langboat / RUC)</td><td><b>7B dense</b>, 14 shared layers ×2</td><td>the whole stack, twice, PLT-style (shared KV + gated sliding window)</td><td>fixed per model; R = 1–4 each trained from scratch</td><td>yes — <a href="https://huggingface.co/Multilingual-Multimodal-NLP/LoopCoder-V2">HF</a></td><td><b>18T tokens</b>; SWE-bench Verified 43.0 → 64.4 from one loop to two; a third loop regresses</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.18208">Looped World Models</a> (Jun 2026 · FaceMind)</td><td>~1B — a text world model, not an LM</td><td>prelude / recurrent block / coda</td><td>Poisson-sampled with a learnable mean; gated adaptive exit</td><td>not stated</td><td>ScienceWorld state-prediction EM 68.4 vs 47.2 for a closed API model — no architecture-matched baseline</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2607.13491">DeepLoop</a> (Jul 2026 · Princeton / UCLA)</td><td>GPT-2 small / medium</td><td>the whole stack ×3–7, with depth-scaled residuals</td><td>fixed per run</td><td>code only</td><td>−0.02 to −0.03 nats vs a pre-LN looped baseline at R = 7, 50B tokens</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2607.16051">Loopie</a> (Jul 2026 · IQuest)</td><td>20B-A2B and 6B-A0.6B looped MoE</td><td>each layer applied twice in place</td><td>fixed 2</td><td>announced, not public as of 7 Sep 2026</td><td>claims to overtake a compute-matched 30B-A3B after ~600B tokens — shown as a figure, no number in the text</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2607.22083">Nanbeige4.2-3B</a> (Jul 2026 · Nanbeige Lab)</td><td><b>3B</b> non-embedding (4B total) → 44 block applications</td><td>all 22 layers, twice, with a separate KV cache per pass</td><td>fixed 2 (more passes tried and rejected)</td><td>yes — <a href="https://huggingface.co/Nanbeige/Nanbeige4.2-3B">HF</a>, Apache-2.0</td><td><b>28T tokens</b> from scratch; two passes “retain approximately 75% of the token efficiency” of a standard Transformer with “a significant capacity gain”; from-scratch beat upcycling; sharing KV across passes cost accuracy</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2608.11233">Retrofit of Qwen2.5-0.5B</a> (Jul 2026 · independent)</td><td>0.5B frozen + a 6M adapter (or a 180M block)</td><td>layers 6–17 tied and re-entered, between a prelude and coda</td><td>forced depths 4–12</td><td>code only</td><td>synthetic rule-composition: 84% vs 72% for a scratchpad-tuned dense twin; holds up to ~1.5× its supervised depth</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2609.01343">SMELT</a> (Sep 2026 · Tsinghua / ByteDance Seed / M-A-P)</td><td>~0.07–1.1B active, up to 54B non-embedding (MoE)</td><td>the middle half of the layers, exactly twice</td><td>fixed</td><td>no (proprietary stack)</td><td>6.8–18.0% of training FLOPs saved against a baseline matched on FLOPs, parameters <i>and</i> KV cache</td></tr>
+
+          <tr class="grp"><td colspan="6">Small recursive reasoners (not language models)</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2506.21734">HRM</a> (Jun 2025 · Sapient)</td><td>27M</td><td>two coupled recurrent modules, plus an outer refinement loop</td><td>adaptive (ACT-style)</td><td>yes</td><td>ARC-AGI-1: 40.3% claimed; <b>32%</b> on ARC Prize’s semi-private re-run, where the hierarchy was worth ~0–5 points and the outer loop did the work</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2510.04871">TRM</a> (Oct 2025 · Samsung SAIL Montréal)</td><td>7M, 2 layers</td><td>one tiny network, recursed</td><td>adaptive</td><td>yes</td><td>ARC-AGI-1 45% / ARC-AGI-2 8% claimed; an audit found ~11 points from 1,000-sample voting and “shallow effective recursion”</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2605.21488">Equilibrium Reasoners</a> (May 2026 · CMU)</td><td>small (not checked)</td><td>DEQ-style: iterate to a task-conditioned attractor</td><td>run to convergence</td><td>not checked</td><td>Sudoku-Extreme 2.6% → over 99% by unrolling to the equivalent of ~40,000 layers (abstract)</td></tr>
+        </tbody>
+      </table></div>
+
+      <p class="meta" style="margin-top:-8px">“Stored → effective” is unique parameters against the depth or FLOPs the loop unrolls to. “Weights” means downloadable checkpoints, checked on 7 September 2026, not code. The last column is each paper’s own headline against its own baseline. Reports that OpenAI’s GPT-6 uses a constrained form of recurrent depth are unconfirmed — its system card says nothing about architecture — so it is not in the table.</p>
+      <hr />
+
+      <h2 id="s3">Loops Buy Reasoning, Not Knowledge</h2>
+
+      <p>Write <i>(k ⊗ L)</i> for a <i>k</i>-layer block looped <i>L</i> times. It has the parameters
+        of <i>(k ⊗ 1)</i> and the FLOPs of <i>(kL ⊗ 1)</i>, so you can ask exactly how much of the gap
+        between the small model and the big one the loop recovers
+        (<a href="https://arxiv.org/abs/2502.17416">Saunshi et al., 2025</a>, 1B scale, the Pile).</p>
+
+      <figure>
+        <img src="../figures/fig-loop-taskgap.svg" alt="Horizontal bars showing the share of the quality gap a looped model recovers: perplexity 34 percent, closed-book question answering 37 percent, open-book 56 percent, reasoning primitives 131 percent, math word problems 282 percent, with a dashed line at 100 percent." />
+        <figcaption><b>Figure 2 — Looping recovers more of the gap the more the task is reasoning.</b> A 12-layer block looped twice, against the 12-layer model it shares parameters with and the 24-layer model it matches in FLOPs (Saunshi et al., Table 3). Past 100% it beats a baseline with twice its parameters. Perplexity — “the primary reason looped models have been ignored for language modeling” — is what it recovers least.</figcaption>
+      </figure>
+
+      <div class="tw"><table>
+        <thead><tr><th>Three independent measurements of the split</th><th>Reasoning side</th><th>Knowledge side</th></tr></thead>
+        <tbody>
+          <tr><td>Saunshi et al. — <i>(4 ⊗ 6)</i>, one sixth the parameters of the 1B baseline</td><td>Reasoning primitives <b>56.9</b> vs the baseline’s 47.5</td><td>Closed-book QA 6.7 vs 11.2; perplexity 8.79 vs 7.40</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2510.25741">Ouro</a> — one loop → four, MMLU by category</td><td>Elementary mathematics <b>+155.6%</b>, formal logic +143%</td><td>Global facts <b>+8.3%</b>, moral scenarios +7.8%</td></tr>
+          <tr><td>Ouro — knowledge-capacity sweep, <a href="https://arxiv.org/abs/2404.05405">“Physics of LMs”</a> protocol (GPT-2-style models, 1M–40M params)</td><td>—</td><td>≈<b>2 bits/parameter</b> with or without looping: “looping does not increase knowledge capacity”</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2502.05171">Huginn</a> — OpenBookQA closed vs open book</td><td>Open-book 49.2, within 4.2 of OLMo-2</td><td>Closed-book 38.2, eight points behind — “less capacity to memorize facts but more capacity to reason about its context”</td></tr>
+        </tbody>
+      </table></div>
+
+      <p>One underrated caveat. Saunshi’s <b>middle-looping</b> variant — untied first and last block,
+        loop the middle — gets closed-book QA back to 11.0 against the baseline’s 11.2, at the cost of
+        most of the math-word-problem gain (34.3 → 28.3). Subformer (2021), Huginn, Mixture-of-Recursions
+        and SMELT all keep the ends untied too. The knowledge penalty looks substantially like an
+        artefact of tying <i>everything</i>, not a law about weight sharing.</p>
+
+      <hr />
+
+      <h2 id="s4">A Recurrence Is Worth About the Square Root of a Fresh Block</h2>
+
+      <p>In April 2026 <a href="https://arxiv.org/abs/2604.21106">Schwethelm, Rückert and Kaissis</a>
+        put a number on it, fitting a Chinchilla-style law with recurrence as an exponent on the
+        looped parameters: <code>L = E + A·(N_once + r^φ·N_rec)^(−α) + B·D^(−β)</code>. φ = 1 would
+        mean a loop is worth a fresh block; φ = 0 would mean it is worth nothing. Over ~50× in training
+        compute they measure <b>φ = 0.46</b>.</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig-loop-exchange.svg?v=1" role="img" aria-label="Interactive chart of the effective parameter multiplier of a looped block against loop count, for four values of the recurrence-equivalence exponent phi: 1.0, 0.65, 0.46 as measured, and 0.38 under truncated backpropagation. Click a value of phi and drag across the chart to read off, for each loop count, how many fresh blocks a recurrence is worth and how many times the FLOPs it costs." style="width:100%;height:auto;aspect-ratio:760/470;display:block;">Figure 3: the exchange rate (SVG).</object>
+        <figcaption><b>Figure 3 — What one recurrence is worth (interactive).</b> Pick φ and drag across the chart. At <i>r</i> = 4 the measured curve says a block is worth 1.9 blocks, for 4× the FLOPs — the paper’s worked example is a 410M looped model matching a 580M dense one at the training cost of a 1B dense one. Truncated backpropagation (the trick that makes deep unrolling affordable) drops φ to 0.38 “even though validation loss decreases”; hyperconnections raise it to 0.65. φ is a property of the recipe, not of looping.</figcaption>
+      </figure>
+
+      <div class="tw"><table>
+        <thead><tr><th>Does looping beat untied weights at equal compute?</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://arxiv.org/abs/2510.25741">Ouro</a>, Appendix D — iso-FLOP, iso-depth, five sizes to 1.36B</td><td><b>No.</b> “The standard model exceeds LoopLM under the same conditions. This gap increases with the recurrent step and decreases with the model size.”</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2507.10524">Mixture-of-Recursions</a>, Table 3 — 16.5e18 FLOPs</td><td><b>No for plain recursion</b> (NLL 2.81–2.88 vs 2.78). MoR wins only because routing is cheaper per token, so the same budget buys 27B tokens instead of 20B.</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2604.21106">Iso-depth law</a> — φ = 0.46</td><td><b>No.</b> “Replacing unique blocks with shared recurrences increases validation loss at matched training compute.”</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2609.01343">SMELT</a> (Sept 2026) — FLOPs, parameters <i>and</i> KV cache matched, via an MoE; middle half looped exactly twice, up to 1.6B active / 54B non-embedding</td><td><b>Yes, modestly:</b> 6.8–18.0% of training FLOPs saved on the compute-optimal frontier. Mechanism: on the second visit, one head’s attention mass moves from the BOS sink (0.60 → 0.02) to the demonstrations (0.24 → 0.85).</td></tr>
+        </tbody>
+      </table></div>
+
+      <p>SMELT and the φ paper disagree, and nobody has run both protocols on the same models — SMELT’s
+        point is that fixing FLOPs alone shrinks the looped model’s unique parameters, so φ may be
+        measuring parameter loss. Where they agree is the shape: the margin is least unfavourable at the
+        smallest loop counts and erodes as <i>r</i> grows. The most controlled win in the literature
+        loops exactly twice.</p>
+
+      <hr />
+
+      <h2 id="s5">A Loop Is Easy to Train Into a No-Op</h2>
+
+      <p>The best section of the Huginn paper describes the two runs that failed. Two of three attempts
+        at a large recurrent-depth run did not make the loop load-bearing — one collapsed, one left the
+        recurrence decorative — and 2026 turned that folklore into mechanism.</p>
+
+      <div class="tw"><table>
+        <thead><tr><th>Failure</th><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Huginn, run 1</td><td>Training stalls; token-wise hidden-state correlation → 1.0</td><td>“Every iteration of the recurrence block increases token correlation, mixing the sequence until collapse”</td><td>Sandwich norm, learned adapter, embedding scale</td></tr>
+          <tr><td>Huginn, run 2</td><td>Perplexity <b>identical at r = 1 and r = 32</b> — the loop burns 32× the FLOPs and does nothing</td><td>Model learned early to ignore the incoming state</td><td>Peak LR 4e-4 → <b>4e-5</b></td></tr>
+          <tr><td>Ouro</td><td>Loss spikes and gradient oscillations at 8 recurrent steps</td><td>“Compounded gradient flow through multiple recurrent iterations”</td><td>Cut to <b>T = 4</b> — the compromise the headline results run at</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2604.12946">Parcae</a> (2026)</td><td>A plain recurrent-depth model retrofitted from a 140M transformer: “Divergent Training” at every depth</td><td>Spectral radius of the injection parameters ≥ 1 on every divergent run</td><td>Constrain it; sample depth per sequence; prelude norm</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.18524">Residual scaling</a> (2026)</td><td>“Recurrent architectures require smaller learning rates” (Ouro’s words)</td><td>Shared weights make residual updates <i>correlated</i>: the sum grows like <i>N</i>, not √<i>N</i></td><td>Scale residuals by 1/<i>N</i>; then the optimal LR depends only on unique layers and transfers across loop counts</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.24898">Readout blind spot</a> (2026)</td><td>Hidden-state norms of <b>56,051 ± 23,993</b> at 129M (vs 77 with a scale-visible readout), in loops with no inter-loop normalisation</td><td>RMSNorm readouts are scale-invariant, so per-loop cross-entropy cannot see the drift it is causing</td><td>Make scale visible to the loss, or normalise between loops — as Ouro and Huginn do</td></tr>
+        </tbody>
+      </table></div>
+
+      <p>The sting in the last row: those drifted models are nearly depth-invariant (perplexity moves
+        +0.01 from one loop to four), so a calibrated halting rule exits at an average of <b>1.00
+        loops</b> and reports a <b>3.4×</b> speedup — a spectacular adaptive-compute number from a model
+        that cannot use its loops at all. Carry that lens into every efficiency claim below.</p>
+
+      <hr />
+
+      <h2 id="s6">The Test-Time Dial Turns About as Far as You Trained It</h2>
+
+      <p>Ouro’s own depth ablation is the cleanest test: one checkpoint, evaluated at every loop count
+        from 1 to 8, trained with depth capped at 4. Drag the cursor past the dashed line.</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig-loop-depth.svg?v=1" role="img" aria-label="Interactive chart. Left: three Ouro accuracy curves against loops used at inference, from one to eight, trained with depth capped at four: the reasoning-tuned checkpoints rise steeply, peak near four, and fall by roughly half at eight; the base checkpoint peaks at four and drifts down gently. Drag across the chart to read the accuracies at each loop count. Right: Huginn, trained with a random loop count averaging 32, rises from four to 32 loops and flattens." style="width:100%;height:auto;aspect-ratio:760/446;display:block;">Figure 4: the depth dial (SVG).</object>
+        <figcaption><b>Figure 4 — Capped-depth training buys you a peak; randomised-depth training buys you a curve (interactive).</b> Left: Ouro-2.6B-Thinking goes from 76.4 on OlympiadBench at T = 4 to 39.3 at T = 8; the base checkpoint degrades gently. Right: Huginn improves up to its mean training depth, every task but SciQ. The difference is not the architecture but the training distribution — Ouro’s objective is an exit-weighted sum over depths that simply has no mass above 4.</figcaption>
+      </figure>
+
+      <div class="tw"><table class="plain">
+        <thead><tr><th>What 2026 says about the dial</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://arxiv.org/abs/2604.12946">Parcae</a> — test-time law across models trained at mean depth 2–12, evaluated to T = 24</td><td>A <b>saturating exponential</b>, not a power law (fits 7.1× better under extrapolation). “Gains plateau near μ<sub>rec</sub>, suggesting <b>training depth determines the test-time scaling ceiling</b>.”</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2604.21106">Iso-depth law</a></td><td>“Effective inference depth concentrates near the training depth distribution rather than extrapolating freely past it. We therefore treat <i>r</i> as an <b>architectural, not a test-time, scaling axis</b>.”</td></tr>
+          <tr><td><a href="https://arxiv.org/abs/2606.29983">Kuo et al.</a> — why Huginn is the exception</td><td>Stochastic loop counts in training “sharply reduce OOD variance and stabilize predictions across inference-time loop counts”; when to stop “should be treated as a training-time design choice.”</td></tr>
+          <tr><td>Huginn’s honest fine print</td><td>Its table stops at r = 32, its own mean. The only r = 64 GSM8K number (47.23 vs 42.08) comes from a weight-averaged checkpoint never run at r = 32; on MT-Bench the doubling moves 5.662 → 5.693, inside a ±0.39 standard error.</td></tr>
+          <tr><td>The result that qualifies the pessimism</td><td>Huginn’s useful depth <b>scales with context</b>: on ARC-Challenge, 0-shot saturates around 8–12 loops, 1-shot around 20, 25–50-shot uses all 32. SMELT’s advantage likewise grows with sample length and shot count.</td></tr>
+        </tbody>
+      </table></div>
+
+      <p>So loop count behaves like an architectural hyperparameter you commit to at training time. If
+        you want flexibility at inference, you buy it by randomising depth during training, not by
+        turning a knob afterwards — and “more context in, more depth worth spending” is a better argument
+        for recurrence than “turn the dial up.”</p>
+
+      <hr />
+
+      <h2 id="s7">Adaptive Depth Is Mostly a Threshold, and the KV Cache Is the Real Bill</h2>
+
+      <p>If depth is not a free dial, the remaining pitch is adaptive computation: loop where it helps,
+        exit where it does not. Two things get in the way.</p>
+
+      <div class="tw"><table>
+        <thead><tr><th>Claim</th><th>Measurement</th></tr></thead>
+        <tbody>
+          <tr><td>A learned exit gate allocates depth well</td><td>Ouro’s own heuristic — exit when ‖h<sub>t</sub> − h<sub>t−1</sub>‖ is small — tracks the trained gate within 1–2% at 2–3 average rounds. <a href="https://arxiv.org/abs/2607.20519">Popescu et al.</a>: on a controlled task a learned gate needs ~2× the depth of a logit-margin threshold; on the reasoning-tuned Ouro checkpoints, in <b>7 of 12</b> settings “the best readout is a simple post-hoc heuristic.” Joint gate training <i>deforms the trajectory</i>; the gate itself is fine.</td></tr>
+          <tr><td>The gate saves compute</td><td>Measured on Ouro-1.4B: 1.2–2.0× wall-clock for 0.2–3.6 points. But Qualcomm’s <a href="https://arxiv.org/abs/2605.07721">MELT</a> team read the released code: the default threshold “effectively disables early exiting,” and a triggered exit “affects which logits are selected, not whether subsequent loops are computed.”</td></tr>
+          <tr><td>Ouro’s decode-time KV sharing is free (78.92 → 78.85 GSM8K at 4× less cache)</td><td>Two groups could not reproduce it. <a href="https://arxiv.org/abs/2608.09444">Continuous depth batching</a>: <b>0.23%</b> with a single shared slot vs 77.86% full — “We cannot reproduce the results from the Ouro paper.” MELT: zero on several benchmarks; generations “degenerate during extended reasoning.” Huginn’s version <i>does</i> replicate: 33.74 → 33.97% collapsing 32 slots to one.</td></tr>
+          <tr><td>Adaptive depth serves well</td><td>The first end-to-end stack reaches 94–99% of the FLOP bound on Ouro: <b>1.5–1.9×</b> throughput, 45–90% lower latency under load — but only if freed slots are <i>refilled</i>, because in the memory-bound regime “early exits save FLOPs but not wall-clock time.” And Huginn’s prelude+coda cost ~1.2 core applications, so one exit saves ~6% of a token’s FLOPs against ~25% for Ouro’s bare stack.</td></tr>
+          <tr><td>You can RL-post-train it</td><td>Ouro tried DAPO and GRPO: no gain. “vLLM/SGLang provide fast rollouts via a fixed execution path, which breaks under LoopLM’s variable-depth computation.” Every 2026 reasoning model is RL-post-trained — the shipped looped coders sidestep this by fixing the loop count at two.</td></tr>
+        </tbody>
+      </table></div>
+
+      <p>The stopping rules in that table are each three lines, and Huginn’s needs no training at all.
+        Read the logits out at every iteration and stop when they stop changing:</p>
+
+      <details class="code">
+        <summary>Code &#8212; three exit rules and the generation loop (28 lines)</summary>
+        <pre><code>import torch, torch.nn.functional as F
+
+def kl_exit(logits_prev, logits_new, thresh=5e-4):
+    """Huginn, zero-shot: stop once consecutive iterations predict the same thing."""
+    p, q = F.log_softmax(logits_prev, -1), F.log_softmax(logits_new, -1)
+    return (q.exp() * (q - p)).sum(-1).mean().item() &lt; thresh
+
+def margin_exit(logits, thresh=2.0):
+    """Popescu et al.: a logit-margin threshold beats the learned gates."""
+    top2 = logits.topk(2, dim=-1).values
+    return (top2[..., 0] - top2[..., 1]).mean().item() &gt; thresh
+
+def hidden_delta_exit(s_prev, s_new, eps=1e-2):
+    """Ouro's baseline heuristic: the state stopped moving."""
+    rel = (s_new - s_prev).norm(dim=-1) / s_prev.norm(dim=-1)
+    return rel.mean().item() &lt; eps
+
+def generate_step(model, tokens, r_max=32):
+    e = model.run_prelude(tokens)
+    s = torch.randn_like(e) * 0.4
+    prev = model.run_coda(s)
+    for i in range(1, r_max + 1):
+        s = model.run_core(e, s)
+        logits = model.run_coda(s)          # read out at every iteration
+        if kl_exit(prev, logits):           # or margin_exit / hidden_delta_exit
+            return logits, i
+        prev = logits
+    return logits, r_max</code></pre>
+        <pre class="out"><code>KL-exit fired after 9 of 32 iterations</code></pre>
+      </details>
+
+      <p>The block ends by running the rule on the toy model, and the line it prints is a warning, not a
+        demo: <code>KL-exit fired after 9 of 32 iterations</code>. The model is untrained and its loop still drifts to a
+        fixed point within nine iterations — the layer norms contract the state whether or not the
+        iterations compute anything. A convergence test tells you the state stopped moving, not that
+        the loop did work: the same trap that produced the 3.4× “speedup” from a depth-invariant model
+        in §6.</p>
+
+      <figure>
+        <object type="image/svg+xml" data="../figures/fig-loop-kv.svg?v=1" role="img" aria-label="Interactive stacked bar chart of memory needed for a generation, as the context length is dragged from one thousand to sixty-four thousand tokens. Qwen3-1.7B and MELT-1.6B keep a single key-value cache and stay small; Ouro-1.4B-Thinking keeps one cache per loop and its cache grows four times as fast, passing 24 gigabytes before 32 thousand tokens." style="width:100%;height:auto;aspect-ratio:760/380;display:block;">Figure 5: the KV bill (SVG).</object>
+        <figcaption><b>Figure 5 — The loop multiplies your KV cache, not your weights (interactive).</b> Memory for a generation of the chosen length, from vLLM measurements (<a href="https://arxiv.org/abs/2605.07721">Vendrell et al., 2026</a>, Table 2): a naive looped model keeps one cache per loop, so a 1.4B model at 32K tokens needs 28 GB where a dense 1.7B needs 7. MELT replaces the per-loop caches with one gated cache for about three points on AIME.</figcaption>
+      </figure>
+
+      <p>Figure 5 is three lines of arithmetic — K and V, per layer, per head, per stored loop state:</p>
+
+      <details class="code">
+        <summary>Code &#8212; the KV-cache arithmetic behind Figure 5 (16 lines)</summary>
+        <pre><code>def kv_bytes_per_token(layers, kv_heads, head_dim, loops=1, dtype_bytes=2):
+    """K and V, per layer, per head, per stored loop state — bf16."""
+    return 2 * layers * kv_heads * head_dim * dtype_bytes * loops
+
+# layers, kv_heads, head_dim, stored loop states, weights in GB
+models = {
+    "Qwen3-1.7B":         (28, 8, 128, 1, 3.44),   # GQA: 8 KV heads
+    "MELT-1.6B":          (24, 16, 128, 1, 3.27),  # one gated cache for all 4 loops
+    "Ouro-1.4B-Thinking": (24, 16, 128, 4, 2.87),  # one cache per loop
+}
+ctx = 32_000                    # MELT reports decimal MB/GB at 32,000 tokens
+for name, (L, H, D, loops, w_gb) in models.items():
+    b = kv_bytes_per_token(L, H, D, loops)
+    gb = b * ctx / 1e9
+    line = f"{name:19s} {b/1e6:.3f} MB/token -&gt; {gb:5.2f} GB at 32K"
+    print(line + f", {w_gb + gb:4.1f} GB with weights")</code></pre>
+        <pre class="out"><code>Qwen3-1.7B          0.115 MB/token -&gt;  3.67 GB at 32K,  7.1 GB with weights
+MELT-1.6B           0.197 MB/token -&gt;  6.29 GB at 32K,  9.6 GB with weights
+Ouro-1.4B-Thinking  0.786 MB/token -&gt; 25.17 GB at 32K, 28.0 GB with weights</code></pre>
+      </details>
+
+      <p>Ouro stores 16 heads of 128 dimensions per layer with no grouped-query sharing and keeps four
+        states, so 0.786 MB per token, the figure in MELT’s table; Qwen3-1.7B’s eight KV heads and one
+        state come to 0.115. At 32,000 tokens that is 25 GB of cache against 3.7.</p>
+
+      <h3 id="s8b">Does a Loop Go Brrr? Only Above the Saturation Batch</h3>
+
+      <p>The question <a href="https://horace.io/brrr_intro.html">Horace He</a> asks of any kernel
+        applies to a decode step: are you bound by compute, by memory bandwidth, or by overhead? Count
+        the bytes and the FLOPs. Every pass through the core re-reads its weights from HBM, and every
+        stored KV state is read once per token generated:</p>
+
+      <details class="code">
+        <summary>Code &#8212; a roofline model of one decode step (25 lines)</summary>
+        <pre><code>BW, PEAK = 3.35e12, 990e12   # H100 SXM: HBM bytes/s, dense bf16 FLOP/s
+RIDGE = PEAK / BW            # ~295 FLOP/byte: below this a step is memory-bound
+
+def decode_step(once, loop, r, batch, ctx, kv_tok, d, layers):
+    """One decode step for `batch` sequences; weights re-read from HBM every pass."""
+    weight_bytes = 2 * (once + r * loop)             # bf16; the core is read r times
+    kv_bytes = batch * ctx * kv_tok                  # every sequence's cache, once
+    flops = batch * (2 * (once + r * loop)           # 2 FLOP per parameter-application
+                     + 4 * layers * d * ctx)         # + attention over the context
+    t = max((weight_bytes + kv_bytes) / BW, flops / PEAK)   # the roofline
+    return 1e3 * t / batch                           # ms per token
+
+CTX = 4096
+# params applied once, params in the loop, r, KV bytes/token, d_model, layers
+models = {
+    "Huginn 3.5B, r = 32":       (2.0e9, 1.5e9, 32, 2.66e6, 5280, 132),  # 32 KV states
+    "Ouro 1.4B, r = 4":          (0.0,   1.4e9,  4, 0.79e6, 2048,  96),  # 4 KV states
+    "dense 50B (same FLOPs)":    (50e9,  0,      1, 0.33e6, 8192,  80),  # GQA, 8 KV heads
+    "dense 3.5B (same weights)": (3.5e9, 0,      1, 0.13e6, 3072,  32),
+}
+B = (1, 8, 64, 512)
+print(f"{'ms per token':28s}" + "".join(f"{'B=' + str(b):&gt;9s}" for b in B))
+for name, (once, loop, r, kv, d, L) in models.items():
+    row = [decode_step(once, loop, r, b, CTX, kv, d, L) for b in B]
+    print(f"{name:28s}" + "".join(f"{x:9.2f}" for x in row))</code></pre>
+        <pre class="out"><code>ms per token                      B=1      B=8     B=64    B=512
+Huginn 3.5B, r = 32             33.10     6.98     3.72     3.31
+Ouro 1.4B, r = 4                 4.31     1.38     1.02     0.97
+dense 50B (same FLOPs)          30.25     4.13     0.87     0.46
+dense 3.5B (same weights)        2.25     0.42     0.19     0.16</code></pre>
+      </details>
+
+      <p>This is a model, not a measurement — an H100’s 3.35 TB/s and 990 TFLOP/s, bf16 weights, nothing
+        overlapped — but it says three things the measured papers agree with. Below the ridge (about 295
+        FLOP per byte, so a few hundred tokens per step) a decode step is memory-bound and the loop turns
+        one weight read into <i>r</i> of them: at batch 1 Huginn spends ~33 ms per token, more than the
+        50B dense model it matches in FLOPs and fifteen times more than the 3.5B dense model it matches
+        in weights. At large batch the step should become compute-bound and cost what the FLOPs say — but
+        a per-loop KV cache does not let it: with 32 stored states per token, Huginn’s cache traffic
+        dominates and it flattens near 3.3 ms where the dense model reaches 0.5. Ouro flattens near 1 ms
+        for the same reason; MELT’s single gated cache would put it near 0.25. So the memory a loop saves
+        is weight <i>capacity</i> — Huginn trained with data parallelism alone — not bandwidth, and only
+        a shared cache makes the loop bandwidth-neutral. The
+        <a href="https://arxiv.org/abs/2608.09444">continuous-depth-batching</a> paper measured exactly
+        this shape: step time flat below a saturation batch, and the saturation batch falling with
+        context length.</p>
+
+      <hr />
+
+      <h2 id="s8">Loops Buy Serial Time; Only Tokens Buy Space</h2>
+
+      <p><a href="https://arxiv.org/abs/2301.13196">Giannou et al.</a> hand-built a nine-layer looped
+        transformer that runs a Turing-complete instruction set: “without this loop, the size of the
+        transformer would have to scale with the number of lines of code.” Saunshi et al. proved a looped
+        model can reproduce any <i>m</i> steps of chain of thought in <i>m</i> loops — <i>given m dummy
+        tokens in the context</i>. That detail is the whole theory in one line.</p>
+
+      <div class="tw"><table>
+        <thead><tr><th></th><th>Chain of thought</th><th><a href="https://arxiv.org/abs/2412.06769">Coconut</a> (latent CoT)</th><th>Looped transformer</th></tr></thead>
+        <tbody>
+          <tr><td>Recurs along</td><td>the sequence, in tokens</td><td>the sequence, in hidden states</td><td>depth, inside one token’s forward pass</td></tr>
+          <tr><td>What grows per step</td><td>context (a scratchpad)</td><td>context</td><td>nothing — same state, revisited</td></tr>
+          <tr><td>Needs reasoning data</td><td>yes</td><td>yes, a staged curriculum</td><td>no (Huginn: plain pretraining)</td></tr>
+          <tr><td>Scales with model size</td><td>yes</td><td>gains shrink: GSM8K +5.7 at 3B, +1.4 at 8B</td><td>penalty shrinks with size (Ouro App. D); no controlled compute-matched comparison published above ~1B active</td></tr>
+          <tr><td>Complexity view (<a href="https://arxiv.org/abs/2605.30757">Zhang, 2026</a>)</td><td>polynomial CoT decides P-complete languages</td><td>—</td><td>a loop with a compressed state cannot (assuming P ⊄ DSPACE(polylog <i>n</i>)): more loops add time, not scratchpad</td></tr>
+          <tr><td>Monitorability</td><td>readable by construction</td><td colspan="2">Flagged as a risk by <a href="https://arxiv.org/abs/2507.11473">Korbak et al.</a>; in practice latents are decodable 65–93% of the time when the answer is right — less when it is wrong — and verbalisability tracks per-iteration supervision, i.e. the recipe, not the architecture</td></tr>
+        </tbody>
+      </table></div>
+
+      <p>Loops win where working state is bounded and steps are many — modular arithmetic, multi-hop
+        composition, graph reachability — and do not win where the task needs an externalised scratchpad.</p>
+
+      <hr />
+
+      <h2 id="s9">Scorecard</h2>
+
+      <div class="tw"><table>
+        <thead><tr><th>Claim you’ll hear</th><th>What the measurements say</th></tr></thead>
+        <tbody>
+          <tr><td>Loops give you free test-time compute</td><td>Gains plateau at the trained depth; Ouro-2.6B-Thinking loses ~half its accuracy from T = 4 to T = 8. Extrapolation comes from randomised-depth <i>training</i>.</td></tr>
+          <tr><td>A looped model is as good as a deeper one</td><td>φ = 0.46: a recurrence is worth about √<i>r</i> fresh blocks. At r = 4, 410M looped ≈ 580M dense, at the training cost of 1B dense.</td></tr>
+          <tr><td>Looping beats dense at equal compute</td><td>Usually no. SMELT wins by 6.8–18% of FLOPs, but with an MoE, matched three ways, at exactly two loops.</td></tr>
+          <tr><td>Loops make models better reasoners</td><td><b>Holds up.</b> ≈2 bits/parameter of storage either way; +155.6% on elementary maths vs +8.3% on global facts.</td></tr>
+          <tr><td>Adaptive depth saves inference compute</td><td>1.2–2.0× measured; a post-hoc heuristic is the best stopping rule in 7 of 12 settings; the released Ouro gate does not skip loops.</td></tr>
+          <tr><td>Weight sharing saves memory</td><td>Weights yes, KV cache no — it multiplies by the loop count unless you design against it.</td></tr>
+          <tr><td>Somebody ships it</td><td><b>Yes, with open weights</b> — a 40B coder (IQuest, Dec 2025), a 7B coder on 18T tokens (LoopCoder-V2) and a 3B generalist on 28T tokens (Nanbeige4.2), every one looping exactly twice at a fixed depth. Ouro stays research-only, and Google DeepMind’s <a href="https://arxiv.org/abs/2608.17981">Recirculation</a> reports that plain training-free looping “does not produce robust benefits” on Gemma3.</td></tr>
+        </tbody>
+      </table></div>
+
+      <p>What would change my mind, in order:</p>
+      <ul>
+        <li><b>Randomised depth at Ouro’s scale.</b> Huginn had the sampling and 800B tokens; Ouro had 7.7T tokens and a cap of 4. Nobody has run both with a 2026 stability recipe.</li>
+        <li><b>Both compute-matching protocols on the same models.</b> SMELT and φ = 0.46 disagree only about what is held fixed.</li>
+        <li><b>Loops against chain of thought at matched inference FLOPs.</b> The theory says loops simulate CoT up to a memory budget; I found no measured head-to-head.</li>
+      </ul>
+
+      <p>The case for looping is a case about <i>parameter</i> efficiency — memory, footprint, bandwidth
+        — with a real inductive bias toward multi-step computation. It is not a case about getting
+        compute for free, and 2025 spent a year arguing it was — which is why the models that actually shipped loop twice,
+        at a fixed depth, and stop there. If you take one number away: a
+        recurrence is worth about the square root of a fresh block, and you pay full price in FLOPs
+        either way.</p>
+
+      <hr />
+
+      <h2 id="r">References &amp; Further Reading</h2>
+      <ol class="refs">
+        <li><b>The lineage.</b> Graves, <a href="https://arxiv.org/abs/1603.08983">Adaptive Computation Time</a> (2016); Dehghani et al., <a href="https://arxiv.org/abs/1807.03819">Universal Transformers</a> (2018); Dabre &amp; Fujita, <a href="https://arxiv.org/abs/1807.05353">Recurrent Stacking of Layers</a> (2018); Bai, Kolter &amp; Koltun, <a href="https://arxiv.org/abs/1909.01377">Deep Equilibrium Models</a> (2019); Lan et al., <a href="https://arxiv.org/abs/1909.11942">ALBERT</a> (2019); Reid et al., <a href="https://arxiv.org/abs/2101.00234">Subformer</a> (2021); Takase &amp; Kiyono, <a href="https://arxiv.org/abs/2104.06022">Lessons on Parameter Sharing</a> (2021); Banino et al., <a href="https://arxiv.org/abs/2107.05407">PonderNet</a> (2021); Tay et al., <a href="https://arxiv.org/abs/2207.10551">Scaling Laws vs Model Architectures</a> (2022); Tan et al., <a href="https://arxiv.org/abs/2310.07096">Sparse Universal Transformer</a> (2023); Mohtashami et al., <a href="https://arxiv.org/abs/2310.10845">CoTFormer</a> (2023).</li>
+        <li><b>Theory.</b> Giannou et al., <a href="https://arxiv.org/abs/2301.13196">Looped Transformers as Programmable Computers</a> (2023); Yang et al., <a href="https://arxiv.org/abs/2311.12424">Looped Transformers are Better at Learning Learning Algorithms</a> (2023); Back de Luca &amp; Fountoulakis, <a href="https://arxiv.org/abs/2402.01107">Simulation of Graph Algorithms</a> (2024); Fan et al., <a href="https://arxiv.org/abs/2409.15647">Looped Transformers for Length Generalization</a> (2024); Xu &amp; Sato, <a href="https://arxiv.org/abs/2410.01405">On Expressive Power of Looped Transformers</a> (2024); Saunshi et al., <a href="https://arxiv.org/abs/2502.17416">Reasoning with Latent Thoughts</a> (2025); Merrill &amp; Sabharwal, <a href="https://arxiv.org/abs/2503.03961">A Little Depth Goes a Long Way</a> (2025); Zhang, <a href="https://arxiv.org/abs/2605.30757">Chain-of-Thought and Compressed Looped Transformers</a> (2026).</li>
+        <li><b>Recurrent-depth language models.</b> Bae et al., <a href="https://arxiv.org/abs/2410.20672">Relaxed Recursive Transformers</a> (2024); Geiping et al., <a href="https://arxiv.org/abs/2502.05171">Scaling up Test-Time Compute with Latent Reasoning</a> (Huginn, 2025); Bae et al., <a href="https://arxiv.org/abs/2507.10524">Mixture-of-Recursions</a> (2025); Zhu et al., <a href="https://arxiv.org/abs/2510.25741">Scaling Latent Reasoning via Looped Language Models</a> (Ouro, 2025).</li>
+        <li><b>Scaling laws and stability, 2026.</b> Prairie et al., <a href="https://arxiv.org/abs/2604.12946">Parcae</a>; Schwethelm, Rückert &amp; Kaissis, <a href="https://arxiv.org/abs/2604.21106">How Much Is One Recurrence Worth?</a>; Sharma &amp; Vu, <a href="https://arxiv.org/abs/2606.24898">The Readout Blind Spot</a>; Wang et al., <a href="https://arxiv.org/abs/2606.18524">On the Residual Scaling of Looped Transformers</a>; Kuo et al., <a href="https://arxiv.org/abs/2606.29983">Stabilizing Extrapolation via Learned Stochastic Stopping</a>; Wang et al., <a href="https://arxiv.org/abs/2609.01343">SMELT</a>.</li>
+        <li><b>Serving and adaptive depth.</b> Popescu et al., <a href="https://arxiv.org/abs/2607.20519">Diagnosing Learned Halting Gates</a> (2026); Vendrell et al., <a href="https://arxiv.org/abs/2605.07721">MELT</a> (2026); Schwethelm et al., <a href="https://arxiv.org/abs/2608.09444">Continuous Depth Batching</a> (2026); Mozer et al., <a href="https://arxiv.org/abs/2608.17981">Recirculation</a> (Google DeepMind, 2026).</li>
+        <li><b>Latent reasoning, interpretability, safety.</b> Hao et al., <a href="https://arxiv.org/abs/2412.06769">Coconut</a> (2024); Snell et al., <a href="https://arxiv.org/abs/2408.03314">Scaling LLM Test-Time Compute Optimally</a> (2024); Korbak et al., <a href="https://arxiv.org/abs/2507.11473">Chain of Thought Monitorability</a> (2025); Weng, <a href="https://lilianweng.github.io/posts/2025-05-01-thinking/">Why We Think</a> (2025); Blayney et al., <a href="https://arxiv.org/abs/2604.11791">A Mechanistic Analysis of Looped Reasoning LMs</a> (2026); Dilgren &amp; Wiegreffe, <a href="https://arxiv.org/abs/2604.04902">Are Latent Reasoning Models Easily Interpretable?</a> (2026); Wang &amp; Reid, <a href="https://arxiv.org/abs/2609.01924">Looped Transformers under the Jacobian Lens</a> (2026).</li>
+      </ol>
+
+      <p class="meta" style="margin-top:32px">Sources were gathered with a fan-out of research agents and every
+        number was checked against the paper it is attributed to; where a claim rests on an abstract or a
+        single small-scale sweep, the tables say so. If you spot an error — especially in the 2026
+        citations — I would genuinely like to know.</p>
+    </article>
+  </main>
+
+  <footer>
+    <p>© <span id="year">2026</span> Bat</p>
+  </footer>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
