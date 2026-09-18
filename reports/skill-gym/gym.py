@@ -39,7 +39,7 @@ CAVEMAN_FLAG = os.path.expanduser("~/.claude/.caveman-active")
 
 CONDITIONS = {
     "baseline": {"args": [], "env": {}},
-    "caveman": {"args": ["--plugin-dir", os.path.join(ROOT, "vendor", "caveman")], "env": {}},
+    "caveman": {"args": ["--plugin-dir", os.path.join(ROOT, "vendor", "caveman")], "env": {}},   # v1 path; v2 repoints below
     "headroom": {"args": [], "env": {"ANTHROPIC_BASE_URL": "http://127.0.0.1:8787"}, "proxy": True},
     "both": {
         "args": ["--plugin-dir", os.path.join(ROOT, "vendor", "caveman")],
@@ -55,13 +55,30 @@ CONDITIONS = {
 # The "nudged" flag is pre-created: on a machine with no statusline configured the
 # hook otherwise appends a one-time "offer to set up the statusline" instruction,
 # which a real user sees once but a flag-cleaning benchmark would see every run.
+PLUG_ROOT = os.path.expanduser("~/Library/Caches/pyplug")    # neutral name on purpose
+
+
+def neutral_tools():
+    """Copy the tools under test out of the harness tree. Their paths reach the agent
+    (plugin roots, the rtk hook command, PATH); a path into this tree is a signpost to
+    tasks/*/instance.json, which holds the held-out tests."""
+    for name in ("caveman", "ponytail"):
+        dst = os.path.join(PLUG_ROOT, name)
+        shutil.rmtree(dst, ignore_errors=True)
+        shutil.copytree(os.path.join(ROOT, "vendor", name), dst, symlinks=True)
+    os.makedirs(os.path.join(PLUG_ROOT, "bin"), exist_ok=True)
+    src = os.path.join(CACHE, "bin", "rtk")
+    if os.path.exists(src):
+        shutil.copy2(src, os.path.join(PLUG_ROOT, "bin", "rtk"))
+
+
 CONDITIONS["ponytail"] = {
-    "args": ["--plugin-dir", os.path.join(ROOT, "vendor", "ponytail")],
+    "args": ["--plugin-dir", os.path.join(PLUG_ROOT, "ponytail")],
     "env": {"PONYTAIL_DEFAULT_MODE": "full"},
 }
 # rtk: what `rtk init -g` installs, minus the global install — the PreToolUse hook
 # that rewrites Bash commands to `rtk <cmd>`, and the RTK.md awareness text.
-RTK_BIN_DIR = os.path.join(CACHE, "bin")
+RTK_BIN_DIR = os.path.join(PLUG_ROOT, "bin")
 _RTK_MD = os.path.join(ROOT, "vendor", "rtk", "RTK.md")
 CONDITIONS["rtk"] = {
     "args": ["--settings", json.dumps({"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [
@@ -69,6 +86,8 @@ CONDITIONS["rtk"] = {
              "--append-system-prompt", open(_RTK_MD).read() if os.path.exists(_RTK_MD) else ""],
     "env": {}, "path_prepend": [RTK_BIN_DIR],
 }
+CONDITIONS["caveman-v1"] = CONDITIONS["caveman"]
+CONDITIONS["caveman"] = {"args": ["--plugin-dir", os.path.join(PLUG_ROOT, "caveman")], "env": {}}
 HOST_FLAGS = {   # plugin family -> files its hooks leave under ~/.claude
     "caveman": [CAVEMAN_FLAG],
     "ponytail": [os.path.expanduser("~/.claude/.ponytail-active"),
@@ -151,7 +170,8 @@ _FROZEN = os.path.join(ROOT, "tasks", "v2_frozen.json")
 if os.path.exists(_FROZEN):
     _v2 = {"tasks": json.load(open(_FROZEN))["tasks"], "trials": 3, "model": V2_MODEL,
            "effort": V2_EFFORT, "runs_as": "v2"}
-    PHASES["v2"] = {**_v2, "conditions": ["caveman", "ponytail", "rtk", "headroom", "effort-low"]}
+    # baseline is listed so its third trial runs interleaved with the arms (t1/t2 are done)
+    PHASES["v2"] = {**_v2, "conditions": ["baseline", "caveman", "ponytail", "rtk", "headroom", "effort-low"]}
     PHASES["v2-high"] = {**_v2, "conditions": ["effort-high"]}   # last: cuttable without side effects
 TIMEOUTS = {"swebench": 2700, "ssb": 1500, "docwork": 1200, "smoke": 300}
 MAX_TURNS = {"swebench": 80, "ssb": 40, "docwork": 25, "smoke": 3}
@@ -765,6 +785,7 @@ def cmd_run(args):
         for alias in tasks:
             for cond in conditions:  # interleaved: condition round-robin within task
                 cells.append((alias, cond, t))
+    neutral_tools()
     log(f"phase={phase} model={model} effort={effort} cells={len(cells)} jobs={args.jobs}")
     try:
         if args.jobs > 1:

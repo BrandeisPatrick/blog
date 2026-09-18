@@ -130,7 +130,9 @@ Opus 5 at `xhigh` is resourceful, and a benchmark it can shortcut measures nothi
 4. **The harness itself.** v1 workspaces sat inside this tree, next to
    `tasks/*/instance.json` — which holds the held-out tests — under a path that named the
    condition. v2 workspaces live under `~/Library/Caches/pyws/<opaque id>/`, the agent's
-   environment no longer points here, and gold patches are deleted before agents run.
+   environment no longer points here, gold patches are deleted before agents run, and the
+   tools under test (plugins, the rtk binary) are copied to `~/Library/Caches/pyplug/` so
+   that no plugin root or hook command is a signpost back to this tree.
 
 And one bug that would have stolen a verdict, as the stale-bytecode one nearly did in v1:
 with two runs in parallel, **every pytest-repo task failed its gate** in the first

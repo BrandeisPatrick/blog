@@ -74,6 +74,15 @@ ceiling again. With the author's agreement the remaining calibration budget move
 - `requests-6028` is excluded whatever it scores: the bug is about proxy handling, and
   the offline shell works by setting proxy variables.
 
+**Frozen 2026-09-18 17:41** after 58 baseline runs (`tasks/v2_frozen.json`,
+`results/summary-v2-calib.md`): 3 tasks in band (`xarray-6992`, `sphinx-7748`,
+`xarray-7229`, each 1/2), 17 always-pass, 5 never-pass (dropped). The seven top-ups are
+the always-pass tasks with the most turns: `sphinx-10673`, `sphinx-8548`, `pylint-6386`,
+`sphinx-9461`, `pylint-4970`, `sphinx-9229`, `pylint-4551`. Opus 5 at `xhigh` turned out
+close to deterministic per task — almost everything is 2/2 or 0/2 — so the main test is
+whether a tool makes an always-solved hard task start failing. The baseline's third trial
+runs interleaved with the tool arms.
+
 sympy (11 in band) and django (26) are excluded for now: their test runners are not
 pytest-ID based and would need a gate adapter.
 

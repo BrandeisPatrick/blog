@@ -1,0 +1,32 @@
+{
+ "frozen_at": "2026-09-18T17:41:30",
+ "tasks": [
+  "xarray-6992",
+  "sphinx-7748",
+  "xarray-7229",
+  "sphinx-10673",
+  "sphinx-8548",
+  "pylint-6386",
+  "sphinx-9461",
+  "pylint-4970",
+  "sphinx-9229",
+  "pylint-4551"
+ ],
+ "baseline_at_freeze": {
+  "xarray-6992": "1/2",
+  "sphinx-7748": "1/2",
+  "xarray-7229": "1/2",
+  "sphinx-10673": "2/2",
+  "sphinx-8548": "2/2",
+  "pylint-6386": "2/2",
+  "sphinx-9461": "2/2",
+  "pylint-4970": "2/2",
+  "sphinx-9229": "2/2",
+  "pylint-4551": "2/2"
+ },
+ "in_band": [
+  "xarray-6992",
+  "sphinx-7748",
+  "xarray-7229"
+ ]
+}
