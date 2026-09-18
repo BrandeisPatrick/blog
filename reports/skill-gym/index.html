@@ -163,7 +163,7 @@ footer a:hover{color:var(--accent);text-decoration:none}
       <h2>Where it stands<a class="anchor" href="#verdict">#</a></h2>
       <p><strong>Stands:</strong> where the tokens go. A Claude Code run reads ~460k tokens and writes ~6k. Caveman shrinks the 6k (output −42%); headroom shrinks the 460k (cache-read −45%). Cost per solved task fell −30% and −18%.</p>
       <p><strong>Withdrawn:</strong> “at identical quality”. All four conditions solved the same 10 of 14 — but every task was one that everything passes or nothing passes. A battery with nothing in between cannot show a quality cost, so v1 never tested for one (§ why v1 tied).</p>
-      <p><strong>Running:</strong> v2 — tasks kept only if the baseline solves them <em>some</em> of the time, two more tools (ponytail, rtk), Claude Code's own effort dial as the yardstick, Opus 5 at extra-high effort. Calibration is under way; no tool has been scored yet.</p>
+      <p><strong>Running:</strong> v2 — tasks kept only if the baseline solves them <em>some</em> of the time, two more tools (ponytail, rtk), Claude Code's own effort dial as the yardstick, Opus 5 at extra-high effort. Calibration is done and ten tasks are frozen; the tool arms are running, and no tool has been scored yet.</p>
       <div class="takehome">v1 measured the saving. v2 is built to measure the price.</div>
       <p class="small-note">updated 2026-09-18 · the v2 design is fixed in <a href="https://github.com/BrandeisPatrick/blog/blob/main/reports/skill-gym/PLAN.md">PLAN.md</a> before any tool runs</p>
     </section>
@@ -223,30 +223,30 @@ footer a:hover{color:var(--accent);text-decoration:none}
 
     <section id="calib" style="max-width:880px">
       <div class="prose">
-        <h2>Calibration so far<a class="anchor" href="#calib">#</a></h2>
-        <p>Baseline only, 37 runs scored as of 2026-09-18 17:05. The first pool was chosen where public agents succeed 2–7 times in 10. Opus 5 at extra-high effort solved <strong>18 of 19 on the first try</strong> — for this model that pool is the ceiling again, so the remaining budget moved to a reserve pool that public agents solve at most once in ten.</p>
+        <h2>Calibration: 58 baseline runs, ten tasks frozen<a class="anchor" href="#calib">#</a></h2>
+        <p>The first pool was chosen where public agents succeed 2–7 times in 10. Opus 5 at extra-high effort solved <strong>18 of 19 on the first try</strong> — for this model that pool is the ceiling again. The remaining budget went to a reserve pool that public agents solve at most once in ten; Opus 5 solved <strong>ten of those fourteen</strong> at least once, eight of them tasks no public agent had solved — among them sphinx-7590, labelled “&gt;4 hours” of human work in SWE-bench.</p>
+        <p>The surprise is how <em>consistent</em> it is. Of 25 tasks run twice, 17 passed both times, 5 failed both times, and only <strong>3 split</strong>. At this effort level a task is mostly either solved or not; there is little luck to average over.</p>
       </div>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>reserve task</th><th>10 public agents</th><th>baseline, first run</th><th>turns</th><th>est $ (API price)</th></tr></thead>
+          <thead><tr><th>frozen task</th><th>10 public agents</th><th>baseline</th><th>mean turns</th><th>est $ (API price)</th><th>why it is in</th></tr></thead>
           <tbody>
-            <tr><th>pylint-4551</th><td class="num">0/10</td><td class="num">pass · 10/10 tests</td><td class="num">45</td><td class="num">2.90</td></tr>
-            <tr><th>pylint-4604</th><td class="num">0/10</td><td class="num bad">fail · 0/21</td><td class="num">32</td><td class="num">1.10</td></tr>
-            <tr><th>pylint-7080</th><td class="num">0/10</td><td class="num">pass</td><td class="num">34</td><td class="num">1.60</td></tr>
-            <tr><th>pytest-5840</th><td class="num">0/10</td><td class="num bad">fail · 0/2</td><td class="num">49</td><td class="num">2.11</td></tr>
-            <tr><th>sphinx-7590</th><td class="num">0/10</td><td class="num">pass</td><td class="num">42</td><td class="num">1.84</td></tr>
-            <tr><th>sphinx-7748</th><td class="num">0/10</td><td class="num">pass</td><td class="num">47</td><td class="num">3.30</td></tr>
-            <tr><th>sphinx-9229</th><td class="num">0/10</td><td class="num">pass</td><td class="num">43</td><td class="num">1.64</td></tr>
-            <tr><th>sphinx-7462</th><td class="num">1/10</td><td class="num bad">fail · 1/2</td><td class="num">15</td><td class="num">0.43</td></tr>
-            <tr><th>sphinx-7985</th><td class="num">1/10</td><td class="num">pass</td><td class="num">30</td><td class="num">1.51</td></tr>
-            <tr><th>sphinx-9461</th><td class="num">1/10</td><td class="num">pass</td><td class="num">55</td><td class="num">2.99</td></tr>
-            <tr><th>sphinx-9602</th><td class="num">1/10</td><td class="num bad">fail · 0/1</td><td class="num">23</td><td class="num">0.82</td></tr>
+            <tr><th>xarray-6992</th><td class="num">0/10</td><td class="num">1/2</td><td class="num">44</td><td class="num">2.60</td><td>in band</td></tr>
+            <tr><th>sphinx-7748</th><td class="num">0/10</td><td class="num">1/2</td><td class="num">40</td><td class="num">2.65</td><td>in band</td></tr>
+            <tr><th>xarray-7229</th><td class="num">0/10</td><td class="num">1/2</td><td class="num">31</td><td class="num">1.26</td><td>in band</td></tr>
+            <tr><th>sphinx-10673</th><td class="num">7/10</td><td class="num">2/2</td><td class="num">61</td><td class="num">3.50</td><td>always solved · most turns</td></tr>
+            <tr><th>sphinx-8548</th><td class="num">4/10</td><td class="num">2/2</td><td class="num">58</td><td class="num">3.83</td><td>always solved · most turns</td></tr>
+            <tr><th>pylint-6386</th><td class="num">5/10</td><td class="num">2/2</td><td class="num">53</td><td class="num">2.36</td><td>always solved · most turns</td></tr>
+            <tr><th>sphinx-9461</th><td class="num">1/10</td><td class="num">2/2</td><td class="num">52</td><td class="num">3.05</td><td>always solved · most turns</td></tr>
+            <tr><th>pylint-4970</th><td class="num">3/10</td><td class="num">2/2</td><td class="num">46</td><td class="num">1.97</td><td>always solved · most turns</td></tr>
+            <tr><th>sphinx-9229</th><td class="num">0/10</td><td class="num">2/2</td><td class="num">41</td><td class="num">1.76</td><td>always solved · most turns</td></tr>
+            <tr><th>pylint-4551</th><td class="num">0/10</td><td class="num">2/2</td><td class="num">40</td><td class="num">2.56</td><td>always solved · most turns</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="tfoot">7 of 11 on the first try, three xarray tasks still to run. Five of the passes are tasks none of the ten public agents solved — among them sphinx-7590, labelled “&gt;4 hours” of human work in SWE-bench. All 37 runs were audited for lookups: two flags, both read by hand and benign — in each the task's own subject tripped the pattern (a proxy-handling bug; a <code>sys.path</code> fixture full of <code>site-packages</code> strings). A mix of passes and fails is the point: second runs decide which tasks sit in the band.</p>
+      <p class="tfoot">frozen 2026-09-18 17:41 and committed before any tool ran. Rule, written into PLAN.md before the reserve pool was run: in-band tasks first; if fewer than ten, top up with always-solved tasks that took the most turns — they have the most to lose; never-solved tasks are dropped. Dropped as never solved: pylint-4604, pytest-10356, pytest-5840, sphinx-7462, sphinx-9602. All 58 runs were audited for lookups: two flags, both read by hand and benign — in each the task's own subject tripped the pattern (a proxy-handling bug; a <code>sys.path</code> fixture full of <code>site-packages</code> strings).</p>
       <div class="prose">
-        <p>The selection rule was written into PLAN.md before the reserve pool ran: in-band tasks first; if fewer than ten, top up with always-pass tasks that took the most turns — they have the most to lose; never-pass tasks are dropped.</p>
+        <p>So the test v2 can run is sharper than planned: with a baseline this stable, <strong>a tool that makes an always-solved hard task start failing</strong> is a signal, not noise. The tool arms are running now.</p>
       </div>
     </section>
 
@@ -578,7 +578,7 @@ footer a:hover{color:var(--accent);text-decoration:none}
       <ul class="plain">
         <li><strong>v1's quality tie is not a finding.</strong> Its tasks sat at the ceiling or the floor; its token and cost numbers stand.</li>
         <li>v1: N=2 — big deltas robust; single-cell effects are flags, not convictions (C3 proved it: the flag was our bug).</li>
-        <li>v2 results are not in. This page reports its design, its calibration so far, and the harness faults it had to fix — nothing about any tool yet.</li>
+        <li>v2 results are not in. This page reports its design, its calibration, and the harness faults it had to fix — nothing about any tool yet.</li>
         <li>One model per version (Opus 4.8, then Opus 5 at <code>xhigh</code>); each tool's ceiling moves with model and task mix.</li>
         <li>Native SWE-bench envs (no Docker; official test patches at gate time). v2 envs are ported from the official recipes and verified against the gold patch — still token measurement, not official scores.</li>
         <li>Harness bugs caught and fixed — v1: per-block stream events; a test-path false-flag; a stale-bytecode gate (C2 re-gated 0/8&#8202;→&#8202;8/8; C3 caveman 0/2&#8202;→&#8202;2/2). v2: § leaks closed.</li>
@@ -621,7 +621,7 @@ python3 analyze_v2.py report</pre>
   </article>
 
   <footer>
-    <span>skill-gym — v1: 56 runs · claude-opus-4-8 · 2026-08-07 — v2: calibrating · claude-opus-5 xhigh · updated 2026-09-18</span>
+    <span>skill-gym — v1: 56 runs · claude-opus-4-8 · 2026-08-07 — v2: tool arms running · claude-opus-5 xhigh · updated 2026-09-18</span>
     <span><a href="https://github.com/BrandeisPatrick/blog/tree/main/reports/skill-gym">repo</a> · built with Claude Code</span>
   </footer>
 </div>
