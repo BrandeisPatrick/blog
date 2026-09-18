@@ -9,3 +9,6 @@
 # Logs and deps (in case this ever grows a toolchain)
 *.log
 node_modules/
+
+# …but reports ship their run logs as evidence
+!reports/**/results/*.log

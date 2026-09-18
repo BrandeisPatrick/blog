@@ -1,0 +1,7 @@
+{
+ "id": 55392,
+ "instruction": "In my Excel worksheet named 'Bank Balance', I have a cumulative formula in column AL that I want to stop calculating after the last entry, which is currently in row 21. Instead of stopping, the formula continues repeating the last value until the end of the worksheet. How can I adjust the formula so that it only calculates when there is a new entry and doesn't fill the rest of the column with the last value?\n   My current formula is: IF(AND(AJ4=\"\",AK4=\"\"),\"\",AL3+AJ4-AK4)\u00a0",
+ "spreadsheet_path": "spreadsheet/55392",
+ "instruction_type": "Cell-Level Manipulation",
+ "answer_position": "'Bank Balance'!AL4:AL21"
+}

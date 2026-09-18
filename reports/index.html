@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tech Reports &mdash; Bat</title>
+<meta name="description" content="Data-backed technical reports: benchmarks run end-to-end, products taken apart, with method and raw numbers attached.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600&family=Inter:wght@400;500&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F6F5; --surface:#fff; --ink:#000; --ink-btn:#191919;
+  --ink2:rgba(25,25,25,.56); --accent:#15aabf; --hair:rgba(0,0,0,.06);
+  --serif:"Source Serif 4",Georgia,serif;
+  --sans:"Inter",system-ui,-apple-system,sans-serif;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:16px}
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.page{max-width:1360px;margin:0 auto;padding:0 64px;display:grid;grid-template-columns:144px minmax(0,1fr);gap:40px;border-left:1px solid var(--hair);border-right:1px solid var(--hair)}
+/* ---------- sidebar ---------- */
+.side{padding-top:40px}
+.side-inner{position:sticky;top:40px;display:flex;flex-direction:column;gap:28px}
+.wordmark{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:-.12px;color:var(--ink);line-height:1.4}
+.wordmark:hover{text-decoration:none}
+.brand{display:flex;flex-direction:column;gap:6px}
+.backlink{font-family:var(--mono);font-size:11.5px;letter-spacing:-.1px;color:var(--ink2)}
+.backlink:hover{color:var(--accent);text-decoration:none}
+.side nav{display:flex;flex-direction:column;gap:8px}
+.side nav a{font-family:var(--sans);font-size:15px;line-height:1.3;color:var(--ink)}
+.side nav a:hover{color:var(--accent);text-decoration:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:28px;padding:0 8px;border:1px solid var(--ink);font-family:var(--sans);font-size:13px;color:var(--ink-btn);width:fit-content;transition:background .12s,color .12s}
+.btn:hover{background:var(--ink-btn);color:var(--paper);text-decoration:none}
+/* ---------- article ---------- */
+article{max-width:880px;padding-top:120px;padding-bottom:96px}
+h1{font-family:var(--serif);font-weight:300;font-size:32px;line-height:1.2;letter-spacing:-.02em;max-width:612px}
+.postheader{border-bottom:1px solid var(--hair);padding-bottom:24px;margin-bottom:8px}
+.dek{font-family:var(--sans);font-size:15px;color:var(--ink2);margin-top:12px;max-width:612px}
+.prose{max-width:612px}
+p{font-size:15px;line-height:1.5;margin-bottom:12px}
+h2{font-family:var(--sans);font-weight:400;font-size:22px;line-height:1.3;margin-top:32px;margin-bottom:8px;scroll-margin-top:32px}
+strong{font-weight:600}
+.small-note{font-family:var(--mono);font-size:12px;color:var(--ink2);letter-spacing:-.12px}
+ul.plain{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+ul.plain li{font-size:15px;line-height:1.5;padding-left:16px;position:relative}
+ul.plain li::before{content:"\2013";position:absolute;left:0;color:var(--ink2)}
+/* ---------- report cards ---------- */
+.reports{margin-top:24px}
+.card{display:block;color:var(--ink);border-top:1px solid var(--hair);padding:26px 0}
+.card:last-child{border-bottom:1px solid var(--hair)}
+.card:hover{text-decoration:none}
+.card-kicker{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--ink2);display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.chip{display:inline-block;width:9px;height:9px;background:var(--ac);flex:none}
+.card h2{margin:0 0 8px;font-size:22px;transition:color .12s}
+.card:hover h2{color:var(--ac)}
+.card-dek{font-family:var(--sans);font-size:14.5px;line-height:1.5;color:var(--ink2);margin-bottom:14px}
+.finding{font-family:var(--serif);font-size:15px;font-weight:600;line-height:1.45;border-left:2px solid var(--ac);padding-left:12px}
+.card-meta{font-family:var(--mono);font-size:11px;letter-spacing:-.1px;color:var(--ink2);margin-top:14px}
+.card-meta .go{color:var(--ac)}
+@media (max-width:900px){
+  .page{grid-template-columns:1fr;gap:0;padding:0 24px;border:0}
+  .side-inner{position:static}
+  article{padding-top:40px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <aside class="side">
+    <div class="side-inner">
+      <div class="brand">
+        <a class="wordmark" href="#top">TECH&nbsp;REPORTS</a>
+        <a class="backlink" href="../index.html">&larr; Bat &mdash; Notes</a>
+      </div>
+      <nav>
+        <a href="#reports">Reports</a>
+        <a href="#about">What these are</a>
+      </nav>
+      <a class="btn" href="https://github.com/BrandeisPatrick/blog/tree/main/reports">View repo</a>
+    </div>
+  </aside>
+
+  <article id="top">
+    <header class="postheader">
+      <h1>Tech reports</h1>
+      <p class="dek">Benchmarks I ran end to end and products I took apart &mdash; longer and more measured than a blog post, with the method, the caveats, and the raw numbers attached.</p>
+    </header>
+
+    <div class="prose">
+      <section class="reports" id="reports">
+
+        <a class="card" href="skill-gym/" style="--ac:#C2255C">
+          <div class="card-kicker"><span class="chip"></span>BENCHMARK &middot; RESULTS IN</div>
+          <h2>Caveman vs Headroom: Which Tokens Actually Get Saved?</h2>
+          <p class="card-dek">56 isolated Opus runs on real SWE-bench and SpreadsheetBench tasks, with every token classified &mdash; which Claude Code token saver actually works, where, and the verdict a harness bug almost stole.</p>
+          <p class="finding">A tie at the top: caveman and the stack both cut cost per solved task &minus;30%, headroom &minus;18% &mdash; at identical quality, 10/14 each. About 460k tokens are read per run against ~6k written; caveman shrinks the 6k, headroom shrinks the 460k.</p>
+          <p class="card-meta">August 7, 2026 &middot; 14 tasks &times; 4 conditions &middot; runner + data in repo &middot; <span class="go">Read the report &rarr;</span></p>
+        </a>
+
+        <a class="card" href="devin-vs-cursor/" style="--ac:#2200FF">
+          <div class="card-kicker"><span class="chip"></span>TEARDOWN &middot; EVALUATION PRE-REGISTERED</div>
+          <h2>Devin vs Cursor: A Technical Comparison</h2>
+          <p class="card-dek">Two opposite bets on how an AI should understand your codebase &mdash; Cursor's trained embedding index against Devin's generated wiki plus RL-trained agentic search, with Claude Code as the control that pre-computes nothing.</p>
+          <p class="finding">Neither product is open source, and as of August 2026 no rigorous head-to-head exists &mdash; published comparisons are single-run anecdotes or roundups that misattribute foundation-model scores to the products. This one documents what is actually known and pre-registers the evaluation.</p>
+          <p class="card-meta">August 4, 2026 &middot; pre-test v0 &middot; hands-on evaluation not yet run &middot; <span class="go">Read the report &rarr;</span></p>
+        </a>
+
+      </section>
+
+      <section id="about">
+        <h2>What these are</h2>
+        <p>The <a href="../index.html">notes blog</a> is where I think out loud. This is where the work that needed a harness ends up &mdash; each report is one self-contained page, and the repo behind it carries the runner, the task definitions, and the results the page charts.</p>
+        <ul class="plain">
+          <li><strong>Numbers over vibes.</strong> Where there is a measurement, the method and the raw table ship next to the claim.</li>
+          <li><strong>Caveats are load-bearing.</strong> Small N, derived splits, and known harness bugs get their own section rather than a footnote.</li>
+          <li><strong>Status is stated up front.</strong> A report with results in says so; one that only pre-registers an evaluation says that too.</li>
+        </ul>
+        <p class="small-note">Source: <a href="https://github.com/BrandeisPatrick/blog/tree/main/reports">github.com/BrandeisPatrick/blog/tree/main/reports</a></p>
+      </section>
+    </div>
+  </article>
+</div>
+</body>
+</html>

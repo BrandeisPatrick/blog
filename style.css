@@ -135,32 +135,6 @@ html { scroll-behavior: smooth; }
 .desk .post-link h2 { font-size: 19px; }
 .desk .post-link .excerpt { font-size: 15px; margin-top: 4px; }
 
-/* ---- Tech reports (longer writeups, hosted in their own repo) ---- */
-.reports { margin: 40px 0 8px; }
-.reports > .section-label {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  color: var(--muted);
-}
-.reports > .section-label .section-note {
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
-}
-.reports .post-link { padding: 18px 0; }
-.reports .post-link h2 { font-size: 19px; }
-.reports .post-link .excerpt { font-size: 15px; margin-top: 4px; }
-/* Off-site marker — these open on the reports site, not this one. */
-.reports .post-link h2::after {
-  content: " \2197";
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--muted);
-}
-
 /* ---- Article (post pages) ---- */
 .article { margin: 24px 0 80px; }
 .article h1 { font-size: clamp(30px, 7vw, 42px); line-height: 1.1; letter-spacing: -0.02em; margin: 8px 0 4px; }

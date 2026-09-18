@@ -54,6 +54,14 @@ themselves. Code and numbers are first-class components, not decoration. This is
   toggles). Static SVG otherwise. One claim per figure.
 - Draft short first; do not write a survey and cut it down.
 
+## Scope: this guide is for the blog, not the reports
+
+Tech reports (`reports/`) share the repo but are deliberately a **different design** —
+grey paper, Source Serif 4 / Inter / Geist Mono, a sticky sidebar, self-contained pages
+with inline CSS. Do not restyle them to match the blog, and do not list or link them on
+the Writing page; they are reached from the **Reports** tab. Their conventions live in
+`reports/README.md`.
+
 ---
 
 ## Visual design (modeled on Hugo PaperMod, like Lilian Weng's site)

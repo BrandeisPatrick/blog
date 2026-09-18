@@ -1,0 +1,16 @@
+{
+ "kind": "docwork",
+ "repo": "pylint-dev/pylint",
+ "base_commit": null,
+ "from_instance": "pylint-dev__pylint-6903",
+ "rubric": [
+  "PyLinter",
+  "pylinter.py",
+  "register_checker|register_plugins|register_checkers",
+  "msgs|message.id|message-id|msgid",
+  "tests/functional",
+  "BaseChecker|BaseRawFileChecker|BaseTokenChecker",
+  "visit_|leave_"
+ ],
+ "rubric_pass_min": 5
+}

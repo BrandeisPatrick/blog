@@ -24,6 +24,15 @@ Live at **https://brandeispatrick.github.io/blog/**.
 Posts keep the same URL either way — publishing is just moving the entry between
 sections on the homepage.
 
+## Reports
+
+Longer, data-backed writeups live under [`reports/`](reports/) — one directory per
+report, holding the page *and* the harness, tasks and results behind it. They share
+this repo but **not** the blog's design: each report page is self-contained (inline
+CSS, its own fonts and sidebar layout) and does not use `style.css`. See
+[`reports/README.md`](reports/README.md). They are reached from the **Reports** tab in
+the top nav and are deliberately not listed or linked on the Writing page.
+
 ## Run locally
 
 Just open `index.html` in a browser, or serve the folder:
