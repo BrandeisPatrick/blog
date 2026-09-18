@@ -82,6 +82,82 @@ Custom slices: `python3 gym.py run --conditions baseline,caveman --tasks C4 --tr
 Runs are resumable (completed cells skipped). Interleaved condition order within
 each task keeps prompt-cache warmth fair.
 
+## v2 — tasks that can move, more tools (in progress)
+
+v1's verdict was a tie on quality because its tasks could not show anything else: the
+three SWE-bench tasks are solved by 7–9 of 10 public frontier agents, and the two
+failing spreadsheet tasks failed identically everywhere over a blank-vs-`#N/A`
+convention. [`PLAN.md`](PLAN.md) is the v2 design; what changed in the harness:
+
+| | v1 | v2 |
+|---|---|---|
+| tasks | 7, picked by hand | 19 SWE-bench Verified candidates in the 20–70% band of public frontier results, then **calibrated**: baseline × 3, keep the 10 that pass sometimes but not always; list frozen before any tool runs |
+| model | `opus` alias (resolved to `claude-opus-4-8`) | `claude-opus-5` pinned, `--effort xhigh` |
+| arms | baseline · caveman · headroom · both | baseline · caveman · **ponytail** · **rtk** · headroom · **effort-high** · **effort-low** (no stacks) |
+| quality | one bit per run | resolved + partial credit + P2P regressions + tests-after-last-edit + repeated calls + patch size |
+| env recipes | hand-written | ported from the official SWE-bench specs, `--exclude-newer 2024-08-01`, and **verified against the gold patch** (`bin/verify_swebench.py`): red at base, green with the reference fix, in this environment |
+| statistics | means | task-clustered bootstrap CIs, task-paired deltas, sign test |
+
+```bash
+python3 fetch_tasks.py swebench --gold      # pin instances (+ answer keys, for verification only)
+for t in tasks/swebench/*; do python3 bin/verify_swebench.py "$(basename $t)"; done
+rm -rf .cache/gold                          # the answer key must not be on disk while agents run
+sh bin/fetch_rtk.sh                         # pinned rtk binary, checksum-verified
+python3 gym.py run --phase calib --jobs 2   # 19 tasks x baseline x 3
+python3 analyze_v2.py calib                 # calibration table + tasks/v2_frozen.json
+python3 gym.py run --phase v2 --jobs 2      # 5 treatment arms on the frozen tasks
+python3 gym.py run --phase v2-high --jobs 2 # second native yardstick
+python3 analyze_v2.py report
+```
+
+### Four leaks v2 had to close before its first real run
+
+Opus 5 at `xhigh` is resourceful, and a benchmark it can shortcut measures nothing.
+
+1. **Account connectors.** One smoke run in two loaded the account's claude.ai MCP
+   connectors (Drive, Calendar, a brokerage) into the nested agent: ~75k tokens of tool
+   schemas, and live account access under `--dangerously-skip-permissions`. Now
+   `--strict-mcp-config`, and the runner refuses to gate any run whose init event shows a
+   tool or MCP server beyond the pinned six.
+2. **Future commits.** A plain clone carries every branch and tag, so `git log --all`
+   contains the real fix. Workspaces now fetch only the base commit's ancestry, plus the
+   tags that already precede it (setuptools_scm needs them).
+3. **The released fix.** The first calibration run did
+   `pip download pylint==2.11.1 --no-binary :all:` and diffed the fixed release against
+   its checkout. The agent's shell is now offline (proxy variables aimed at a dead port,
+   `NO_PROXY` for the API), the prompt forbids consulting other copies, and every run is
+   audited for network, bypass and outside-the-workspace lookups (`audit` in `gate.json`).
+4. **The harness itself.** v1 workspaces sat inside this tree, next to
+   `tasks/*/instance.json` — which holds the held-out tests — under a path that named the
+   condition. v2 workspaces live under `~/Library/Caches/pyws/<opaque id>/`, the agent's
+   environment no longer points here, and gold patches are deleted before agents run.
+
+And one bug that would have stolen a verdict, as the stale-bytecode one nearly did in v1:
+with two runs in parallel, **every pytest-repo task failed its gate** in the first
+calibration round — including a patch byte-identical to the gold fix (0/10 target tests,
+16/16 "regressions"). pytest garbage-collects its numbered temp dirs under
+`$TMPDIR/pytest-of-<user>/`; concurrent sessions of one user race on that cleanup, and
+pytest's own suite escalates the resulting `rm_rf` warning to an error. Every agent and
+every gate now gets a private `TMPDIR`; re-gating the same patch passed 10/10 with no
+regressions (`python3 gym.py regate <task>/<arm>/t<N>` rebuilds a workspace from the
+saved `patch.diff` and scores it again). The three affected runs were discarded and
+re-run, since the agents had seen the spurious errors too.
+
+Two things the host machine taught us. **Crash dialogs:** left to itself `uv` builds 3.9
+environments on Xcode's Python, an app bundle; pytest's suite aborts subprocesses on
+purpose (faulthandler tests), and every abort of an app bundle raises a "Python quit
+unexpectedly" dialog — 29 on the author's screen before `UV_PYTHON_PREFERENCE=only-managed`
+went in. All 19 environments were re-verified on the managed interpreter (3.9.25); 13
+baseline runs scored before the switch ran on Xcode's 3.9.6 and are kept (`venv_python`
+in `meta.json` from then on). **Disk:** the host had ~4 GB free, so the runner refuses to
+start a run below 2 GB free, aborts below 1 GB, and removes workspaces with a
+permission-fixing delete — pytest's own permission tests leave `chmod 0` directories that
+a plain `rmtree` silently skips.
+
+Host footprint in v2: `~/.claude/.ponytail-active` and `.ponytail-statusline-nudged`
+(ponytail's hook; removed after each run), `~/Library/Application Support/rtk/` (rtk's
+command history), `~/Library/Caches/pyws/` (workspaces; emptied after each gate).
+
 ## Caveats
 
 - N is small; treat deltas under ~15% as noise unless trials agree.
@@ -95,6 +171,9 @@ each task keeps prompt-cache warmth fair.
 ## Credits / licenses
 
 - caveman © Julius Brussee, vendored at pinned commit under `vendor/` (see its LICENSE)
+- ponytail © Dietrich Gebert (MIT), vendored at v4.10.0 under `vendor/ponytail` (see `PINNED`)
+- rtk © rtk-ai (Apache-2.0), v0.49.0 release binary fetched by `bin/fetch_rtk.sh`;
+  only its generated `RTK.md` is vendored
 - headroom © Headroom Labs, installed from PyPI into `.venv`
 - SWE-bench Verified (Princeton NLP / OpenAI-verified subset) via HuggingFace
 - SpreadsheetBench (RUC KBReasoning); `bin/ssb_check.py` ports its value-comparison

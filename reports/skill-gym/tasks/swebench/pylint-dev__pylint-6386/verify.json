@@ -1,0 +1,32 @@
+{
+ "instance": "pylint-dev__pylint-6386",
+ "verified": true,
+ "install_ok": true,
+ "patch_ok": true,
+ "gold_ok": true,
+ "f2p_red": true,
+ "f2p_green": true,
+ "notes": "",
+ "f2p_total": 1,
+ "p2p_total": 7,
+ "env": {
+  "python": "3.9",
+  "install": [
+   "pip install -e . pytest<8 py>=1.11 setuptools<70"
+  ],
+  "exclude_newer": "2024-08-01"
+ },
+ "f2p_passing_at_base": [],
+ "f2p_failing_with_gold": [],
+ "p2p_verified": [
+  "tests/config/test_config.py::test_can_read_toml_env_variable",
+  "tests/config/test_config.py::test_unknown_message_id",
+  "tests/config/test_config.py::test_unknown_option_name",
+  "tests/config/test_config.py::test_unknown_short_option_name",
+  "tests/config/test_config.py::test_unknown_confidence",
+  "tests/config/test_config.py::test_unknown_yes_no",
+  "tests/config/test_config.py::test_unknown_py_version"
+ ],
+ "p2p_verified_n": 7,
+ "seconds": 4
+}

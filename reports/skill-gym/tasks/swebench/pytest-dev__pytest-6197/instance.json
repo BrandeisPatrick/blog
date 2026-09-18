@@ -159,5 +159,7 @@
  "python": "3.9",
  "install": [
   "pip install -e ."
- ]
+ ],
+ "max_turns": 120,
+ "timeout": 3600
 }

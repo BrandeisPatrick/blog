@@ -1,0 +1,24 @@
+{
+ "instance": "pylint-dev__pylint-4604",
+ "verified": true,
+ "install_ok": true,
+ "patch_ok": true,
+ "gold_ok": true,
+ "f2p_red": true,
+ "f2p_green": true,
+ "notes": "",
+ "f2p_total": 21,
+ "p2p_total": 0,
+ "env": {
+  "python": "3.9",
+  "install": [
+   "pip install -e . pytest<8 py>=1.11 setuptools<70"
+  ],
+  "exclude_newer": "2024-08-01"
+ },
+ "f2p_passing_at_base": [],
+ "f2p_failing_with_gold": [],
+ "p2p_verified": [],
+ "p2p_verified_n": 0,
+ "seconds": 5
+}

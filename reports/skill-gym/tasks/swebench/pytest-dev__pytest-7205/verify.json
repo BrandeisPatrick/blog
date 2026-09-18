@@ -1,0 +1,41 @@
+{
+ "instance": "pytest-dev__pytest-7205",
+ "verified": true,
+ "install_ok": true,
+ "patch_ok": true,
+ "gold_ok": true,
+ "f2p_red": true,
+ "f2p_green": true,
+ "notes": "",
+ "f2p_total": 10,
+ "p2p_total": 16,
+ "env": {
+  "python": "3.9",
+  "install": [
+   "pip install -e . py==1.11.0 packaging==23.1 attrs==23.1.0 more-itertools==10.1.0 pluggy==0.13.1"
+  ],
+  "exclude_newer": "2024-08-01"
+ },
+ "f2p_passing_at_base": [],
+ "f2p_failing_with_gold": [],
+ "p2p_verified": [
+  "testing/test_setuponly.py::test_show_only_active_fixtures[--setup-only]",
+  "testing/test_setuponly.py::test_show_different_scopes[--setup-only]",
+  "testing/test_setuponly.py::test_show_nested_fixtures[--setup-only]",
+  "testing/test_setuponly.py::test_show_fixtures_with_autouse[--setup-only]",
+  "testing/test_setuponly.py::test_show_only_active_fixtures[--setup-plan]",
+  "testing/test_setuponly.py::test_show_different_scopes[--setup-plan]",
+  "testing/test_setuponly.py::test_show_nested_fixtures[--setup-plan]",
+  "testing/test_setuponly.py::test_show_fixtures_with_autouse[--setup-plan]",
+  "testing/test_setuponly.py::test_show_only_active_fixtures[--setup-show]",
+  "testing/test_setuponly.py::test_show_different_scopes[--setup-show]",
+  "testing/test_setuponly.py::test_show_nested_fixtures[--setup-show]",
+  "testing/test_setuponly.py::test_show_fixtures_with_autouse[--setup-show]",
+  "testing/test_setuponly.py::test_dynamic_fixture_request",
+  "testing/test_setuponly.py::test_capturing",
+  "testing/test_setuponly.py::test_show_fixtures_and_execute_test",
+  "testing/test_setuponly.py::test_setup_show_with_KeyboardInterrupt_in_test"
+ ],
+ "p2p_verified_n": 16,
+ "seconds": 4
+}

@@ -1,0 +1,21 @@
+{
+ "instance_id": "pylint-dev__pylint-4661",
+ "repo": "pylint-dev/pylint",
+ "base_commit": "1d1619ef913b99b06647d2030bddff4800abdf63",
+ "environment_setup_commit": "bc95cd34071ec2e71de5bca8ff95cc9b88e23814",
+ "version": "2.10",
+ "FAIL_TO_PASS": [
+  "tests/lint/unittest_lint.py::test_pylint_home"
+ ],
+ "PASS_TO_PASS": [],
+ "test_patch": "diff --git a/tests/lint/unittest_lint.py b/tests/lint/unittest_lint.py\n--- a/tests/lint/unittest_lint.py\n+++ b/tests/lint/unittest_lint.py\n@@ -46,6 +46,7 @@\n from os.path import abspath, basename, dirname, isdir, join, sep\n from shutil import rmtree\n \n+import appdirs\n import pytest\n \n from pylint import checkers, config, exceptions, interfaces, lint, testutils\n@@ -631,7 +632,7 @@ def test_pylint_home():\n     if uhome == \"~\":\n         expected = \".pylint.d\"\n     else:\n-        expected = os.path.join(uhome, \".pylint.d\")\n+        expected = appdirs.user_cache_dir(\"pylint\")\n     assert config.PYLINT_HOME == expected\n \n     try:\n",
+ "python": "3.9",
+ "install": [
+  "pip install -e . pytest<8 py>=1.11 setuptools<70"
+ ],
+ "max_turns": 120,
+ "timeout": 3600,
+ "exclude_newer": "2024-08-01",
+ "activate": true,
+ "offline": true
+}

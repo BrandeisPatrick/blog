@@ -134,7 +134,12 @@
  "test_patch": "diff --git a/tests/test_self.py b/tests/test_self.py\n--- a/tests/test_self.py\n+++ b/tests/test_self.py\n@@ -759,6 +759,24 @@ def test_modify_sys_path() -> None:\n                 modify_sys_path()\n             assert sys.path == paths[1:]\n \n+            paths = [\"\", *default_paths]\n+            sys.path = copy(paths)\n+            with _test_environ_pythonpath():\n+                modify_sys_path()\n+            assert sys.path == paths[1:]\n+\n+            paths = [\".\", *default_paths]\n+            sys.path = copy(paths)\n+            with _test_environ_pythonpath():\n+                modify_sys_path()\n+            assert sys.path == paths[1:]\n+\n+            paths = [\"/do_not_remove\", *default_paths]\n+            sys.path = copy(paths)\n+            with _test_environ_pythonpath():\n+                modify_sys_path()\n+            assert sys.path == paths\n+\n             paths = [cwd, cwd, *default_paths]\n             sys.path = copy(paths)\n             with _test_environ_pythonpath(\".\"):\n",
  "python": "3.9",
  "install": [
-  "pip install -e .",
-  "pip install pytest<8 py>=1.11"
- ]
+  "pip install setuptools<70 wheel",
+  "pip install --no-build-isolation -e . pytest<8 py>=1.11"
+ ],
+ "max_turns": 120,
+ "timeout": 3600,
+ "exclude_newer": "2024-08-01",
+ "activate": true,
+ "offline": true
 }

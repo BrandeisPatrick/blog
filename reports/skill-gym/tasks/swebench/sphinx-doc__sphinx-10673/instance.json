@@ -1,0 +1,31 @@
+{
+ "instance_id": "sphinx-doc__sphinx-10673",
+ "repo": "sphinx-doc/sphinx",
+ "base_commit": "f35d2a6cc726f97d0e859ca7a0e1729f7da8a6c8",
+ "environment_setup_commit": "a651e6bf4ad7a1dc293525d0a70e6d0d11b827db",
+ "version": "5.2",
+ "FAIL_TO_PASS": [
+  "tests/test_environment_toctree.py::test_toctree_index"
+ ],
+ "PASS_TO_PASS": [
+  "tests/test_environment_toctree.py::test_process_doc",
+  "tests/test_environment_toctree.py::test_glob",
+  "tests/test_environment_toctree.py::test_get_toc_for",
+  "tests/test_environment_toctree.py::test_get_toc_for_only",
+  "tests/test_environment_toctree.py::test_get_toc_for_tocdepth",
+  "tests/test_environment_toctree.py::test_get_toctree_for",
+  "tests/test_environment_toctree.py::test_get_toctree_for_collapse",
+  "tests/test_environment_toctree.py::test_get_toctree_for_maxdepth",
+  "tests/test_environment_toctree.py::test_get_toctree_for_includehidden"
+ ],
+ "test_patch": "diff --git a/tests/roots/test-toctree-index/conf.py b/tests/roots/test-toctree-index/conf.py\nnew file mode 100644\ndiff --git a/tests/roots/test-toctree-index/foo.rst b/tests/roots/test-toctree-index/foo.rst\nnew file mode 100644\n--- /dev/null\n+++ b/tests/roots/test-toctree-index/foo.rst\n@@ -0,0 +1,8 @@\n+foo\n+===\n+\n+:index:`word`\n+\n+.. py:module:: pymodule\n+\n+.. py:function:: Timer.repeat(repeat=3, number=1000000)\ndiff --git a/tests/roots/test-toctree-index/index.rst b/tests/roots/test-toctree-index/index.rst\nnew file mode 100644\n--- /dev/null\n+++ b/tests/roots/test-toctree-index/index.rst\n@@ -0,0 +1,15 @@\n+test-toctree-index\n+==================\n+\n+.. toctree::\n+\n+   foo\n+\n+\n+.. toctree::\n+   :caption: Indices\n+\n+   genindex\n+   modindex\n+   search\n+\ndiff --git a/tests/test_environment_toctree.py b/tests/test_environment_toctree.py\n--- a/tests/test_environment_toctree.py\n+++ b/tests/test_environment_toctree.py\n@@ -346,3 +346,17 @@ def test_get_toctree_for_includehidden(app):\n \n     assert_node(toctree[2],\n                 [bullet_list, list_item, compact_paragraph, reference, \"baz\"])\n+\n+\n+@pytest.mark.sphinx('xml', testroot='toctree-index')\n+def test_toctree_index(app):\n+    app.build()\n+    toctree = app.env.tocs['index']\n+    assert_node(toctree,\n+                [bullet_list, ([list_item, (compact_paragraph,  # [0][0]\n+                                            [bullet_list, (addnodes.toctree,  # [0][1][0]\n+                                                           addnodes.toctree)])])])  # [0][1][1]\n+    assert_node(toctree[0][1][1], addnodes.toctree,\n+                caption=\"Indices\", glob=False, hidden=False,\n+                titlesonly=False, maxdepth=-1, numbered=0,\n+                entries=[(None, 'genindex'), (None, 'modindex'), (None, 'search')])\n",
+ "python": "3.9",
+ "install": [
+  "pip install -e .[test] Jinja2==3.0.3 pytest<8 setuptools<70"
+ ],
+ "max_turns": 120,
+ "timeout": 3600,
+ "exclude_newer": "2024-08-01",
+ "activate": true,
+ "offline": true
+}

@@ -1,0 +1,10 @@
+rtk v0.49.0 (Apache-2.0) — https://github.com/rtk-ai/rtk
+asset   rtk-aarch64-apple-darwin.tar.gz
+sha256  bbbfebabb22686993a80da731aa4d5d35116fb8ae24abb00608efa028e13ae01
+fetched 2026-09-18 by bin/fetch_rtk.sh into .cache/bin/rtk (binary is not vendored)
+
+RTK.md is the awareness file `rtk init -g` writes to ~/.claude/RTK.md and references
+from ~/.claude/CLAUDE.md. skill-gym never runs `rtk init` against the real home: the
+rtk arm injects the same two pieces per run —
+  hook:       --settings {"hooks":{"PreToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"<abs>/rtk hook claude"}]}]}}
+  awareness:  --append-system-prompt "$(cat vendor/rtk/RTK.md)"

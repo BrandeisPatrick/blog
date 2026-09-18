@@ -1,0 +1,34 @@
+{
+ "instance": "sphinx-doc__sphinx-11510",
+ "verified": false,
+ "install_ok": true,
+ "patch_ok": true,
+ "gold_ok": true,
+ "f2p_red": true,
+ "f2p_green": false,
+ "notes": "gold tail: other.py::test_toctree_glob_and_url\nPASSED tests/test_directive_other.py::test_reversed_toctree\nPASSED tests/test_directive_other.py::test_toctree_twice\nPASSED tests/test_directive_other.py::test_include_source_read_event_nested_includes\nFAILED tests/test_directive_other.py::test_include_source_read_event - Assert...\n========================= 1 failed, 8 passed in 0.63s ==========================\n",
+ "f2p_total": 2,
+ "p2p_total": 7,
+ "env": {
+  "python": "3.9",
+  "install": [
+   "pip install -e .[test] Jinja2==3.0.3 pytest<8 setuptools<70"
+  ],
+  "exclude_newer": "2024-08-01"
+ },
+ "f2p_passing_at_base": [],
+ "f2p_failing_with_gold": [
+  "tests/test_directive_other.py::test_include_source_read_event"
+ ],
+ "p2p_verified": [
+  "tests/test_directive_other.py::test_toctree",
+  "tests/test_directive_other.py::test_relative_toctree",
+  "tests/test_directive_other.py::test_toctree_urls_and_titles",
+  "tests/test_directive_other.py::test_toctree_glob",
+  "tests/test_directive_other.py::test_toctree_glob_and_url",
+  "tests/test_directive_other.py::test_reversed_toctree",
+  "tests/test_directive_other.py::test_toctree_twice"
+ ],
+ "p2p_verified_n": 7,
+ "seconds": 7
+}

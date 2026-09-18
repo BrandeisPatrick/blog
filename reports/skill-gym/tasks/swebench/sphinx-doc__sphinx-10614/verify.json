@@ -1,0 +1,28 @@
+{
+ "instance": "sphinx-doc__sphinx-10614",
+ "verified": false,
+ "install_ok": true,
+ "patch_ok": true,
+ "gold_ok": true,
+ "f2p_red": true,
+ "f2p_green": false,
+ "notes": "gold tail: heritance_diagram.py:151: graphviz \"dot\" is not available\nSKIPPED [1] tests/test_ext_inheritance_diagram.py:197: graphviz \"dot\" is not available\nSKIPPED [1] tests/test_ext_inheritance_diagram.py:249: graphviz \"dot\" is not available\nSKIPPED [1] tests/test_ext_inheritance_diagram.py:262: graphviz \"dot\" is not available\n========================= 1 passed, 5 skipped in 0.42s =========================\n",
+ "f2p_total": 1,
+ "p2p_total": 5,
+ "env": {
+  "python": "3.9",
+  "install": [
+   "pip install -e .[test] Jinja2==3.0.3 pytest<8 setuptools<70"
+  ],
+  "exclude_newer": "2024-08-01"
+ },
+ "f2p_passing_at_base": [],
+ "f2p_failing_with_gold": [
+  "tests/test_ext_inheritance_diagram.py::test_inheritance_diagram_svg_html"
+ ],
+ "p2p_verified": [
+  "tests/test_ext_inheritance_diagram.py::test_import_classes"
+ ],
+ "p2p_verified_n": 1,
+ "seconds": 8
+}

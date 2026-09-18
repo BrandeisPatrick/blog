@@ -1,0 +1,30 @@
+{
+ "instance": "sphinx-doc__sphinx-8548",
+ "verified": true,
+ "install_ok": true,
+ "patch_ok": true,
+ "gold_ok": true,
+ "f2p_red": true,
+ "f2p_green": true,
+ "notes": "",
+ "f2p_total": 1,
+ "p2p_total": 5,
+ "env": {
+  "python": "3.9",
+  "install": [
+   "pip install -e .[test] Jinja2<3.0 sphinxcontrib-applehelp<=1.0.7 sphinxcontrib-devhelp<=1.0.5 sphinxcontrib-qthelp<=1.0.6 alabaster<0.7.12 markupsafe<=2.0.1 sphinxcontrib-htmlhelp<=2.0.4 sphinxcontrib-serializinghtml<=1.1.9 pytest<8 setuptools<70"
+  ],
+  "exclude_newer": "2024-08-01"
+ },
+ "f2p_passing_at_base": [],
+ "f2p_failing_with_gold": [],
+ "p2p_verified": [
+  "tests/test_ext_autodoc_autoclass.py::test_classes",
+  "tests/test_ext_autodoc_autoclass.py::test_instance_variable",
+  "tests/test_ext_autodoc_autoclass.py::test_decorators",
+  "tests/test_ext_autodoc_autoclass.py::test_slots_attribute",
+  "tests/test_ext_autodoc_autoclass.py::test_show_inheritance_for_subclass_of_generic_type"
+ ],
+ "p2p_verified_n": 5,
+ "seconds": 7
+}

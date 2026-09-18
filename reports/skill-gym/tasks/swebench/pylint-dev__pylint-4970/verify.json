@@ -1,0 +1,42 @@
+{
+ "instance": "pylint-dev__pylint-4970",
+ "verified": true,
+ "install_ok": true,
+ "patch_ok": true,
+ "gold_ok": true,
+ "f2p_red": true,
+ "f2p_green": true,
+ "notes": "",
+ "f2p_total": 1,
+ "p2p_total": 17,
+ "env": {
+  "python": "3.9",
+  "install": [
+   "pip install -e . pytest<8 py>=1.11 setuptools<70"
+  ],
+  "exclude_newer": "2024-08-01"
+ },
+ "f2p_passing_at_base": [],
+ "f2p_failing_with_gold": [],
+ "p2p_verified": [
+  "tests/checkers/unittest_similar.py::test_ignore_comments",
+  "tests/checkers/unittest_similar.py::test_ignore_docstrings",
+  "tests/checkers/unittest_similar.py::test_ignore_imports",
+  "tests/checkers/unittest_similar.py::test_multiline_imports",
+  "tests/checkers/unittest_similar.py::test_ignore_multiline_imports",
+  "tests/checkers/unittest_similar.py::test_ignore_signatures_fail",
+  "tests/checkers/unittest_similar.py::test_ignore_signatures_pass",
+  "tests/checkers/unittest_similar.py::test_ignore_signatures_class_methods_fail",
+  "tests/checkers/unittest_similar.py::test_ignore_signatures_class_methods_pass",
+  "tests/checkers/unittest_similar.py::test_ignore_signatures_empty_functions_fail",
+  "tests/checkers/unittest_similar.py::test_ignore_signatures_empty_functions_pass",
+  "tests/checkers/unittest_similar.py::test_no_hide_code_with_imports",
+  "tests/checkers/unittest_similar.py::test_ignore_nothing",
+  "tests/checkers/unittest_similar.py::test_lines_without_meaningful_content_do_not_trigger_similarity",
+  "tests/checkers/unittest_similar.py::test_help",
+  "tests/checkers/unittest_similar.py::test_no_args",
+  "tests/checkers/unittest_similar.py::test_get_map_data"
+ ],
+ "p2p_verified_n": 17,
+ "seconds": 5
+}

@@ -1,0 +1,37 @@
+{
+ "instance": "sphinx-doc__sphinx-7748",
+ "verified": true,
+ "install_ok": true,
+ "patch_ok": true,
+ "gold_ok": true,
+ "f2p_red": true,
+ "f2p_green": true,
+ "notes": "",
+ "f2p_total": 2,
+ "p2p_total": 12,
+ "env": {
+  "python": "3.9",
+  "install": [
+   "pip install -e .[test] Jinja2<3.0 sphinxcontrib-applehelp<=1.0.7 sphinxcontrib-devhelp<=1.0.5 sphinxcontrib-qthelp<=1.0.6 alabaster<0.7.12 markupsafe<=2.0.1 sphinxcontrib-htmlhelp<=2.0.4 sphinxcontrib-serializinghtml<=1.1.9 pytest<8 setuptools<70"
+  ],
+  "exclude_newer": "2024-08-01"
+ },
+ "f2p_passing_at_base": [],
+ "f2p_failing_with_gold": [],
+ "p2p_verified": [
+  "tests/test_ext_autodoc_configs.py::test_autoclass_content_class",
+  "tests/test_ext_autodoc_configs.py::test_autoclass_content_init",
+  "tests/test_ext_autodoc_configs.py::test_autoclass_content_both",
+  "tests/test_ext_autodoc_configs.py::test_autodoc_inherit_docstrings",
+  "tests/test_ext_autodoc_configs.py::test_autodoc_docstring_signature",
+  "tests/test_ext_autodoc_configs.py::test_autoclass_content_and_docstring_signature_class",
+  "tests/test_ext_autodoc_configs.py::test_mocked_module_imports",
+  "tests/test_ext_autodoc_configs.py::test_autodoc_typehints_signature",
+  "tests/test_ext_autodoc_configs.py::test_autodoc_typehints_none",
+  "tests/test_ext_autodoc_configs.py::test_autodoc_typehints_description",
+  "tests/test_ext_autodoc_configs.py::test_autodoc_default_options",
+  "tests/test_ext_autodoc_configs.py::test_autodoc_default_options_with_values"
+ ],
+ "p2p_verified_n": 12,
+ "seconds": 7
+}

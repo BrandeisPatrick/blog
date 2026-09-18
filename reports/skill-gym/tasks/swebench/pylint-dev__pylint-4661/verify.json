@@ -1,0 +1,26 @@
+{
+ "instance": "pylint-dev__pylint-4661",
+ "verified": false,
+ "install_ok": true,
+ "patch_ok": true,
+ "gold_ok": true,
+ "f2p_red": true,
+ "f2p_green": false,
+ "notes": "gold tail: py'.\ntests/conftest.py:8: in <module>\n    from pylint import checkers\npylint/checkers/__init__.py:49: in <module>\n    from pylint.checkers.base_checker import BaseChecker, BaseTokenChecker\npylint/checkers/base_checker.py:22: in <module>\n    from pylint.config import OptionsProviderMixIn\npylint/config/__init__.py:39: in <module>\n    import appdirs\nE   ModuleNotFoundError: No module named 'appdirs'\n",
+ "f2p_total": 1,
+ "p2p_total": 0,
+ "env": {
+  "python": "3.9",
+  "install": [
+   "pip install -e . pytest<8 py>=1.11 setuptools<70"
+  ],
+  "exclude_newer": "2024-08-01"
+ },
+ "f2p_passing_at_base": [],
+ "f2p_failing_with_gold": [
+  "tests/lint/unittest_lint.py::test_pylint_home"
+ ],
+ "p2p_verified": [],
+ "p2p_verified_n": 0,
+ "seconds": 4
+}
