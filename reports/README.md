@@ -9,7 +9,7 @@ own design — deliberately different from the notes.
 
 | Report | Status | Live | Source |
 |---|---|---|---|
-| **Caveman vs Headroom** — which Claude Code token saver actually saves tokens, and which *kind* | results in (56 Opus runs) | [read](https://brandeispatrick.github.io/blog/reports/skill-gym/) | [`skill-gym/`](skill-gym/) |
+| **Caveman vs Headroom** — which Claude Code token saver actually saves tokens, which *kind*, and at what cost in solved tasks | v1 results in (56 Opus runs); v2 running — harder calibrated tasks, + ponytail, rtk | [read](https://brandeispatrick.github.io/blog/reports/skill-gym/) | [`skill-gym/`](skill-gym/) |
 | **Devin vs Cursor** — two opposite bets on how an AI should index and retrieve a codebase | pre-test v0, evaluation not yet run | [read](https://brandeispatrick.github.io/blog/reports/devin-vs-cursor/) | [`devin-vs-cursor/`](devin-vs-cursor/) |
 
 ## Layout
@@ -28,6 +28,9 @@ skill-gym/
   bin/                deterministic per-task gates
   tasks/              pinned SWE-bench / SpreadsheetBench instances
   results/            summary tables + results.json the page charts
+  analyze_v2.py       v2: graded quality, task-paired statistics
+  PLAN.md             v2 evaluation design, amendments, selection rule
+  vendor/             pinned third-party tools under test (caveman, ponytail, rtk notes)
   README.md           method, isolation model, how to run it
 devin-vs-cursor/
   index.html          the report

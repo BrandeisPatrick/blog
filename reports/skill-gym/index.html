@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Caveman vs Headroom: Which Tokens Actually Get Saved?</title>
-<meta name="description" content="A sandbox-isolated benchmark of Claude Code token-saving add-ons: 56 Opus runs, real SWE-bench and SpreadsheetBench tasks, token-category decomposition.">
+<meta name="description" content="A sandbox-isolated benchmark of Claude Code token-saving add-ons. v1: 56 Opus runs showed which tokens each tool saves. v2, running: harder tasks, more tools, and what the saving costs in solved tasks.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600&family=Inter:wght@400;500&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -132,13 +132,17 @@ footer a:hover{color:var(--accent);text-decoration:none}
         <a class="backlink" href="../">&larr; All reports</a>
       </div>
       <nav>
-        <a href="#verdict">Verdict</a>
-        <a href="#matchup">The matchup</a>
-        <a href="#method">Method</a>
-        <a href="#tokens">Where tokens go</a>
-        <a href="#cost">What it costs</a>
-        <a href="#pertask">Per task</a>
-        <a href="#quality">Why tasks failed</a>
+        <a href="#verdict">Where it stands</a>
+        <a href="#ceiling">Why v1 tied</a>
+        <a href="#v2">v2 design</a>
+        <a href="#calib">Calibration</a>
+        <a href="#leaks">Leaks closed</a>
+        <a href="#matchup">v1 &middot; matchup</a>
+        <a href="#method">v1 &middot; method</a>
+        <a href="#tokens">v1 &middot; tokens</a>
+        <a href="#cost">v1 &middot; cost</a>
+        <a href="#pertask">v1 &middot; per task</a>
+        <a href="#quality">v1 &middot; failures</a>
         <a href="#caveats">Caveats</a>
         <a href="#repro">Reproduce</a>
         <a href="#refs">References</a>
@@ -152,18 +156,125 @@ footer a:hover{color:var(--accent);text-decoration:none}
 
     <header class="postheader">
       <h1>Caveman vs Headroom: Which Tokens Actually Get Saved?</h1>
-      <p class="dek">56 isolated Opus runs, real benchmark tasks, every token classified — which Claude Code token saver actually works, where — and the verdict a harness bug almost stole.</p>
+      <p class="dek">v1 — 56 isolated Opus runs, every token classified — showed which tokens each Claude Code token saver removes. It could not show what removing them costs: its tasks were too easy to fail. v2 is running to find out.</p>
     </header>
 
     <section class="prose" id="verdict">
-      <h2>Verdict<a class="anchor" href="#verdict">#</a></h2>
-      <p>A tie at the top: <strong>caveman and the stack both cut cost per solved task −30%</strong>; headroom −18%. Quality is identical across all four — 10/14 each. (An earlier verdict had caveman “breaking a task” — that was our harness, not the tool; § why tasks failed.)</p>
-      <div class="takehome">~460k tokens read per run vs ~6k written. Caveman shrinks the 6k; headroom shrinks the 460k.</div>
+      <h2>Where it stands<a class="anchor" href="#verdict">#</a></h2>
+      <p><strong>Stands:</strong> where the tokens go. A Claude Code run reads ~460k tokens and writes ~6k. Caveman shrinks the 6k (output −42%); headroom shrinks the 460k (cache-read −45%). Cost per solved task fell −30% and −18%.</p>
+      <p><strong>Withdrawn:</strong> “at identical quality”. All four conditions solved the same 10 of 14 — but every task was one that everything passes or nothing passes. A battery with nothing in between cannot show a quality cost, so v1 never tested for one (§ why v1 tied).</p>
+      <p><strong>Running:</strong> v2 — tasks kept only if the baseline solves them <em>some</em> of the time, two more tools (ponytail, rtk), Claude Code's own effort dial as the yardstick, Opus 5 at extra-high effort. Calibration is under way; no tool has been scored yet.</p>
+      <div class="takehome">v1 measured the saving. v2 is built to measure the price.</div>
+      <p class="small-note">updated 2026-09-18 · the v2 design is fixed in <a href="https://github.com/BrandeisPatrick/blog/blob/main/reports/skill-gym/PLAN.md">PLAN.md</a> before any tool runs</p>
+    </section>
+
+    <section id="ceiling" style="max-width:880px">
+      <div class="prose">
+        <h2>Why v1 tied<a class="anchor" href="#ceiling">#</a></h2>
+        <p>A task can only separate two agents if one of them might fail it. Set v1's tasks against how often ten public frontier agents on the SWE-bench Verified leaderboard solve them:</p>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>v1 task</th><th>all four conditions</th><th>10 public agents</th><th>what it can show</th></tr></thead>
+          <tbody>
+            <tr><th>C1 · pylint-6903</th><td class="num">2/2</td><td class="num">9/10</td><td><strong>ceiling</strong> — everything passes</td></tr>
+            <tr><th>C2 · pytest-7490</th><td class="num">2/2</td><td class="num">7/10</td><td>near ceiling</td></tr>
+            <tr><th>C3 · sphinx-10323</th><td class="num">2/2</td><td class="num">9/10</td><td><strong>ceiling</strong></td></tr>
+            <tr><th>C4 · onboarding doc</th><td class="num">2/2</td><td class="num">—</td><td><strong>ceiling</strong> — a 5-of-7 keyword rubric passes anything on topic</td></tr>
+            <tr><th>O2 · spreadsheet</th><td class="num">2/2</td><td class="num">—</td><td><strong>ceiling</strong></td></tr>
+            <tr><th>O1, O3 · spreadsheets</th><td class="num">0/2</td><td class="num">—</td><td><strong>floor</strong> — a blank-vs-<code>#N/A</code> grading convention, not difficulty</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tfoot">public agents = 10 submissions in swe-bench/experiments (OpenHands, Sonar and live-SWE-agent on Opus 4.5; mini-SWE-agent on Opus 4.5, Opus 4.6, Sonnet 4.5, GPT-5.2, GLM-5, Kimi K2.5, Gemini 3.5 Flash). The “hard tier” pinned in August and never run had the opposite fault: 2/10, 2/10, 0/10, 0/10 — a floor instead of a ceiling.</p>
+      <div class="prose">
+        <p>So the goal is not <em>harder</em> tasks. It is <strong>discriminating</strong> ones: tasks the baseline solves sometimes, where a tool that costs capability has a pass rate to move.</p>
+      </div>
+    </section>
+
+    <section id="v2" style="max-width:880px">
+      <div class="prose">
+        <h2>v2 design<a class="anchor" href="#v2">#</a></h2>
+        <p>One arm per kind of token, no stacks — every effect gets a single cause. All arms run <code>claude-opus-5</code> at <code>--effort xhigh</code>: the most token-hungry setting is where a saver has the most to cut, and the most to break.</p>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <colgroup><col style="width:14%"><col style="width:22%"><col style="width:34%"><col style="width:30%"></colgroup>
+          <thead><tr><th>arm</th><th>tokens it cuts</th><th>injected per run as</th><th>what could break</th></tr></thead>
+          <tbody>
+            <tr><th>baseline</th><td>—</td><td>nothing</td><td>—</td></tr>
+            <tr><th>caveman</th><td>output · answer prose</td><td>plugin (<code>--plugin-dir</code>)</td><td>facts dropped from what it writes</td></tr>
+            <tr><th>ponytail</th><td>output · generated code</td><td>plugin; its SessionStart hook injects ~1.4k tokens of rules</td><td>under-building: edge cases, validation</td></tr>
+            <tr><th>rtk</th><td>input · shell output</td><td>a PreToolUse hook that rewrites <code>pytest</code> → <code>rtk pytest</code></td><td>the one line that mattered, compressed away</td></tr>
+            <tr><th>headroom</th><td>input · the whole request</td><td>localhost proxy (<code>ANTHROPIC_BASE_URL</code>)</td><td>lossy tool results and history</td></tr>
+            <tr><th>effort-high<br>effort-low</th><td>native · reasoning</td><td><code>--effort high</code> / <code>low</code></td><td><strong>the yardstick</strong> — what turning Claude Code's own dial buys, for free</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <ul class="plain">
+          <li><strong>Tasks by measured difficulty.</strong> Candidates come from public per-task solve rates, then get calibrated here: baseline runs first, and a task is kept only if it passes some but not all of them. The list is frozen before any tool runs.</li>
+          <li><strong>Quality is graded, not one bit:</strong> resolved · fraction of target tests passing · regressions · whether tests ran after the last edit · repeated tool calls · patch size.</li>
+          <li><strong>The frontier.</strong> Plot cost against pass rate; the effort arms draw the line you get for free. A tool above it earns its install; on it, you could have turned the dial; below it, the dial was better.</li>
+          <li><strong>Power, stated up front:</strong> 10 tasks × 3 trials sees drops of roughly 20 points, not 5. Differences are paired by task; intervals are bootstraps clustered by task.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="calib" style="max-width:880px">
+      <div class="prose">
+        <h2>Calibration so far<a class="anchor" href="#calib">#</a></h2>
+        <p>Baseline only, 37 runs scored as of 2026-09-18 17:05. The first pool was chosen where public agents succeed 2–7 times in 10. Opus 5 at extra-high effort solved <strong>18 of 19 on the first try</strong> — for this model that pool is the ceiling again, so the remaining budget moved to a reserve pool that public agents solve at most once in ten.</p>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>reserve task</th><th>10 public agents</th><th>baseline, first run</th><th>turns</th><th>est $ (API price)</th></tr></thead>
+          <tbody>
+            <tr><th>pylint-4551</th><td class="num">0/10</td><td class="num">pass · 10/10 tests</td><td class="num">45</td><td class="num">2.90</td></tr>
+            <tr><th>pylint-4604</th><td class="num">0/10</td><td class="num bad">fail · 0/21</td><td class="num">32</td><td class="num">1.10</td></tr>
+            <tr><th>pylint-7080</th><td class="num">0/10</td><td class="num">pass</td><td class="num">34</td><td class="num">1.60</td></tr>
+            <tr><th>pytest-5840</th><td class="num">0/10</td><td class="num bad">fail · 0/2</td><td class="num">49</td><td class="num">2.11</td></tr>
+            <tr><th>sphinx-7590</th><td class="num">0/10</td><td class="num">pass</td><td class="num">42</td><td class="num">1.84</td></tr>
+            <tr><th>sphinx-7748</th><td class="num">0/10</td><td class="num">pass</td><td class="num">47</td><td class="num">3.30</td></tr>
+            <tr><th>sphinx-9229</th><td class="num">0/10</td><td class="num">pass</td><td class="num">43</td><td class="num">1.64</td></tr>
+            <tr><th>sphinx-7462</th><td class="num">1/10</td><td class="num bad">fail · 1/2</td><td class="num">15</td><td class="num">0.43</td></tr>
+            <tr><th>sphinx-7985</th><td class="num">1/10</td><td class="num">pass</td><td class="num">30</td><td class="num">1.51</td></tr>
+            <tr><th>sphinx-9461</th><td class="num">1/10</td><td class="num">pass</td><td class="num">55</td><td class="num">2.99</td></tr>
+            <tr><th>sphinx-9602</th><td class="num">1/10</td><td class="num bad">fail · 0/1</td><td class="num">23</td><td class="num">0.82</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tfoot">7 of 11 on the first try, three xarray tasks still to run. Five of the passes are tasks none of the ten public agents solved — among them sphinx-7590, labelled “&gt;4 hours” of human work in SWE-bench. All 37 runs were audited for lookups: two flags, both read by hand and benign — in each the task's own subject tripped the pattern (a proxy-handling bug; a <code>sys.path</code> fixture full of <code>site-packages</code> strings). A mix of passes and fails is the point: second runs decide which tasks sit in the band.</p>
+      <div class="prose">
+        <p>The selection rule was written into PLAN.md before the reserve pool ran: in-band tasks first; if fewer than ten, top up with always-pass tasks that took the most turns — they have the most to lose; never-pass tasks are dropped.</p>
+      </div>
+    </section>
+
+    <section id="leaks" style="max-width:880px">
+      <div class="prose">
+        <h2>Leaks closed before the first real run<a class="anchor" href="#leaks">#</a></h2>
+        <p>Opus 5 at extra-high effort is resourceful, and a benchmark it can shortcut measures nothing. Each of these surfaced in smoke tests or the first calibration runs; nothing from an affected run is used.</p>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <colgroup><col style="width:17%"><col style="width:45%"><col style="width:38%"></colgroup>
+          <thead><tr><th>leak</th><th>how it showed up</th><th>fix</th></tr></thead>
+          <tbody>
+            <tr><th>account connectors</th><td>One smoke run in two loaded the account's claude.ai connectors — Drive, Calendar, a brokerage — into the nested agent: ~75k tokens of tool schemas, and live account access under skip-permissions.</td><td><code>--strict-mcp-config</code>; a run is not gated unless its init event shows exactly the six pinned tools and no MCP server.</td></tr>
+            <tr><th>future commits</th><td>A plain clone carries every branch and tag, so <code>git log --all</code> contains the real fix.</td><td>Workspaces fetch only the base commit's ancestry, plus the tags that already precede it.</td></tr>
+            <tr><th>the released fix</th><td>The first calibration run did <code>pip download pylint==2.11.1</code> and diffed the fixed release against its checkout.</td><td>The agent's shell is offline (proxy variables aimed at a dead port, the API exempted); the prompt forbids other copies; every run is audited for lookups.</td></tr>
+            <tr><th>the harness itself</th><td>v1 workspaces sat inside the harness tree, beside the held-out tests, under a path that named the condition.</td><td>Workspaces live elsewhere under an opaque id; gold patches are deleted before agents run.</td></tr>
+            <tr><th>a verdict-stealing bug</th><td>With two runs in parallel every pytest-repo task failed its gate — including a patch byte-identical to the gold fix (0/10 target tests, 16/16 “regressions”). Concurrent pytest sessions race to clean a shared temp root, and pytest's own suite turns that warning into an error.</td><td>A private <code>TMPDIR</code> per agent and per gate. The same patch re-gated: 10/10, no regressions.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tfoot">the fifth row is v1's stale-bytecode story again (§ v1 · failures): a harness artifact that reads exactly like a tool breaking a task. Both were caught the same way — a failing patch that matched a passing one.</p>
     </section>
 
     <section id="matchup" style="max-width:880px">
       <div class="prose">
-        <h2>The matchup<a class="anchor" href="#matchup">#</a></h2>
+        <p class="small-note">v1 RESULTS · AUGUST 2026 · claude-opus-4-8 · 56 runs</p>
+        <h2>v1 · The matchup<a class="anchor" href="#matchup">#</a></h2>
         <p><strong>Caveman</strong> makes Claude answer in fragments; <strong>headroom</strong> compresses what Claude reads. One figure each.</p>
       </div>
 
@@ -193,7 +304,7 @@ footer a:hover{color:var(--accent);text-decoration:none}
           <text x="775" y="134" text-anchor="middle" style="font-family:var(--mono);font-size:8.5px" fill="rgba(25,25,25,.56)">fragments · code intact</text>
           <text x="775" y="170" text-anchor="middle" style="font-family:var(--mono);font-size:10.5px;font-weight:600" fill="#c77a29">3.4k (−42%)</text>
 
-          <text x="440" y="218" text-anchor="middle" style="font-family:var(--mono);font-size:10px" fill="rgba(25,25,25,.56)">price: +1.6k prompt tax · reasoning −42% — no measured quality cost (§ why tasks failed)</text>
+          <text x="440" y="218" text-anchor="middle" style="font-family:var(--mono);font-size:10px" fill="rgba(25,25,25,.56)">price: +1.6k prompt tax · reasoning −42% — quality cost: not measurable in v1 (§ why v1 tied)</text>
         </svg>
         <p class="fig-note">* a shorter transcript also shrinks the replayed context (−33%) — a second-order effect, not compression.</p>
       </figure>
@@ -256,7 +367,7 @@ footer a:hover{color:var(--accent);text-decoration:none}
 
     <section id="method" style="max-width:880px">
       <div class="prose">
-        <h2>Method<a class="anchor" href="#method">#</a></h2>
+        <h2>v1 · Method<a class="anchor" href="#method">#</a></h2>
       </div>
       <div class="tablewrap">
         <table>
@@ -284,7 +395,7 @@ footer a:hover{color:var(--accent);text-decoration:none}
 
     <section id="tokens" style="max-width:880px">
       <div class="prose">
-        <h2>Where the tokens go<a class="anchor" href="#tokens">#</a></h2>
+        <h2>v1 · Where the tokens go<a class="anchor" href="#tokens">#</a></h2>
       </div>
 
       <figure>
@@ -360,7 +471,7 @@ footer a:hover{color:var(--accent);text-decoration:none}
 
     <section id="cost" style="max-width:880px">
       <div class="prose">
-        <h2>What a solved task costs<a class="anchor" href="#cost">#</a></h2>
+        <h2>v1 · What a solved task costs<a class="anchor" href="#cost">#</a></h2>
         <p>Divide by solved tasks and the podium reorders.</p>
       </div>
       <figure>
@@ -407,7 +518,7 @@ footer a:hover{color:var(--accent);text-decoration:none}
 
     <section id="pertask" style="max-width:880px">
       <div class="prose">
-        <h2>Per task<a class="anchor" href="#pertask">#</a></h2>
+        <h2>v1 · Per task<a class="anchor" href="#pertask">#</a></h2>
         <p>Cost vs baseline, per task (pass rate). C = coding, O = spreadsheets.</p>
       </div>
       <div class="tablewrap">
@@ -424,12 +535,12 @@ footer a:hover{color:var(--accent);text-decoration:none}
           </tbody>
         </table>
       </div>
-      <p class="tfoot">no condition separates on quality. O1/O3 are four-way ties (§ why tasks failed); C3's −68% is caveman's biggest legitimate saving. C4, pure writing: −15%.</p>
+      <p class="tfoot">no condition separates on quality — and no task here could have (§ why v1 tied). O1/O3 are four-way ties (§ why tasks failed); C3's −68% is caveman's biggest legitimate saving. C4, pure writing: −15%.</p>
     </section>
 
     <section id="quality" style="max-width:880px">
       <div class="prose">
-        <h2>Why tasks failed<a class="anchor" href="#quality">#</a></h2>
+        <h2>v1 · Why tasks failed<a class="anchor" href="#quality">#</a></h2>
       </div>
       <div class="tablewrap">
         <table>
@@ -458,17 +569,19 @@ footer a:hover{color:var(--accent);text-decoration:none}
         </table>
       </div>
       <div class="prose">
-        <p>After the appeal: zero failures separate the conditions — 10/14 everywhere. The scariest finding reversed on forensics: caveman's speed didn't break the sphinx task, it outran the bytecode cache's one-second mtime resolution and broke our gate. Its −42% reasoning cut shows no measured quality cost in this battery — though N=2 says treat that as absence of evidence, not proof of safety.</p>
+        <p>After the appeal: zero failures separate the conditions — 10/14 everywhere. The scariest finding reversed on forensics: caveman's speed didn't break the sphinx task, it outran the bytecode cache's one-second mtime resolution and broke our gate. Its −42% reasoning cut shows no measured quality cost in this battery — and this battery could not have shown one: every task sat at the ceiling or the floor (§ why v1 tied). That is the question v2 exists to answer.</p>
       </div>
     </section>
 
     <section class="prose" id="caveats">
       <h2>Caveats<a class="anchor" href="#caveats">#</a></h2>
       <ul class="plain">
-        <li>N=2 — big deltas robust; single-cell effects are flags, not convictions (C3 proved it: the flag was our bug).</li>
-        <li>One model, one battery — each tool's ceiling moves with task mix.</li>
-        <li>Native SWE-bench envs (no Docker; official test patches at gate time) — token measurement, not official scores.</li>
-        <li>Three harness bugs caught and fixed (per-block stream events; a test-path false-flag; a stale-bytecode gate). C2 re-gated 0/8&#8202;→&#8202;8/8; C3 caveman 0/2&#8202;→&#8202;2/2.</li>
+        <li><strong>v1's quality tie is not a finding.</strong> Its tasks sat at the ceiling or the floor; its token and cost numbers stand.</li>
+        <li>v1: N=2 — big deltas robust; single-cell effects are flags, not convictions (C3 proved it: the flag was our bug).</li>
+        <li>v2 results are not in. This page reports its design, its calibration so far, and the harness faults it had to fix — nothing about any tool yet.</li>
+        <li>One model per version (Opus 4.8, then Opus 5 at <code>xhigh</code>); each tool's ceiling moves with model and task mix.</li>
+        <li>Native SWE-bench envs (no Docker; official test patches at gate time). v2 envs are ported from the official recipes and verified against the gold patch — still token measurement, not official scores.</li>
+        <li>Harness bugs caught and fixed — v1: per-block stream events; a test-path false-flag; a stale-bytecode gate (C2 re-gated 0/8&#8202;→&#8202;8/8; C3 caveman 0/2&#8202;→&#8202;2/2). v2: § leaks closed.</li>
       </ul>
     </section>
 
@@ -478,8 +591,17 @@ footer a:hover{color:var(--accent);text-decoration:none}
 <pre>python3 fetch_tasks.py            # pin benchmark instances
 python3 gym.py smoke              # auth + activation checks
 python3 gym.py run --phase full   # 4 conditions × 7 tasks × 2 trials
-python3 analyze.py full           # summary + results.json</pre>
-      <p class="small-note">isolation per run: fresh workspace · --setting-sources "" · pinned tools · scrubbed env · session-scoped plugin/proxy injection · no session persistence</p>
+python3 analyze.py full           # summary + results.json
+
+# v2
+python3 fetch_tasks.py swebench --gold      # pin instances (+ answer keys, for verification only)
+python3 bin/verify_swebench.py &lt;instance&gt;  # red at base, green with the gold patch, in this env
+rm -rf .cache/gold                          # no answer key on disk while agents run
+python3 gym.py run --phase calib --jobs 4   # baseline only
+python3 analyze_v2.py calib --freeze        # calibration table + frozen task list
+python3 gym.py run --phase v2 --jobs 4      # tool arms on the frozen tasks
+python3 analyze_v2.py report</pre>
+      <p class="small-note">isolation per run: fresh workspace · --setting-sources "" · pinned tools · scrubbed env · session-scoped plugin/proxy injection · no session persistence · v2 adds: no MCP · history cut at the base commit · offline shell · workspace outside the harness · private temp dir · lookup audit</p>
     </section>
 
     <section class="prose" id="refs">
@@ -490,12 +612,16 @@ python3 analyze.py full           # summary + results.json</pre>
         <li><span class="n">3</span>SWE-bench Verified — princeton-nlp, instances pylint-6903 · pytest-7490 · sphinx-10323, official FAIL_TO_PASS/PASS_TO_PASS gates</li>
         <li><span class="n">4</span>SpreadsheetBench — RUCKBReasoning, instances 59055 · 13894 · 55392, cell-level comparator port</li>
         <li><span class="n">5</span>runner, analyzer, raw event logs, and per-run gates: the skill-gym repo</li>
+        <li><span class="n">6</span>ponytail — DietrichGebert/ponytail, vendored at v4.10.0 (1d95ff7); rtk — rtk-ai/rtk v0.49.0, release binary pinned by SHA-256; headroom-ai 0.37.0 for v2</li>
+        <li><span class="n">7</span>per-task solve rates — swe-bench/experiments, 10 Verified submissions (Nov 2025 – Sep 2026)</li>
+        <li><span class="n">8</span>prior art — JetBrains AI blog, July 2026: caveman, rtk and ponytail on SkillsBench (rtk +7.6% cost; ponytail −10.3%); no quality difference detected, and not powered to prove equivalence</li>
+        <li><span class="n">9</span>v2 design, amendments and selection rule: PLAN.md in the repo</li>
       </ol>
     </section>
   </article>
 
   <footer>
-    <span>skill-gym — 56 runs · claude-opus-4-8 · 2h16m · zero errors · 2026-08-07</span>
+    <span>skill-gym — v1: 56 runs · claude-opus-4-8 · 2026-08-07 — v2: calibrating · claude-opus-5 xhigh · updated 2026-09-18</span>
     <span><a href="https://github.com/BrandeisPatrick/blog/tree/main/reports/skill-gym">repo</a> · built with Claude Code</span>
   </footer>
 </div>
