@@ -9,12 +9,9 @@
   --fg: #1b1b1a;
   --muted: #6b6b66;
   --accent: #b5482e;
-  --link: #2f6f7a;
-  --link-soft: rgba(47,111,122,.38);
   --rule: #ececec;
   --maxw: 680px;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --serif: Georgia, "Times New Roman", serif;
 }
 
 /* Always light/white — force it even if the OS is in dark mode. */
@@ -37,14 +34,10 @@ body {
 
 main, .hero, footer { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
 
-/* Article pages: tuned for reading, not for filling the screen.
-   ~700px measure ≈ 70 chars/line, 19px text, 1.7 line-height — the
-   typographic sweet spot. Figures may run a little wider than the text. */
-/* Desktop style modeled on lilianweng.github.io (Hugo PaperMod theme):
-   ~720px content column, system sans, 18px body, 1.6 leading, TOC box. */
+/* Article pages, modeled on lilianweng.github.io (Hugo PaperMod theme):
+   720px content column, system sans, 16px / 1.6, TOC box. */
 body.wide main, body.wide footer { max-width: 768px; }   /* 720px content + 2×24px gutters */
 .article { font-size: 16px; line-height: 1.6; }           /* matches lilianweng.github.io */
-.article p { margin: 0 0 1.2em; }
 .article .dek { font-size: 1.1em; line-height: 1.5; color: var(--muted); }
 /* Content / citation links: same color as the paragraph text, plain underline. */
 .article a { color: var(--fg); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
@@ -182,7 +175,7 @@ html { scroll-behavior: smooth; }
 }
 .article pre {
   background: rgba(127,127,127,.10); padding: 16px; border-radius: 8px;
-  overflow-x: auto; font-size: 14px; line-height: 1.5;
+  overflow-x: auto; font-size: 12.5px; line-height: 1.45;
 }
 .article code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
 .article pre code { font-size: inherit; }
@@ -198,6 +191,16 @@ html { scroll-behavior: smooth; }
 .article figcaption { margin-top: 10px; font-size: 13px; color: var(--muted); line-height: 1.5; text-align: center; }
 .article figcaption b { color: var(--fg); font-weight: 600; }
 
+/* ---- Code, collapsed by default (core style: available, not imposed) ---- */
+details.code { margin: 18px 0 26px; border-left: 3px solid var(--rule); padding-left: 14px; }
+details.code > summary { cursor: pointer; font-size: 14px; color: var(--muted); list-style: none; line-height: 1.5; }
+details.code > summary::-webkit-details-marker { display: none; }
+details.code > summary::before { content: "\25B8  "; color: var(--accent); }
+details.code[open] > summary::before { content: "\25BE  "; }
+details.code > summary:hover { color: var(--fg); }
+details.code pre { margin: 12px 0 0; }
+details.code pre.out { background: #fff; border-left: 3px solid var(--rule); border-radius: 0; margin-top: 0; color: var(--muted); }
+
 /* ---- Article extras ---- */
 .dek { font-size: clamp(18px, 4.5vw, 22px); color: var(--muted); line-height: 1.45; margin: 0 0 28px; }
 .article ul, .article ol { margin: 0 0 20px; padding-left: 24px; }
@@ -209,7 +212,6 @@ html { scroll-behavior: smooth; }
 .refs { font-size: 14px; line-height: 1.55; color: var(--muted); }
 .refs li { margin: 7px 0; }
 .refs a { color: var(--fg); word-break: break-word; }
-.footnote-num { font-size: 0.7em; vertical-align: super; color: var(--accent); text-decoration: none; padding: 0 1px; }
 
 /* ---- Footer ---- */
 footer {
