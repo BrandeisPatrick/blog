@@ -58,9 +58,3 @@ Serif 4 / Inter / Geist Mono, 144px sidebar + article grid — and differ only i
 
 One repo-level wrinkle: the blog's root `.gitignore` drops `*.log`, so
 `reports/**/results/*.log` is re-included there — run logs ship as evidence.
-
-## History
-
-These reports lived in a standalone `tech-report` repo (itself a `git subtree` merge
-of the earlier `devin-vs-cursor` and `skill-gym` repos) until September 2026, when the
-source moved into the blog repo. The harnesses' commit history stays in that repo.
