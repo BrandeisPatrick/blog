@@ -9,7 +9,7 @@ own design — deliberately different from the notes.
 
 | Report | Status | Live | Source |
 |---|---|---|---|
-| **Caveman vs Headroom** — which Claude Code token saver actually saves tokens, which *kind*, and at what cost in solved tasks | v2 results in (248 Opus 5 runs, 7 arms, 10 calibrated tasks); v1 (56 runs) kept | [read](https://brandeispatrick.github.io/blog/reports/skill-gym/) | [`skill-gym/`](skill-gym/) |
+| **Token-Saving Skills Review** — which Claude Code token saver actually saves tokens, which *kind*, and at what cost in solved tasks | v2 results in (276 Opus 5 runs, 7 arms, 10 calibrated tasks); v1 (56 runs) kept | [read](https://brandeispatrick.github.io/blog/reports/skill-gym/) | [`skill-gym/`](skill-gym/) |
 | **Devin vs Cursor** — two opposite bets on how an AI should index and retrieve a codebase | pre-test v0, evaluation not yet run | [read](https://brandeispatrick.github.io/blog/reports/devin-vs-cursor/) | [`devin-vs-cursor/`](devin-vs-cursor/) |
 
 ## Layout
