@@ -6,6 +6,11 @@ time of writing: all 19 candidate environments verified against their gold patch
 (§2); calibration not yet run. Task list freezes — and this file gets committed —
 before any treatment arm runs._
 
+_**Outcome, 2026-09-19:** run to completion — 58 calibration runs, list frozen and
+pushed at 17:41, then 190 further runs; zero errors, zero audit flags on the frozen
+tasks. Results: `results/summary-v2.md`. The amendments below were each written before
+the data they govern existed._
+
 ## 1. What v1 could not see
 
 v1 (56 Opus runs) found every condition solving the same 10 of 14 runs. That is not
@@ -201,6 +206,31 @@ Every arm shares all of this; an arm differs only in what it injects (§3).
 An earlier calibration was started and **discarded after two runs** when the first one
 fetched the fixed upstream release with `pip download` (README, "Four leaks"). Nothing
 from it is used.
+
+## 5b. Replication of the one surprise (pre-registered 2026-09-25, before launch)
+
+Headroom solved 28/30 against the baseline's 25/30. Forensics (report page, "why it went
+that way") found ordinary causes for every baseline miss and no mechanism by which a 2%
+context compression could produce them, and put the odds of one arm in six getting this
+lucky at about 1 in 20. That is not nothing, so we run more trials.
+
+- **Design:** the two tasks where the arms disagreed, `sphinx-7748` (1/3 vs 3/3) and
+  `xarray-7229` (2/3 vs 3/3); baseline and headroom only; **7 new trials per cell**
+  (28 runs, ~1 h at 4 parallel), same protocol and pins as `v2`, stored under
+  `results/runs/v2-rep/` so the main tables stay at 3 trials.
+- **Primary test — new trials only**, because the original three generated the
+  hypothesis: pooled 14 vs 14 runs, Fisher's exact test, two-sided; per task as well.
+- **Decision, fixed now:** if headroom's new-trial pass rate is within what 14 vs 14 can
+  resolve of the baseline's (p ≥ 0.05), the 28/30 is reported as luck and the report's
+  wording stands. If headroom is ahead with p < 0.05, the report is changed to say the
+  effect replicated on these tasks and a full replication across all ten is the next
+  step. If baseline is ahead, same wording as luck.
+- Secondary, descriptive only: all 10 trials per cell.
+
+**Outcome (2026-09-25, 28 runs, zero errors, zero audit flags):** new trials only, headroom
+7/14 vs baseline 11/14 (Fisher p = 0.24; per task 3/7 vs 5/7 and 4/7 vs 6/7). All ten
+trials: sphinx-7748 6/10 vs 6/10, xarray-7229 7/10 vs 8/10. Per the rule above: the 28/30
+is reported as luck, and the report's wording stands. `results/summary-v2-rep.md`.
 
 ## 6. Budget
 

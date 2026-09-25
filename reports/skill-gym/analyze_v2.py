@@ -3,13 +3,17 @@
 
   python3 analyze_v2.py calib [--freeze]   # baseline-only table; --freeze writes the task list
   python3 analyze_v2.py report    # every arm, on the frozen tasks only
+  python3 analyze_v2.py rep       # the pre-registered headroom replication
 
 Reads results/runs/v2/<task>/<arm>/t<N>/. Token accounting is v1's (analyze.parse_run);
 what is new here is the quality side and the statistics:
 
   resolved          all FAIL_TO_PASS green, verified PASS_TO_PASS held, tests untouched
   f2p_frac          partial credit
-  verified_last     the agent ran tests AFTER its final edit
+  test_cmds         shell commands that ran tests (pytest / tox / unittest)
+  bash_share        share of tool calls that were Bash. Opus 5 does 99-100% of its work in
+                    the shell - reads with sed/cat/grep, edits with heredocs - so metrics
+                    keyed on the Edit/Read tools (v2's first draft had one) measure nothing
   repeat_calls      identical tool calls issued more than once (the re-read tax)
   audit             lookups outside the workspace (see gym.audit_run)
 
@@ -53,7 +57,7 @@ random.seed(20260918)
 
 def behaviour(cell):
     """Process metrics from the event log."""
-    calls, last_edit, last_test = [], -1, -1
+    calls, n_test, n_bash = [], 0, 0
     for line in open(os.path.join(cell, "events.jsonl")):
         try:
             ev = json.loads(line)
@@ -66,15 +70,12 @@ def behaviour(cell):
                 continue
             sig = b.get("name", "") + json.dumps(b.get("input", {}), sort_keys=True)
             calls.append((sig, b.get("name")))
-            i = len(calls) - 1
-            if b.get("name") in ("Edit", "Write"):
-                last_edit = i
-            cmd = (b.get("input", {}) or {}).get("command", "") if b.get("name") == "Bash" else ""
-            if any(k in cmd for k in ("pytest", "tox ", "unittest")):
-                last_test = i
+            if b.get("name") == "Bash":
+                n_bash += 1
+                if any(k in (b.get("input") or {}).get("command", "") for k in ("pytest", "tox ", "unittest")):
+                    n_test += 1
     sigs = [c for c, _ in calls]
-    return {"verified_last": last_edit >= 0 and last_test > last_edit,
-            "edited": last_edit >= 0,
+    return {"test_cmds": n_test, "bash_share": n_bash / max(1, len(calls)),
             "repeat_calls": len(sigs) - len(set(sigs))}
 
 
@@ -229,18 +230,60 @@ def cmd_report(rows):
                     f" {better}/{worse}/{len(ts) - better - worse} (p={sign_test(better, worse):.2f}) |")
                  + f" {cost:.2f} | {pct(cost, base_cost)} | {cps:.2f} | {pct(cps, base_cps)} |")
 
+    # ---- cost, paired by task; and each tool against the free effort dial
+    tm = lambda a, t: mean(C[a][t])                                       # noqa: E731
+    L += ["\n## Cost, paired by task\n",
+          "| arm | cost vs baseline [95% CI] | cheaper on (tasks) | sign p |", "|---|---|---|---|"]
+    for a in arms:
+        if a == "baseline":
+            continue
+        ratio = lambda ts, a=a: sum(tm(a, t) for t in ts) / sum(tm("baseline", t) for t in ts)   # noqa: E731
+        lo, hi = boot(frozen, ratio)
+        cheaper = sum(tm(a, t) < tm("baseline", t) for t in frozen)
+        out["arms"][a].update(cost_ratio=ratio(frozen), cost_ratio_ci=[lo, hi], cheaper_tasks=cheaper)
+        L.append(f"| {a} | {ratio(frozen) - 1:+.0%} [{lo - 1:+.0%}, {hi - 1:+.0%}] | {cheaper}/{len(frozen)} |"
+                 f" {sign_test(cheaper, len(frozen) - cheaper):.3f} |")
+    dial = sorted((out["arms"][a]["cost"], out["arms"][a]["pass_rate"])
+                  for a in ("baseline", "effort-high", "effort-low") if a in out["arms"])
+    if len(dial) >= 2:
+        def dial_at(c):
+            for (c0, p0), (c1, p1) in zip(dial, dial[1:]):
+                if c0 <= c <= c1:
+                    return p0 + (p1 - p0) * (c - c0) / (c1 - c0)
+            return None
+        L += ["\n## Against the free dial\n",
+              "The effort arms are what Claude Code gives away: xhigh -> high -> low. For each tool, the pass rate "
+              "the dial delivers at the same cost per run (linear between the native points).\n",
+              "| tool | $/run | pass rate | the dial at that cost | tool minus dial |", "|---|---|---|---|---|"]
+        for a in arms:
+            if a in ("baseline", "effort-high", "effort-low"):
+                continue
+            c, pr = out["arms"][a]["cost"], out["arms"][a]["pass_rate"]
+            da = dial_at(c)
+            out["arms"][a]["dial_at_cost"] = da
+            L.append(f"| {a} | {c:.2f} | {pr:.0%} | " + (f"{da:.0%} | {100 * (pr - da):+.0f} pts |" if da is not None
+                     else "— costs more than the top of the dial | — |"))
+        out["dial"] = dial
+    if "caveman" in arms and "effort-high" in arms:
+        w = sum(mean(P["caveman"][t]) > mean(P["effort-high"][t]) for t in frozen)
+        l_ = sum(mean(P["caveman"][t]) < mean(P["effort-high"][t]) for t in frozen)
+        L.append(f"\ncaveman vs effort-high, the closest pair on price: caveman better on {w} tasks, worse on {l_}, "
+                 f"tie {len(frozen) - w - l_} (sign p={sign_test(w, l_):.3f}).")
+
     L += ["\n## Graded quality and process (mean per run)\n",
-          "| arm | f2p partial credit | P2P regressions | tests modified | ran tests after last edit |"
-          " repeated tool calls | lines added | audit-flagged runs |", "|---|---|---|---|---|---|---|---|"]
+          "| arm | f2p partial credit | P2P regressions | tests modified | test commands |"
+          " Bash share of tool calls | repeated tool calls | lines added | audit-flagged runs |",
+          "|---|---|---|---|---|---|---|---|---|"]
     for a in arms:
         rs = [r for r in rows if r["arm"] == a]
         out["arms"][a].update(f2p=mean([r["f2p_frac"] for r in rs]),
-                              verified_last=mean([r["verified_last"] for r in rs]),
+                              test_cmds=mean([r["test_cmds"] for r in rs]),
+                              bash_share=mean([r["bash_share"] for r in rs]),
                               repeat_calls=mean([r["repeat_calls"] for r in rs]),
                               lines_added=mean([r["lines_added"] for r in rs]))
         L.append(f"| {a} | {mean([r['f2p_frac'] for r in rs]):.2f} | {mean([r['p2p_regressions'] for r in rs]):.2f} |"
-                 f" {mean([r['tests_modified'] for r in rs]):.2f} | {mean([r['verified_last'] for r in rs]):.0%} |"
-                 f" {mean([r['repeat_calls'] for r in rs]):.1f} | {mean([r['lines_added'] for r in rs]):.0f} |"
+                 f" {mean([r['tests_modified'] for r in rs]):.2f} | {mean([r['test_cmds'] for r in rs]):.1f} |"
+                 f" {mean([r['bash_share'] for r in rs]):.0%} | {mean([r['repeat_calls'] for r in rs]):.1f} | {mean([r['lines_added'] for r in rs]):.0f} |"
                  f" {sum(not r['audit_clean'] for r in rs)}/{len(rs)} |")
 
     L += ["\n## Where the tokens went (mean per run)\n",
@@ -277,13 +320,53 @@ def cmd_report(rows):
           " do not quote these pass rates as SWE-bench scores."]
     md = "\n".join(L)
     open(os.path.join(ROOT, "results", "summary-v2.md"), "w").write(md)
-    json.dump({"summary": out, "runs": [{k: v for k, v in r.items() if k != "tools"} for r in rows]},
+    # gate_detail and audit carry pytest tails and shell commands, i.e. local paths: not published
+    json.dump({"summary": out, "runs": [{k: v for k, v in r.items() if k not in ("tools", "gate_detail", "audit")}
+                                        for r in rows]},
               open(os.path.join(ROOT, "results", "results-v2.json"), "w"), indent=1)
     print(md)
 
 
+# ------------------------------------------------------------------ replication
+REP = os.path.join(ROOT, "results", "runs", "v2-rep")
+REP_TASKS = ["sphinx-7748", "xarray-7229"]
+
+
+def fisher(a, b, c, d):
+    """Two-sided Fisher exact test for [[a, b], [c, d]]."""
+    n, r1, c1 = a + b + c + d, a + b, a + c
+    p = lambda x: comb(r1, x) * comb(n - r1, c1 - x) / comb(n, c1)   # noqa: E731
+    p0 = p(a)
+    return sum(p(x) for x in range(max(0, c1 - (n - r1)), min(r1, c1) + 1) if p(x) <= p0 + 1e-12)
+
+
+def cmd_rep(_rows):
+    """The pre-registered replication (PLAN.md 5b): fresh trials of baseline and headroom
+    on the two tasks where they disagreed. Primary test uses the new trials only."""
+    def passes(root, task, arm):
+        return [json.load(open(g))["passed"] for g in sorted(glob.glob(os.path.join(root, task, arm, "t*", "gate.json")))]
+    L = ["# skill-gym v2 — replication of headroom 28/30 vs baseline 25/30\n",
+         f"_Generated {time.strftime('%Y-%m-%d %H:%M')}. Design and decision rule: PLAN.md 5b, written before launch._\n",
+         "## New trials only (primary)\n", "| task | headroom | baseline | Fisher p |", "|---|---|---|---|"]
+    H = [0, 0]; B = [0, 0]
+    for t in REP_TASKS:
+        h, b = passes(REP, t, "headroom"), passes(REP, t, "baseline")
+        H[0] += sum(h); H[1] += len(h) - sum(h); B[0] += sum(b); B[1] += len(b) - sum(b)
+        L.append(f"| {t} | {sum(h)}/{len(h)} | {sum(b)}/{len(b)} | {fisher(sum(h), len(h) - sum(h), sum(b), len(b) - sum(b)):.2f} |")
+    L.append(f"| pooled | {H[0]}/{sum(H)} | {B[0]}/{sum(B)} | {fisher(H[0], H[1], B[0], B[1]):.2f} |")
+    L += ["\n## All trials (original 3 + new), descriptive\n", "| task | headroom | baseline |", "|---|---|---|"]
+    for t in REP_TASKS:
+        h = passes(RUNS, t, "headroom") + passes(REP, t, "headroom")
+        b = passes(RUNS, t, "baseline") + passes(REP, t, "baseline")
+        L.append(f"| {t} | {sum(h)}/{len(h)} | {sum(b)}/{len(b)} |")
+    md = "\n".join(L)
+    open(os.path.join(ROOT, "results", "summary-v2-rep.md"), "w").write(md)
+    print(md)
+
+
 if __name__ == "__main__":
-    rows = collect()
-    if not rows:
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "calib"
+    rows = [] if cmd == "rep" else collect()
+    if not rows and cmd != "rep":
         sys.exit("no gated v2 runs yet")
-    {"calib": cmd_calib, "report": cmd_report}[sys.argv[1] if len(sys.argv) > 1 else "calib"](rows)
+    {"calib": cmd_calib, "report": cmd_report, "rep": cmd_rep}[cmd](rows)

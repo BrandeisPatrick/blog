@@ -173,6 +173,11 @@ if os.path.exists(_FROZEN):
     # baseline is listed so its third trial runs interleaved with the arms (t1/t2 are done)
     PHASES["v2"] = {**_v2, "conditions": ["baseline", "caveman", "ponytail", "rtk", "headroom", "effort-low"]}
     PHASES["v2-high"] = {**_v2, "conditions": ["effort-high"]}   # last: cuttable without side effects
+    # Replication of the one surprise (headroom 28/30 vs baseline 25/30): fresh trials on the
+    # two tasks where the arms disagreed, kept in their own directory so the main table stays
+    # at 3 trials per cell. Pre-registered in PLAN.md before launch.
+    PHASES["v2-rep"] = {**_v2, "conditions": ["baseline", "headroom"],
+                        "tasks": ["sphinx-7748", "xarray-7229"], "trials": 7, "runs_as": "v2-rep"}
 TIMEOUTS = {"swebench": 2700, "ssb": 1500, "docwork": 1200, "smoke": 300}
 MAX_TURNS = {"swebench": 80, "ssb": 40, "docwork": 25, "smoke": 3}
 TOOLS = "Bash,Edit,Write,Read,Grep,Glob"
@@ -199,8 +204,11 @@ RATE_LIMIT_PAT = re.compile(r"rate.?limit|429|overloaded|usage limit|limit reach
                             r"limit will reset|out of extra usage", re.I)
 
 
-MIN_FREE_GB = 2.0      # never start a run below this; the host disk is nearly full
-ABORT_FREE_GB = 1.0
+# Never start a run below MIN_FREE_GB: the host disk is nearly full, and a run in flight
+# keeps growing — a sphinx workspace reaches ~500 MB once its private temp dir fills with
+# built docs. At 3 GB the guard throttles parallelism by itself when space is tight.
+MIN_FREE_GB = 3.0
+ABORT_FREE_GB = 1.5
 
 
 def force_rmtree(path):
@@ -214,6 +222,11 @@ def force_rmtree(path):
 
 
 def wait_for_disk():
+    # the harness-side bytecode cache is keyed by path, and every run has a new path:
+    # it grows ~5 MB per run for ever unless pruned
+    pyc = os.path.join(CACHE, "pycache")
+    if os.path.isdir(pyc) and sum(os.path.getsize(os.path.join(d, f)) for d, _, fs in os.walk(pyc) for f in fs) > 150e6:
+        shutil.rmtree(pyc, ignore_errors=True)
     waited = 0
     while True:
         free = shutil.disk_usage(ROOT).free / 1e9
@@ -695,7 +708,7 @@ def run_cell(phase, alias, task_rel, condition, trial, model, effort=None):
         log(f"skip {alias}/{condition}/t{trial} (done)")
         return
     ws = os.path.join(cell, "workspace")
-    if kind == "swebench" and phase == "v2":
+    if kind == "swebench" and phase.startswith("v2"):
         import hashlib
         opaque = hashlib.sha1(f"{alias}/{condition}/{trial}".encode()).hexdigest()[:10]
         ws = os.path.join(WS_ROOT, opaque, task_rel.split("__")[-1].rsplit("-", 1)[0])
