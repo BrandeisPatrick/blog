@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Token-Saving Skills Review: Caveman, Ponytail, rtk and Headroom on Opus 5</title>
-<meta name="description" content="A sandbox-isolated benchmark of Claude Code token-saving add-ons. v2: 276 Opus 5 runs on tasks hard enough to fail — caveman cuts cost 43% at no measurable quality loss; rtk and headroom cost more than running nothing.">
+<meta name="description" content="Four Claude Code token-saving add-ons and the effort dial, on ten SWE-bench tasks hard enough to fail: 276 isolated Opus 5 runs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600&family=Inter:wght@400;500&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -121,6 +121,19 @@ footer a:hover{color:var(--accent);text-decoration:none}
   article{padding-top:40px}
   h1{font-size:24px}
 }
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0 8px}
+.tile{background:#fff;border:1px solid var(--hair);padding:14px 16px}
+.tile b{display:block;font-family:var(--sans);font-size:30px;font-weight:500;letter-spacing:-.02em;line-height:1.1}
+.tile span{display:block;font-family:var(--sans);font-size:13px;color:var(--ink2);margin-top:6px;line-height:1.35}
+@media (max-width:640px){.tiles{grid-template-columns:1fr}}
+.tip{position:fixed;pointer-events:none;background:#191919;color:#fff;font-family:var(--mono);font-size:11px;padding:6px 8px;max-width:320px;line-height:1.4;z-index:9;opacity:0;transition:opacity .08s}
+[data-tip]{cursor:default}
+details.archive{margin:40px 0 0;border-top:1px solid var(--hair);padding-top:20px}
+details.archive>summary{cursor:pointer;font-family:var(--sans);font-size:17px;font-weight:500;list-style:none}
+details.archive>summary::-webkit-details-marker{display:none}
+details.archive>summary::before{content:"▸ ";color:var(--accent)}
+details.archive[open]>summary::before{content:"▾ "}
+.lede{font-family:var(--sans);font-size:15px;color:var(--ink2);max-width:612px;margin:4px 0 0}
 </style>
 </head>
 <body>
@@ -133,21 +146,16 @@ footer a:hover{color:var(--accent);text-decoration:none}
       </div>
       <nav>
         <a href="#verdict">Verdict</a>
-        <a href="#results">v2 results</a>
-        <a href="#why">Why it went that way</a>
-        <a href="#ceiling">Why v1 tied</a>
-        <a href="#v2">v2 design</a>
-        <a href="#calib">Calibration</a>
+        <a href="#frontier">Cost vs solved</a>
+        <a href="#cost">Cost</a>
+        <a href="#why">Why</a>
+        <a href="#pertask">Per task</a>
+        <a href="#replication">Replication</a>
+        <a href="#method">Method</a>
         <a href="#leaks">Leaks closed</a>
-        <a href="#matchup">v1 &middot; matchup</a>
-        <a href="#method">v1 &middot; method</a>
-        <a href="#tokens">v1 &middot; tokens</a>
-        <a href="#cost">v1 &middot; cost</a>
-        <a href="#pertask">v1 &middot; per task</a>
-        <a href="#quality">v1 &middot; failures</a>
+        <a href="#v1">v1 archive</a>
         <a href="#caveats">Caveats</a>
         <a href="#repro">Reproduce</a>
-        <a href="#refs">References</a>
       </nav>
       <a class="btn" href="https://github.com/BrandeisPatrick/blog/tree/main/reports/skill-gym">View repo</a>
     </div>
@@ -158,237 +166,117 @@ footer a:hover{color:var(--accent);text-decoration:none}
 
     <header class="postheader">
       <h1>Token-Saving Skills Review: Caveman, Ponytail, rtk and Headroom on Opus 5</h1>
-      <p class="dek">Four Claude Code token savers and the effort dial, on ten SWE-bench tasks hard enough to fail: 276 isolated Opus 5 runs at extra-high effort. One tool beats turning the dial. Two cost more than running nothing.</p>
+      <p class="dek">Four Claude Code token savers against the model's own effort dial, on ten SWE-bench tasks hard enough to fail. 276 isolated runs, Opus 5 at extra-high effort.</p>
     </header>
+
 
     <section class="prose" id="verdict">
       <h2>Verdict<a class="anchor" href="#verdict">#</a></h2>
-      <p><strong>Caveman works, and beats the free alternative.</strong> −43% cost per run, cheaper on all ten tasks, 24 of 30 solved against the baseline's 25. Turning Claude Code's own effort dial down one notch costs about the same and solves 20.</p>
-      <p><strong>Ponytail saves, at about the dial's price.</strong> −34% cost, 22 of 30 solved: worse than baseline on three tasks, better on none.</p>
-      <p><strong>rtk and headroom cost more than running nothing</strong> — +12% and +21% per run. Both keep their own ledgers of tokens saved; on this traffic neither ledger survived contact with the bill.</p>
-      <div class="takehome">On a model that over-thinks, the saver that works is the one that makes it say less. The ones that make it read less had nothing left to cut.</div>
-      <p class="small-note">210 runs on ten frozen tasks · claude-opus-5 at xhigh · 7 arms × 3 trials · the cost differences are statistically solid; no pass-rate difference between a tool and baseline is</p>
+      <div class="tiles">
+        <div class="tile"><b style="color:#c77a29">−43%</b><span>caveman's cost per run — cheaper on all 10 tasks, 24/30 solved vs baseline's 25</span></div>
+        <div class="tile"><b>24 vs 20</b><span>solved by caveman vs the effort dial at the same price</span></div>
+        <div class="tile"><b style="color:#b02525">+12% · +21%</b><span>rtk and headroom: dearer than running no tool</span></div>
+      </div>
+      <div class="takehome">The saver that makes the model say less works. The ones that make it read less had nothing to cut.</div>
     </section>
 
-    <section id="results" style="max-width:880px">
-      <div class="prose">
-        <h2>v2 results<a class="anchor" href="#results">#</a></h2>
-        <p>Cost per run against tasks solved. The grey line is what Claude Code gives away: the same model with the effort dial at <code>xhigh</code>, <code>high</code> and <code>low</code>. A tool above the line earns its install; on it, you could have turned the dial; to the right of baseline, it costs more than doing nothing.</p>
-      </div>
+    <section id="frontier" style="max-width:880px">
       <figure>
-        <figcaption>Fig. 0 — Four tools against the free dial</figcaption>
-        <svg class="chart-svg" viewBox="0 0 880 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Scatter of cost per run against pass rate for seven arms. The effort dial runs from low at 0.57 dollars and 60 percent, through high at 1.63 dollars and 67 percent, to the extra-high baseline at 2.52 dollars and 83 percent. Caveman sits above that line at 1.44 dollars and 80 percent; ponytail just above it at 1.67 dollars and 73 percent; rtk and headroom sit to the right of baseline at 2.83 and 3.05 dollars.">
-          <g stroke="#000" stroke-opacity=".07">
-            <line x1="90" y1="40" x2="820" y2="40"/><line x1="90" y1="85.7" x2="820" y2="85.7"/><line x1="90" y1="131.4" x2="820" y2="131.4"/>
-            <line x1="90" y1="177.1" x2="820" y2="177.1"/><line x1="90" y1="222.9" x2="820" y2="222.9"/><line x1="90" y1="268.6" x2="820" y2="268.6"/><line x1="90" y1="314.3" x2="820" y2="314.3"/>
-          </g>
+        <figcaption>Fig. 1 — Cost per run against runs solved</figcaption>
+        <svg class="chart-svg" viewBox="0 0 880 410" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cost per run against tasks solved for seven arms, with the effort dial as a line">
           <line class="axis" x1="90" y1="360" x2="820" y2="360"/><line class="axis" x1="90" y1="40" x2="90" y2="360"/>
-          <g class="axlabel" text-anchor="end"><text x="82" y="44">100%</text><text x="82" y="89.7">90%</text><text x="82" y="135.4">80%</text><text x="82" y="181.1">70%</text><text x="82" y="226.9">60%</text><text x="82" y="272.6">50%</text><text x="82" y="318.3">40%</text><text x="82" y="364">30%</text></g>
-          <g class="axlabel" text-anchor="middle"><text x="90" y="378">$0</text><text x="314.6" y="378">$1</text><text x="539.2" y="378">$2</text><text x="763.8" y="378">$3</text></g>
+          <line x1="90" y1="40.0" x2="820" y2="40.0" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="82" y="44.0" text-anchor="end">100%</text><line x1="90" y1="85.7" x2="820" y2="85.7" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="82" y="89.7" text-anchor="end">90%</text><line x1="90" y1="131.4" x2="820" y2="131.4" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="82" y="135.4" text-anchor="end">80%</text><line x1="90" y1="177.1" x2="820" y2="177.1" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="82" y="181.1" text-anchor="end">70%</text><line x1="90" y1="222.9" x2="820" y2="222.9" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="82" y="226.9" text-anchor="end">60%</text><line x1="90" y1="268.6" x2="820" y2="268.6" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="82" y="272.6" text-anchor="end">50%</text><line x1="90" y1="314.3" x2="820" y2="314.3" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="82" y="318.3" text-anchor="end">40%</text><line x1="90" y1="360.0" x2="820" y2="360.0" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="82" y="364.0" text-anchor="end">30%</text><text class="axlabel" x="90.0" y="378" text-anchor="middle">$0</text><text class="axlabel" x="314.6" y="378" text-anchor="middle">$1</text><text class="axlabel" x="539.2" y="378" text-anchor="middle">$2</text><text class="axlabel" x="763.8" y="378" text-anchor="middle">$3</text><polygon points="218.0,40 218.0,222.9 456.1,192.4 656.0,116.2 656.0,40" fill="#f58e3a" fill-opacity=".06"/><text x="258.5" y="62" style="font-family:var(--sans);font-size:11px" fill="#c77a29">above the line: better than turning the dial</text><rect x="656.0" y="40" width="164.0" height="320" fill="#b02525" fill-opacity=".04"/><text x="667.3" y="352" style="font-family:var(--sans);font-size:11px" fill="#b02525">right of baseline: costs more than no tool</text><polyline points="218.0,222.9 456.1,192.4 656.0,116.2" fill="none" stroke="#191919" stroke-opacity=".5" stroke-width="2"/><text class="axlabel" x="337.1" y="229.7" transform="rotate(-6 337.1 229.7)">the effort dial (free)</text><line x1="218.0" y1="346.3" x2="218.0" y2="117.7" stroke="#191919" stroke-opacity=".28" stroke-width="2"/><line x1="456.1" y1="282.3" x2="456.1" y2="99.4" stroke="#191919" stroke-opacity=".28" stroke-width="2"/><line x1="656.0" y1="209.1" x2="656.0" y2="40.0" stroke="#7048e8" stroke-opacity=".28" stroke-width="2"/><line x1="413.4" y1="236.6" x2="413.4" y2="53.7" stroke="#f58e3a" stroke-opacity=".28" stroke-width="2"/><line x1="465.1" y1="282.3" x2="465.1" y2="72.0" stroke="#15aabf" stroke-opacity=".28" stroke-width="2"/><line x1="725.7" y1="222.9" x2="725.7" y2="53.7" stroke="#2f9e44" stroke-opacity=".28" stroke-width="2"/><line x1="775.1" y1="145.1" x2="775.1" y2="40.0" stroke="#317cff" stroke-opacity=".28" stroke-width="2"/><circle cx="218.0" cy="222.9" r="7" fill="#F7F6F5" stroke="#191919" stroke-width="2" data-tip="effort-low: $0.57 per run · 18/30 solved · 95% CI 33–83%"/><text class="val" x="218.0" y="244.9" text-anchor="middle" font-weight="500">effort-low</text><text class="delta" x="218.0" y="257.9" text-anchor="middle">$0.57 · 18/30</text><circle cx="456.1" cy="192.4" r="7" fill="#F7F6F5" stroke="#191919" stroke-width="2" data-tip="effort-high: $1.63 per run · 20/30 solved · 95% CI 47–87%"/><text class="val" x="468.1" y="216.4" text-anchor="start" font-weight="500">effort-high</text><text class="delta" x="468.1" y="229.4" text-anchor="start">$1.63 · 20/30</text><circle cx="656.0" cy="116.2" r="7" fill="#7048e8" stroke="#F7F6F5" stroke-width="2" data-tip="baseline: $2.52 per run · 25/30 solved · 95% CI 63–100%"/><text class="val" x="644.0" y="106.2" text-anchor="end" font-weight="500">baseline (xhigh)</text><text class="delta" x="644.0" y="119.2" text-anchor="end">$2.52 · 25/30</text><circle cx="413.4" cy="131.4" r="7" fill="#f58e3a" stroke="#F7F6F5" stroke-width="2" data-tip="caveman: $1.44 per run · 24/30 solved · 95% CI 57–97%"/><text class="val" x="401.4" y="123.4" text-anchor="end" font-weight="600">caveman</text><text class="delta" x="401.4" y="136.4" text-anchor="end">$1.44 · 24/30</text><circle cx="465.1" cy="161.9" r="7" fill="#15aabf" stroke="#F7F6F5" stroke-width="2" data-tip="ponytail: $1.67 per run · 22/30 solved · 95% CI 47–93%"/><text class="val" x="477.1" y="137.9" text-anchor="start" font-weight="500">ponytail</text><text class="delta" x="477.1" y="150.9" text-anchor="start">$1.67 · 22/30</text><circle cx="725.7" cy="131.4" r="7" fill="#2f9e44" stroke="#F7F6F5" stroke-width="2" data-tip="rtk: $2.83 per run · 24/30 solved · 95% CI 60–97%"/><text class="val" x="737.7" y="151.4" text-anchor="start" font-weight="500">rtk</text><text class="delta" x="737.7" y="164.4" text-anchor="start">$2.83 · 24/30</text><circle cx="775.1" cy="70.5" r="7" fill="#317cff" stroke="#F7F6F5" stroke-width="2" data-tip="headroom: $3.05 per run · 28/30 solved · 95% CI 77–100%"/><text class="val" x="791.1" y="68.5" text-anchor="start" font-weight="500">headroom</text><text class="delta" x="791.1" y="81.5" text-anchor="start">$3.05 · 28/30</text><circle cx="775.1" cy="70.5" r="12" fill="none" stroke="#317cff" stroke-dasharray="3 3"/><text class="delta" x="791.1" y="94.5" fill="#317cff">did not</text><text class="delta" x="791.1" y="106.5" fill="#317cff">replicate</text>
           <text class="axlabel" x="455" y="402" text-anchor="middle">est. cost per run (API prices) →</text>
-          <text class="axlabel" x="24" y="200" text-anchor="middle" transform="rotate(-90 24 200)">runs solved, % of 30 →</text>
-          <!-- baseline cost -->
-          <line x1="656" y1="40" x2="656" y2="360" stroke="#7048e8" stroke-opacity=".35" stroke-dasharray="3 4"/>
-          <text class="axlabel" x="662" y="352">costs more than doing nothing →</text>
-          <!-- the dial -->
-          <polyline points="218,222.9 456.1,192.2 656,116.3" fill="none" stroke="#191919" stroke-opacity=".45" stroke-width="1.5"/>
-          <!-- 95% intervals -->
-          <g stroke="#191919" stroke-opacity=".22" stroke-width="1.2">
-            <line x1="218" y1="346.3" x2="218" y2="117.7"/><line x1="456.1" y1="282.3" x2="456.1" y2="99.4"/><line x1="656" y1="209.1" x2="656" y2="40"/>
-            <line x1="413.4" y1="236.6" x2="413.4" y2="53.7"/><line x1="465.1" y1="282.3" x2="465.1" y2="72"/><line x1="725.6" y1="222.9" x2="725.6" y2="53.7"/><line x1="775" y1="145.1" x2="775" y2="40"/>
-          </g>
-          <!-- native points -->
-          <circle cx="218" cy="222.9" r="5" fill="#F7F6F5" stroke="#191919" stroke-width="1.5"><title>effort-low: $0.57/run, 18/30</title></circle>
-          <circle cx="456.1" cy="192.2" r="5" fill="#F7F6F5" stroke="#191919" stroke-width="1.5"><title>effort-high: $1.63/run, 20/30</title></circle>
-          <circle cx="656" cy="116.3" r="6" fill="#7048e8"><title>baseline (xhigh): $2.52/run, 25/30</title></circle>
-          <text class="val" x="218" y="246" text-anchor="middle">effort-low</text><text class="delta" x="218" y="259" text-anchor="middle">$0.57 · 18/30</text>
-          <text class="val" x="474" y="214">effort-high</text><text class="delta" x="474" y="227">$1.63 · 20/30</text>
-          <text class="val" x="646" y="106" text-anchor="end">baseline · xhigh</text><text class="delta" x="646" y="119" text-anchor="end">$2.52 · 25/30</text>
-          <!-- tools -->
-          <circle cx="413.4" cy="131.4" r="6" fill="#f58e3a"><title>caveman: $1.44/run, 24/30</title></circle>
-          <text class="val" x="403" y="127" text-anchor="end" font-weight="600">caveman</text><text class="delta" x="403" y="140" text-anchor="end">$1.44 · 24/30 · +15 pts over the dial</text>
-          <circle cx="465.1" cy="162" r="6" fill="#15aabf"><title>ponytail: $1.67/run, 22/30</title></circle>
-          <text class="val" x="476" y="160">ponytail</text><text class="delta" x="476" y="173">$1.67 · 22/30 · +6</text>
-          <circle cx="725.6" cy="131.4" r="6" fill="#2f9e44"><title>rtk: $2.83/run, 24/30</title></circle>
-          <text class="val" x="736" y="150">rtk</text><text class="delta" x="736" y="163">$2.83 · 24/30</text>
-          <circle cx="775" cy="70.6" r="6" fill="#317cff"><title>headroom: $3.05/run, 28/30</title></circle>
-          <text class="val" x="765" y="62" text-anchor="end">headroom</text><text class="delta" x="765" y="75" text-anchor="end">$3.05 · 28/30</text>
+          <text class="axlabel" x="22" y="200" text-anchor="middle" transform="rotate(-90 22 200)">runs solved (of 30) →</text>
         </svg>
-        <p class="fig-note">whiskers = 95% intervals on the pass rate (bootstrap clustered by task). They overlap everywhere except effort-low vs baseline: the vertical differences between tools are suggestions, the horizontal ones are not. headroom's 28/30 did not replicate (§ why it went that way).</p>
+        <p class="fig-note">each dot = 30 runs (10 tasks × 3). whiskers = 95% intervals on the pass rate, clustered by task — they overlap: pass-rate gaps between tools are not significant; cost gaps are (Fig. 2). hover any mark.</p>
       </figure>
+    </section>
 
-      <div class="tablewrap">
-        <table>
-          <thead><tr><th>arm</th><th>solved</th><th>vs baseline [95% CI]</th><th>tasks better / worse</th><th>est $/run</th><th>cost vs baseline [95% CI]</th><th>cheaper on</th><th>est $/solved</th></tr></thead>
-          <tbody>
-            <tr><th><i class="dot" style="background:#7048e8"></i>baseline</th><td class="num">25/30</td><td class="num">—</td><td class="num">—</td><td class="num">2.52</td><td class="num">—</td><td class="num">—</td><td class="num">3.02</td></tr>
-            <tr><th><i class="dot" style="background:#f58e3a"></i>caveman</th><td class="num">24/30</td><td class="num">−3 pts [−23, +13]</td><td class="num">1 / 2</td><td class="num">1.44</td><td class="num"><strong>−43%</strong> [−50, −36]</td><td class="num">10/10 tasks</td><td class="num"><strong>1.80</strong></td></tr>
-            <tr><th><i class="dot" style="background:#15aabf"></i>ponytail</th><td class="num">22/30</td><td class="num">−10 pts [−27, +7]</td><td class="num">0 / 3</td><td class="num">1.67</td><td class="num"><strong>−34%</strong> [−41, −25]</td><td class="num">9/10</td><td class="num">2.27</td></tr>
-            <tr><th><i class="dot" style="background:#2f9e44"></i>rtk</th><td class="num">24/30</td><td class="num">−3 pts [−27, +20]</td><td class="num">2 / 2</td><td class="num">2.83</td><td class="num bad">+12% [+0, +27]</td><td class="num">3/10</td><td class="num">3.54</td></tr>
-            <tr><th><i class="dot" style="background:#317cff"></i>headroom</th><td class="num">28/30</td><td class="num">+10 pts [−3, +30]</td><td class="num">2 / 0</td><td class="num">3.05</td><td class="num bad">+21% [+5, +44]</td><td class="num">2/10</td><td class="num">3.27</td></tr>
-            <tr><th>effort-high</th><td class="num">20/30</td><td class="num">−17 pts [−37, +3]</td><td class="num">0 / 5</td><td class="num">1.63</td><td class="num">−35% [−45, −21]</td><td class="num">8/10</td><td class="num">2.45</td></tr>
-            <tr><th>effort-low</th><td class="num">18/30</td><td class="num bad">−23 pts [−50, −3]</td><td class="num">0 / 5</td><td class="num">0.57</td><td class="num">−77% [−82, −71]</td><td class="num">10/10</td><td class="num">0.95</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="tfoot">differences are paired by task; intervals are bootstraps clustered by task. No tool's pass rate is distinguishable from baseline's; the effort arms sit at the edge (sign test p = 0.06 each), and headroom's +3 did not survive replication — 7/14 against baseline's 11/14 on fresh trials of the two tasks that produced it (§ why it went that way). Caveman against effort-high, the closest pair on price: better on 4 tasks, worse on none (p = 0.125). 0 of 210 runs flagged by the lookup audit, no regressions, no test files touched.</p>
-
-      <div class="tablewrap">
-        <table>
-          <thead><tr><th>task</th><th>baseline</th><th>caveman</th><th>ponytail</th><th>rtk</th><th>headroom</th><th>effort-high</th><th>effort-low</th></tr></thead>
-          <tbody>
-            <tr><th>xarray-6992</th><td class="num">1/3</td><td class="num">1/3</td><td class="num">1/3</td><td class="num">2/3</td><td class="num">1/3</td><td class="num">1/3</td><td class="num bad">0/3</td></tr>
-            <tr><th>sphinx-7748</th><td class="num">1/3</td><td class="num">1/3</td><td class="num bad">0/3</td><td class="num">2/3</td><td class="num">3/3</td><td class="num">1/3</td><td class="num">1/3</td></tr>
-            <tr><th>xarray-7229</th><td class="num">2/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">2/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">1/3</td></tr>
-            <tr><th>sphinx-10673</th><td class="num">3/3</td><td class="num">2/3</td><td class="num">3/3</td><td class="num bad">1/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">2/3</td></tr>
-            <tr><th>sphinx-8548</th><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td></tr>
-            <tr><th>pylint-6386</th><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td></tr>
-            <tr><th>sphinx-9461</th><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">3/3</td></tr>
-            <tr><th>pylint-4970</th><td class="num">3/3</td><td class="num">2/3</td><td class="num">2/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num bad">0/3</td></tr>
-            <tr><th>sphinx-9229</th><td class="num">3/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">3/3</td></tr>
-            <tr><th>pylint-4551</th><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">2/3</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="tfoot">the first three are the tasks the baseline solves only sometimes; the other seven it always solves, chosen as the ones that took the most turns. This is what v1 could not produce: columns that differ.</p>
+    <section id="cost" style="max-width:880px">
+      <figure>
+        <figcaption>Fig. 2 — Cost per run vs baseline</figcaption>
+        <svg class="chart-svg" viewBox="0 0 880 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cost per run relative to baseline, with 95% intervals"><line x1="470.0" y1="14" x2="470.0" y2="260" stroke="#7048e8" stroke-width="2"/><text class="axlabel" x="470.0" y="276" text-anchor="middle">baseline</text><line x1="158.0" y1="14" x2="158.0" y2="260" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="158.0" y="276" text-anchor="middle">-80%</text><line x1="236.0" y1="14" x2="236.0" y2="260" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="236.0" y="276" text-anchor="middle">-60%</text><line x1="314.0" y1="14" x2="314.0" y2="260" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="314.0" y="276" text-anchor="middle">-40%</text><line x1="392.0" y1="14" x2="392.0" y2="260" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="392.0" y="276" text-anchor="middle">-20%</text><line x1="548.0" y1="14" x2="548.0" y2="260" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="548.0" y="276" text-anchor="middle">+20%</text><line x1="626.0" y1="14" x2="626.0" y2="260" stroke="#000" stroke-opacity=".06"/><text class="axlabel" x="626.0" y="276" text-anchor="middle">+40%</text><rect x="169.7" y="22" width="300.3" height="22" rx="4" fill="#fff" stroke="#191919" stroke-width="1.2" data-tip="effort-low: -77% cost per run vs baseline · 95% CI -82% to -71% · cheaper on 10/10 tasks"/><line x1="150.2" y1="33" x2="193.1" y2="33" stroke="#191919" stroke-opacity=".55" stroke-width="1.5"/><line x1="150.2" y1="28" x2="150.2" y2="38" stroke="#191919" stroke-opacity=".55"/><line x1="193.1" y1="28" x2="193.1" y2="38" stroke="#191919" stroke-opacity=".55"/><text class="rowlab" x="480.0" y="37">effort-low</text><text class="val" x="142.2" y="37" text-anchor="end">-77%</text><text class="delta" x="550.0" y="37">cheaper on 10/10 tasks</text><rect x="302.3" y="62" width="167.7" height="22" rx="4" fill="#f58e3a" data-tip="caveman: -43% cost per run vs baseline · 95% CI -50% to -36% · cheaper on 10/10 tasks"/><line x1="275.0" y1="73" x2="329.6" y2="73" stroke="#191919" stroke-opacity=".55" stroke-width="1.5"/><line x1="275.0" y1="68" x2="275.0" y2="78" stroke="#191919" stroke-opacity=".55"/><line x1="329.6" y1="68" x2="329.6" y2="78" stroke="#191919" stroke-opacity=".55"/><text class="rowlab" x="480.0" y="77">caveman</text><text class="val" x="267.0" y="77" text-anchor="end">-43%</text><text class="delta" x="550.0" y="77">cheaper on 10/10 tasks</text><rect x="333.5" y="102" width="136.5" height="22" rx="4" fill="#fff" stroke="#191919" stroke-width="1.2" data-tip="effort-high: -35% cost per run vs baseline · 95% CI -45% to -21% · cheaper on 8/10 tasks"/><line x1="294.5" y1="113" x2="388.1" y2="113" stroke="#191919" stroke-opacity=".55" stroke-width="1.5"/><line x1="294.5" y1="108" x2="294.5" y2="118" stroke="#191919" stroke-opacity=".55"/><line x1="388.1" y1="108" x2="388.1" y2="118" stroke="#191919" stroke-opacity=".55"/><text class="rowlab" x="480.0" y="117">effort-high</text><text class="val" x="286.5" y="117" text-anchor="end">-35%</text><text class="delta" x="550.0" y="117">cheaper on 8/10 tasks</text><rect x="337.4" y="142" width="132.6" height="22" rx="4" fill="#15aabf" data-tip="ponytail: -34% cost per run vs baseline · 95% CI -41% to -25% · cheaper on 9/10 tasks"/><line x1="310.1" y1="153" x2="372.5" y2="153" stroke="#191919" stroke-opacity=".55" stroke-width="1.5"/><line x1="310.1" y1="148" x2="310.1" y2="158" stroke="#191919" stroke-opacity=".55"/><line x1="372.5" y1="148" x2="372.5" y2="158" stroke="#191919" stroke-opacity=".55"/><text class="rowlab" x="480.0" y="157">ponytail</text><text class="val" x="302.1" y="157" text-anchor="end">-34%</text><text class="delta" x="550.0" y="157">cheaper on 9/10 tasks</text><rect x="470.0" y="182" width="46.8" height="22" rx="4" fill="#2f9e44" data-tip="rtk: +12% cost per run vs baseline · 95% CI +0% to +27% · cheaper on 3/10 tasks"/><line x1="470.0" y1="193" x2="575.3" y2="193" stroke="#191919" stroke-opacity=".55" stroke-width="1.5"/><line x1="470.0" y1="188" x2="470.0" y2="198" stroke="#191919" stroke-opacity=".55"/><line x1="575.3" y1="188" x2="575.3" y2="198" stroke="#191919" stroke-opacity=".55"/><text class="rowlab" x="460.0" y="197" text-anchor="end">rtk</text><text class="val" x="583.3" y="197" fill="#b02525">+12%</text><text class="delta" x="390.0" y="197" text-anchor="end">cheaper on 3/10 tasks</text><rect x="470.0" y="222" width="81.9" height="22" rx="4" fill="#317cff" data-tip="headroom: +21% cost per run vs baseline · 95% CI +5% to +44% · cheaper on 2/10 tasks"/><line x1="489.5" y1="233" x2="641.6" y2="233" stroke="#191919" stroke-opacity=".55" stroke-width="1.5"/><line x1="489.5" y1="228" x2="489.5" y2="238" stroke="#191919" stroke-opacity=".55"/><line x1="641.6" y1="228" x2="641.6" y2="238" stroke="#191919" stroke-opacity=".55"/><text class="rowlab" x="460.0" y="237" text-anchor="end">headroom</text><text class="val" x="649.6" y="237" fill="#b02525">+21%</text><text class="delta" x="390.0" y="237" text-anchor="end">cheaper on 2/10 tasks</text></svg>
+        <p class="fig-note">task-paired; whiskers = 95% bootstrap intervals over tasks. baseline = $2.52/run at API prices.</p>
+      </figure>
     </section>
 
     <section id="why" style="max-width:880px">
-      <div class="prose">
-        <h2>Why it went that way<a class="anchor" href="#why">#</a></h2>
-      </div>
-      <div class="tablewrap">
-        <table>
-          <thead><tr><th>mean per run</th><th>reasoning tok</th><th>answer tok</th><th>tool/code tok</th><th>cache-read tok</th><th>turns</th><th>test commands</th><th>wall</th></tr></thead>
-          <tbody>
-            <tr><th>baseline</th><td class="num">26.3k</td><td class="num">782</td><td class="num">5.3k</td><td class="num">2,058k</td><td class="num">47</td><td class="num">11.6</td><td class="num">8.9 min</td></tr>
-            <tr><th>caveman</th><td class="num"><strong>13.2k</strong></td><td class="num">476</td><td class="num">3.5k</td><td class="num">1,096k</td><td class="num">34</td><td class="num">7.8</td><td class="num">4.9 min</td></tr>
-            <tr><th>ponytail</th><td class="num">17.4k</td><td class="num">490</td><td class="num">3.3k</td><td class="num">1,208k</td><td class="num">35</td><td class="num">8.5</td><td class="num">6.2 min</td></tr>
-            <tr><th>rtk</th><td class="num">29.9k</td><td class="num">771</td><td class="num">6.0k</td><td class="num">2,378k</td><td class="num">51</td><td class="num">14.0</td><td class="num">9.5 min</td></tr>
-            <tr><th>headroom</th><td class="num">28.9k</td><td class="num">768</td><td class="num">5.6k</td><td class="num">2,457k</td><td class="num">53</td><td class="num">12.0</td><td class="num">10.1 min</td></tr>
-            <tr><th>effort-high</th><td class="num">15.9k</td><td class="num">677</td><td class="num">3.6k</td><td class="num">1,257k</td><td class="num">37</td><td class="num">8.9</td><td class="num">6.1 min</td></tr>
-            <tr><th>effort-low</th><td class="num">4.7k</td><td class="num">323</td><td class="num">1.9k</td><td class="num">358k</td><td class="num">19</td><td class="num">5.7</td><td class="num">2.3 min</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="prose">
-        <ul class="plain">
-          <li><strong>Caveman halves the thinking, not just the prose.</strong> Reasoning falls 26.3k → 13.2k tokens and turns 47 → 34; with a shorter transcript, replayed context halves too. That is a deeper cut than the dial's <code>high</code> setting makes (15.9k) — and it keeps four more tasks. Told to speak in fragments, the model drops the redundancy and keeps the work. Told to try less, it drops both.</li>
-          <li><strong>Ponytail does write less code</strong> — 43 lines added per run against 50, −14%, almost exactly what JetBrains measured — and spends a third less. But it slipped on three tasks and gained on none — one the baseline solves sometimes (0/3 against 1/3), two it never fails. Not significant, and not nothing.</li>
-          <li><strong>rtk had the whole channel and nothing to cut.</strong> Opus 5 does 99–100% of its work in the shell: it reads with <code>sed</code> and <code>grep</code>, edits with heredocs, and almost never calls Read or Edit. rtk rewrote some 945 of those commands and its ledger claims 89% saved — against raw output. The agent was already trimming its own output with <code>| tail</code> and <code>-q</code>; what reached the model did not shrink (75.7k characters of tool results per run against 72.4k), and runs got longer: more turns, more test commands, +12% cost.</li>
-          <li><strong>Headroom barely compressed this traffic.</strong> Its own ledger: 1.87M of 90.8M tokens removed, 2.1%. In v1, on Opus 4.8 and tasks full of logs and workbooks, it cut replayed context 45%; here the context is source code read in small slices. Meanwhile cache writes rose 37% and turns 13%, and the bill rose with them. Its runs did solve the most — 28 of 30, better on two tasks and worse on none. Checked, because a compressor solving <em>more</em> is odd: all nine disagreeing runs were re-scored from their saved patches in fresh workspaces and every verdict held; the three headroom trajectories share no tool calls; the baseline's misses are real near-misses, and each has a mundane cause: on sphinx-7748 both failing runs wrote the new overload branch without the return annotation, then printed rendered output in which the second signature visibly lacked its <code>-&gt; int</code> — and moved on to editing CHANGES; the one headroom run that made the same slip re-read its own code two calls later and fixed it; on xarray-7229 the failing run chose a defensible other reading of “coordinate attributes should be preserved” (keep the first argument's, not <code>x</code>'s), which the issue's own example cannot distinguish and the hidden test does. Five of the six other runs picked <code>x</code>'s. Simulated against the pooled per-task rates, an arm this lucky turns up about 1 time in 20 when six arms are tried. So we ran the bigger run, decision rule written down first (PLAN.md §5b): seven fresh trials each of baseline and headroom on the two tasks where they had disagreed. <strong>New trials only: headroom 7/14, baseline 11/14</strong> (Fisher p = 0.24); over all ten trials per cell, 6/10 against 6/10 on sphinx-7748 and 7/10 against 8/10 on xarray-7229. The 28/30 was luck.</li>
-          <li><strong>The dial is a blunt instrument.</strong> One notch down saves 35% and solves five fewer runs (worse on 5 tasks, better on none); the bottom saves 77% and solves 18 of 30. The first tool worth installing is one that beats that line, and one did.</li>
-        </ul>
-      </div>
+      <figure>
+        <figcaption>Fig. 3 — Why: what each arm changed</figcaption>
+        <div class="legend"><span><i style="background:#364fc7"></i>reasoning</span><span><i style="background:#c2255c"></i>answer text</span><span><i style="background:#e8890c"></i>tool calls &amp; code</span></div>
+        <svg class="chart-svg" viewBox="0 0 880 272" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Output tokens, context re-read and turns per run for each arm"><text x="118" y="14" style="font-family:var(--sans);font-size:12px;font-weight:500" fill="#191919">output written per run (tokens)</text><text x="470" y="14" style="font-family:var(--sans);font-size:12px;font-weight:500" fill="#191919">context re-read per run</text><text x="700" y="14" style="font-family:var(--sans);font-size:12px;font-weight:500" fill="#191919">turns per run</text><rect x="4" y="34" width="9" height="9" fill="#7048e8" stroke="none"/><text class="rowlab" x="18" y="43">baseline</text><rect x="118.0" y="30" width="195.2" height="18" fill="#364fc7" data-tip="baseline: reasoning 26.3k tokens/run"/><rect x="315.2" y="30" width="3.8" height="18" fill="#c2255c" data-tip="baseline: answer text 0.8k tokens/run"/><rect x="321.1" y="30" width="37.8" height="18" fill="#e8890c" data-tip="baseline: tool calls &amp; code 5.3k tokens/run"/><text class="val" x="366.9" y="43">32.4k</text><rect x="470" y="30" width="158.3" height="18" rx="3" fill="#8fa9ef" data-tip="baseline: 2.06M tokens of context re-read per run"/><text class="val" x="634.3" y="43">2.1M</text><rect x="700" y="30" width="109.7" height="18" rx="3" fill="#adb5bd" data-tip="baseline: 47 turns per run"/><text class="val" x="815.7" y="43">47</text><rect x="4" y="68" width="9" height="9" fill="#f58e3a" stroke="none"/><text class="rowlab" x="18" y="77">caveman</text><rect x="118.0" y="64" width="97.0" height="18" fill="#364fc7" data-tip="caveman: reasoning 13.2k tokens/run"/><rect x="217.0" y="64" width="1.6" height="18" fill="#c2255c" data-tip="caveman: answer text 0.5k tokens/run"/><rect x="220.6" y="64" width="24.2" height="18" fill="#e8890c" data-tip="caveman: tool calls &amp; code 3.5k tokens/run"/><text class="val" x="252.8" y="77">17.2k</text><rect x="470" y="64" width="84.3" height="18" rx="3" fill="#8fa9ef" data-tip="caveman: 1.10M tokens of context re-read per run"/><text class="val" x="560.3" y="77">1.1M</text><rect x="700" y="64" width="79.3" height="18" rx="3" fill="#adb5bd" data-tip="caveman: 34 turns per run"/><text class="val" x="785.3" y="77">34</text><rect x="4" y="102" width="9" height="9" fill="#15aabf" stroke="none"/><text class="rowlab" x="18" y="111">ponytail</text><rect x="118.0" y="98" width="128.5" height="18" fill="#364fc7" data-tip="ponytail: reasoning 17.4k tokens/run"/><rect x="248.5" y="98" width="1.7" height="18" fill="#c2255c" data-tip="ponytail: answer text 0.5k tokens/run"/><rect x="252.2" y="98" width="22.7" height="18" fill="#e8890c" data-tip="ponytail: tool calls &amp; code 3.3k tokens/run"/><text class="val" x="282.9" y="111">21.2k</text><rect x="470" y="98" width="92.9" height="18" rx="3" fill="#8fa9ef" data-tip="ponytail: 1.21M tokens of context re-read per run"/><text class="val" x="568.9" y="111">1.2M</text><rect x="700" y="98" width="81.7" height="18" rx="3" fill="#adb5bd" data-tip="ponytail: 35 turns per run"/><text class="val" x="787.7" y="111">35</text><rect x="4" y="136" width="9" height="9" fill="#fff" stroke="#191919"/><text class="rowlab" x="18" y="145">effort-high</text><rect x="118.0" y="132" width="117.2" height="18" fill="#364fc7" data-tip="effort-high: reasoning 15.9k tokens/run"/><rect x="237.2" y="132" width="3.1" height="18" fill="#c2255c" data-tip="effort-high: answer text 0.7k tokens/run"/><rect x="242.3" y="132" width="25.0" height="18" fill="#e8890c" data-tip="effort-high: tool calls &amp; code 3.6k tokens/run"/><text class="val" x="275.4" y="145">20.2k</text><rect x="470" y="132" width="96.7" height="18" rx="3" fill="#8fa9ef" data-tip="effort-high: 1.26M tokens of context re-read per run"/><text class="val" x="572.7" y="145">1.3M</text><rect x="700" y="132" width="86.3" height="18" rx="3" fill="#adb5bd" data-tip="effort-high: 37 turns per run"/><text class="val" x="792.3" y="145">37</text><line x1="4" y1="158" x2="876" y2="158" stroke="#000" stroke-opacity=".12" stroke-dasharray="3 3"/><rect x="4" y="170" width="9" height="9" fill="#2f9e44" stroke="none"/><text class="rowlab" x="18" y="179">rtk</text><rect x="118.0" y="166" width="222.2" height="18" fill="#364fc7" data-tip="rtk: reasoning 29.9k tokens/run"/><rect x="342.2" y="166" width="3.8" height="18" fill="#c2255c" data-tip="rtk: answer text 0.8k tokens/run"/><rect x="348.0" y="166" width="43.0" height="18" fill="#e8890c" data-tip="rtk: tool calls &amp; code 6.0k tokens/run"/><text class="val" x="399.0" y="179">36.7k</text><rect x="470" y="166" width="182.9" height="18" rx="3" fill="#8fa9ef" data-tip="rtk: 2.38M tokens of context re-read per run"/><text class="val" x="658.9" y="179">2.4M</text><rect x="700" y="166" width="119.0" height="18" rx="3" fill="#adb5bd" data-tip="rtk: 51 turns per run"/><text class="val" x="825.0" y="179">51</text><rect x="4" y="204" width="9" height="9" fill="#317cff" stroke="none"/><text class="rowlab" x="18" y="213">headroom</text><rect x="118.0" y="200" width="214.7" height="18" fill="#364fc7" data-tip="headroom: reasoning 28.9k tokens/run"/><rect x="334.8" y="200" width="3.8" height="18" fill="#c2255c" data-tip="headroom: answer text 0.8k tokens/run"/><rect x="340.5" y="200" width="40.0" height="18" fill="#e8890c" data-tip="headroom: tool calls &amp; code 5.6k tokens/run"/><text class="val" x="388.5" y="213">35.3k</text><rect x="470" y="200" width="189.0" height="18" rx="3" fill="#8fa9ef" data-tip="headroom: 2.46M tokens of context re-read per run"/><text class="val" x="665.0" y="213">2.5M</text><rect x="700" y="200" width="123.7" height="18" rx="3" fill="#adb5bd" data-tip="headroom: 53 turns per run"/><text class="val" x="829.7" y="213">53</text><rect x="4" y="238" width="9" height="9" fill="#fff" stroke="#191919"/><text class="rowlab" x="18" y="247">effort-low</text><rect x="118.0" y="234" width="33.2" height="18" fill="#364fc7" data-tip="effort-low: reasoning 4.7k tokens/run"/><rect x="153.2" y="234" width="1.0" height="18" fill="#c2255c" data-tip="effort-low: answer text 0.3k tokens/run"/><rect x="155.7" y="234" width="12.2" height="18" fill="#e8890c" data-tip="effort-low: tool calls &amp; code 1.9k tokens/run"/><text class="val" x="175.9" y="247">6.9k</text><rect x="470" y="234" width="27.5" height="18" rx="3" fill="#8fa9ef" data-tip="effort-low: 0.36M tokens of context re-read per run"/><text class="val" x="503.5" y="247">0.4M</text><rect x="700" y="234" width="44.3" height="18" rx="3" fill="#adb5bd" data-tip="effort-low: 19 turns per run"/><text class="val" x="750.3" y="247">19</text></svg>
+        <p class="fig-note">caveman halves reasoning (26.3k → 13.2k) and turns (47 → 34) — a deeper cut than the dial's <code>high</code>, keeping 4 more solves. rtk and headroom leave output alone and <em>raise</em> context and turns: Opus 5 works 99% in Bash and already trims its own output, so there was little left to compress (headroom's own ledger: 2.1% removed).</p>
+      </figure>
     </section>
 
-    <section id="ceiling" style="max-width:880px">
-      <div class="prose">
-        <h2>Why v1 tied<a class="anchor" href="#ceiling">#</a></h2>
-        <p>A task can only separate two agents if one of them might fail it. Set v1's tasks against how often ten public frontier agents on the SWE-bench Verified leaderboard solve them:</p>
-      </div>
-      <div class="tablewrap">
-        <table>
-          <thead><tr><th>v1 task</th><th>all four conditions</th><th>10 public agents</th><th>what it can show</th></tr></thead>
-          <tbody>
-            <tr><th>C1 · pylint-6903</th><td class="num">2/2</td><td class="num">9/10</td><td><strong>ceiling</strong> — everything passes</td></tr>
-            <tr><th>C2 · pytest-7490</th><td class="num">2/2</td><td class="num">7/10</td><td>near ceiling</td></tr>
-            <tr><th>C3 · sphinx-10323</th><td class="num">2/2</td><td class="num">9/10</td><td><strong>ceiling</strong></td></tr>
-            <tr><th>C4 · onboarding doc</th><td class="num">2/2</td><td class="num">—</td><td><strong>ceiling</strong> — a 5-of-7 keyword rubric passes anything on topic</td></tr>
-            <tr><th>O2 · spreadsheet</th><td class="num">2/2</td><td class="num">—</td><td><strong>ceiling</strong></td></tr>
-            <tr><th>O1, O3 · spreadsheets</th><td class="num">0/2</td><td class="num">—</td><td><strong>floor</strong> — a blank-vs-<code>#N/A</code> grading convention, not difficulty</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="tfoot">public agents = 10 submissions in swe-bench/experiments (OpenHands, Sonar and live-SWE-agent on Opus 4.5; mini-SWE-agent on Opus 4.5, Opus 4.6, Sonnet 4.5, GPT-5.2, GLM-5, Kimi K2.5, Gemini 3.5 Flash). The “hard tier” pinned in August and never run had the opposite fault: 2/10, 2/10, 0/10, 0/10 — a floor instead of a ceiling.</p>
-      <div class="prose">
-        <p>So the goal is not <em>harder</em> tasks. It is <strong>discriminating</strong> ones: tasks the baseline solves sometimes, where a tool that costs capability has a pass rate to move.</p>
-      </div>
+    <section id="pertask" style="max-width:880px">
+      <figure>
+        <figcaption>Fig. 4 — Runs solved, per task</figcaption>
+        <svg class="chart-svg" viewBox="0 0 880 358" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Runs solved out of 3 for each task and arm"><text class="rowlab" x="196" y="22" text-anchor="middle">baseline</text><text class="rowlab" x="288" y="22" text-anchor="middle">caveman</text><text class="rowlab" x="380" y="22" text-anchor="middle">ponytail</text><text class="rowlab" x="472" y="22" text-anchor="middle">rtk</text><text class="rowlab" x="564" y="22" text-anchor="middle">headroom</text><text class="rowlab" x="656" y="22" text-anchor="middle">effort-high</text><text class="rowlab" x="748" y="22" text-anchor="middle">effort-low</text><text class="rowlab" x="140" y="53" text-anchor="end">xarray-6992</text><rect x="151" y="35" width="90" height="28" rx="3" fill="#f0b5c2" data-tip="xarray-6992 · baseline: 1/3 solved (baseline 1/3)"/><text x="196" y="53" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">1/3</text><rect x="243" y="35" width="90" height="28" rx="3" fill="#f0b5c2" data-tip="xarray-6992 · caveman: 1/3 solved (baseline 1/3)"/><text x="288" y="53" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">1/3</text><rect x="335" y="35" width="90" height="28" rx="3" fill="#f0b5c2" data-tip="xarray-6992 · ponytail: 1/3 solved (baseline 1/3)"/><text x="380" y="53" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">1/3</text><rect x="427" y="35" width="90" height="28" rx="3" fill="#d9607e" data-tip="xarray-6992 · rtk: 2/3 solved (baseline 1/3)"/><text x="472" y="53" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3</text><rect x="519" y="35" width="90" height="28" rx="3" fill="#f0b5c2" data-tip="xarray-6992 · headroom: 1/3 solved (baseline 1/3)"/><text x="564" y="53" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">1/3</text><rect x="611" y="35" width="90" height="28" rx="3" fill="#f0b5c2" data-tip="xarray-6992 · effort-high: 1/3 solved (baseline 1/3)"/><text x="656" y="53" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">1/3</text><rect x="703" y="35" width="90" height="28" rx="3" fill="#fbe9ec" data-tip="xarray-6992 · effort-low: 0/3 solved (baseline 1/3)"/><text x="748" y="53" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">0/3 ↓</text><text class="rowlab" x="140" y="83" text-anchor="end">sphinx-7748</text><rect x="151" y="65" width="90" height="28" rx="3" fill="#f0b5c2" data-tip="sphinx-7748 · baseline: 1/3 solved (baseline 1/3)"/><text x="196" y="83" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">1/3</text><rect x="243" y="65" width="90" height="28" rx="3" fill="#f0b5c2" data-tip="sphinx-7748 · caveman: 1/3 solved (baseline 1/3)"/><text x="288" y="83" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">1/3</text><rect x="335" y="65" width="90" height="28" rx="3" fill="#fbe9ec" data-tip="sphinx-7748 · ponytail: 0/3 solved (baseline 1/3)"/><text x="380" y="83" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">0/3 ↓</text><rect x="427" y="65" width="90" height="28" rx="3" fill="#d9607e" data-tip="sphinx-7748 · rtk: 2/3 solved (baseline 1/3)"/><text x="472" y="83" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3</text><rect x="519" y="65" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-7748 · headroom: 3/3 solved (baseline 1/3)"/><text x="564" y="83" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="611" y="65" width="90" height="28" rx="3" fill="#f0b5c2" data-tip="sphinx-7748 · effort-high: 1/3 solved (baseline 1/3)"/><text x="656" y="83" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">1/3</text><rect x="703" y="65" width="90" height="28" rx="3" fill="#f0b5c2" data-tip="sphinx-7748 · effort-low: 1/3 solved (baseline 1/3)"/><text x="748" y="83" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">1/3</text><text class="rowlab" x="140" y="113" text-anchor="end">xarray-7229</text><rect x="151" y="95" width="90" height="28" rx="3" fill="#d9607e" data-tip="xarray-7229 · baseline: 2/3 solved (baseline 2/3)"/><text x="196" y="113" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3</text><rect x="243" y="95" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="xarray-7229 · caveman: 3/3 solved (baseline 2/3)"/><text x="288" y="113" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="335" y="95" width="90" height="28" rx="3" fill="#d9607e" data-tip="xarray-7229 · ponytail: 2/3 solved (baseline 2/3)"/><text x="380" y="113" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3</text><rect x="427" y="95" width="90" height="28" rx="3" fill="#d9607e" data-tip="xarray-7229 · rtk: 2/3 solved (baseline 2/3)"/><text x="472" y="113" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3</text><rect x="519" y="95" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="xarray-7229 · headroom: 3/3 solved (baseline 2/3)"/><text x="564" y="113" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="611" y="95" width="90" height="28" rx="3" fill="#d9607e" data-tip="xarray-7229 · effort-high: 2/3 solved (baseline 2/3)"/><text x="656" y="113" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3</text><rect x="703" y="95" width="90" height="28" rx="3" fill="#f0b5c2" data-tip="xarray-7229 · effort-low: 1/3 solved (baseline 2/3)"/><text x="748" y="113" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">1/3 ↓</text><text class="rowlab" x="140" y="157" text-anchor="end">sphinx-10673</text><rect x="151" y="139" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-10673 · baseline: 3/3 solved (baseline 3/3)"/><text x="196" y="157" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="243" y="139" width="90" height="28" rx="3" fill="#d9607e" data-tip="sphinx-10673 · caveman: 2/3 solved (baseline 3/3)"/><text x="288" y="157" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3 ↓</text><rect x="335" y="139" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-10673 · ponytail: 3/3 solved (baseline 3/3)"/><text x="380" y="157" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="427" y="139" width="90" height="28" rx="3" fill="#f0b5c2" data-tip="sphinx-10673 · rtk: 1/3 solved (baseline 3/3)"/><text x="472" y="157" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">1/3 ↓</text><rect x="519" y="139" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-10673 · headroom: 3/3 solved (baseline 3/3)"/><text x="564" y="157" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="611" y="139" width="90" height="28" rx="3" fill="#d9607e" data-tip="sphinx-10673 · effort-high: 2/3 solved (baseline 3/3)"/><text x="656" y="157" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3 ↓</text><rect x="703" y="139" width="90" height="28" rx="3" fill="#d9607e" data-tip="sphinx-10673 · effort-low: 2/3 solved (baseline 3/3)"/><text x="748" y="157" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3 ↓</text><text class="rowlab" x="140" y="187" text-anchor="end">sphinx-8548</text><rect x="151" y="169" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-8548 · baseline: 3/3 solved (baseline 3/3)"/><text x="196" y="187" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="243" y="169" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-8548 · caveman: 3/3 solved (baseline 3/3)"/><text x="288" y="187" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="335" y="169" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-8548 · ponytail: 3/3 solved (baseline 3/3)"/><text x="380" y="187" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="427" y="169" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-8548 · rtk: 3/3 solved (baseline 3/3)"/><text x="472" y="187" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="519" y="169" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-8548 · headroom: 3/3 solved (baseline 3/3)"/><text x="564" y="187" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="611" y="169" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-8548 · effort-high: 3/3 solved (baseline 3/3)"/><text x="656" y="187" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="703" y="169" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-8548 · effort-low: 3/3 solved (baseline 3/3)"/><text x="748" y="187" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><text class="rowlab" x="140" y="217" text-anchor="end">pylint-6386</text><rect x="151" y="199" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-6386 · baseline: 3/3 solved (baseline 3/3)"/><text x="196" y="217" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="243" y="199" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-6386 · caveman: 3/3 solved (baseline 3/3)"/><text x="288" y="217" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="335" y="199" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-6386 · ponytail: 3/3 solved (baseline 3/3)"/><text x="380" y="217" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="427" y="199" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-6386 · rtk: 3/3 solved (baseline 3/3)"/><text x="472" y="217" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="519" y="199" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-6386 · headroom: 3/3 solved (baseline 3/3)"/><text x="564" y="217" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="611" y="199" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-6386 · effort-high: 3/3 solved (baseline 3/3)"/><text x="656" y="217" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="703" y="199" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-6386 · effort-low: 3/3 solved (baseline 3/3)"/><text x="748" y="217" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><text class="rowlab" x="140" y="247" text-anchor="end">sphinx-9461</text><rect x="151" y="229" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-9461 · baseline: 3/3 solved (baseline 3/3)"/><text x="196" y="247" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="243" y="229" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-9461 · caveman: 3/3 solved (baseline 3/3)"/><text x="288" y="247" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="335" y="229" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-9461 · ponytail: 3/3 solved (baseline 3/3)"/><text x="380" y="247" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="427" y="229" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-9461 · rtk: 3/3 solved (baseline 3/3)"/><text x="472" y="247" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="519" y="229" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-9461 · headroom: 3/3 solved (baseline 3/3)"/><text x="564" y="247" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="611" y="229" width="90" height="28" rx="3" fill="#d9607e" data-tip="sphinx-9461 · effort-high: 2/3 solved (baseline 3/3)"/><text x="656" y="247" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3 ↓</text><rect x="703" y="229" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-9461 · effort-low: 3/3 solved (baseline 3/3)"/><text x="748" y="247" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><text class="rowlab" x="140" y="277" text-anchor="end">pylint-4970</text><rect x="151" y="259" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-4970 · baseline: 3/3 solved (baseline 3/3)"/><text x="196" y="277" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="243" y="259" width="90" height="28" rx="3" fill="#d9607e" data-tip="pylint-4970 · caveman: 2/3 solved (baseline 3/3)"/><text x="288" y="277" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3 ↓</text><rect x="335" y="259" width="90" height="28" rx="3" fill="#d9607e" data-tip="pylint-4970 · ponytail: 2/3 solved (baseline 3/3)"/><text x="380" y="277" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3 ↓</text><rect x="427" y="259" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-4970 · rtk: 3/3 solved (baseline 3/3)"/><text x="472" y="277" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="519" y="259" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-4970 · headroom: 3/3 solved (baseline 3/3)"/><text x="564" y="277" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="611" y="259" width="90" height="28" rx="3" fill="#d9607e" data-tip="pylint-4970 · effort-high: 2/3 solved (baseline 3/3)"/><text x="656" y="277" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3 ↓</text><rect x="703" y="259" width="90" height="28" rx="3" fill="#fbe9ec" data-tip="pylint-4970 · effort-low: 0/3 solved (baseline 3/3)"/><text x="748" y="277" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#191919">0/3 ↓</text><text class="rowlab" x="140" y="307" text-anchor="end">sphinx-9229</text><rect x="151" y="289" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-9229 · baseline: 3/3 solved (baseline 3/3)"/><text x="196" y="307" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="243" y="289" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-9229 · caveman: 3/3 solved (baseline 3/3)"/><text x="288" y="307" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="335" y="289" width="90" height="28" rx="3" fill="#d9607e" data-tip="sphinx-9229 · ponytail: 2/3 solved (baseline 3/3)"/><text x="380" y="307" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3 ↓</text><rect x="427" y="289" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-9229 · rtk: 3/3 solved (baseline 3/3)"/><text x="472" y="307" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="519" y="289" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-9229 · headroom: 3/3 solved (baseline 3/3)"/><text x="564" y="307" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="611" y="289" width="90" height="28" rx="3" fill="#d9607e" data-tip="sphinx-9229 · effort-high: 2/3 solved (baseline 3/3)"/><text x="656" y="307" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3 ↓</text><rect x="703" y="289" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="sphinx-9229 · effort-low: 3/3 solved (baseline 3/3)"/><text x="748" y="307" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><text class="rowlab" x="140" y="337" text-anchor="end">pylint-4551</text><rect x="151" y="319" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-4551 · baseline: 3/3 solved (baseline 3/3)"/><text x="196" y="337" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="243" y="319" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-4551 · caveman: 3/3 solved (baseline 3/3)"/><text x="288" y="337" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="335" y="319" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-4551 · ponytail: 3/3 solved (baseline 3/3)"/><text x="380" y="337" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="427" y="319" width="90" height="28" rx="3" fill="#d9607e" data-tip="pylint-4551 · rtk: 2/3 solved (baseline 3/3)"/><text x="472" y="337" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3 ↓</text><rect x="519" y="319" width="90" height="28" rx="3" fill="#9c1f3f" data-tip="pylint-4551 · headroom: 3/3 solved (baseline 3/3)"/><text x="564" y="337" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">3/3</text><rect x="611" y="319" width="90" height="28" rx="3" fill="#d9607e" data-tip="pylint-4551 · effort-high: 2/3 solved (baseline 3/3)"/><text x="656" y="337" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3 ↓</text><rect x="703" y="319" width="90" height="28" rx="3" fill="#d9607e" data-tip="pylint-4551 · effort-low: 2/3 solved (baseline 3/3)"/><text x="748" y="337" text-anchor="middle" style="font-family:var(--mono);font-size:12px" fill="#fff">2/3 ↓</text><text class="delta" x="802" y="82">baseline</text><text class="delta" x="802" y="95">sometimes</text><text class="delta" x="802" y="218">baseline</text><text class="delta" x="802" y="231">always</text><line x1="10" y1="131" x2="794" y2="131" stroke="#000" stroke-opacity=".15"/></svg>
+        <p class="fig-note">↓ = fewer solves than baseline on that task. darker = more solves of 3.</p>
+      </figure>
     </section>
 
-    <section id="v2" style="max-width:880px">
-      <div class="prose">
-        <h2>v2 design<a class="anchor" href="#v2">#</a></h2>
-        <p>One arm per kind of token, no stacks — every effect gets a single cause. All arms run <code>claude-opus-5</code> at <code>--effort xhigh</code>: the most token-hungry setting is where a saver has the most to cut, and the most to break.</p>
-      </div>
-      <div class="tablewrap">
-        <table>
-          <colgroup><col style="width:14%"><col style="width:22%"><col style="width:34%"><col style="width:30%"></colgroup>
-          <thead><tr><th>arm</th><th>tokens it cuts</th><th>injected per run as</th><th>what could break</th></tr></thead>
-          <tbody>
-            <tr><th>baseline</th><td>—</td><td>nothing</td><td>—</td></tr>
-            <tr><th>caveman</th><td>output · answer prose</td><td>plugin (<code>--plugin-dir</code>)</td><td>facts dropped from what it writes</td></tr>
-            <tr><th>ponytail</th><td>output · generated code</td><td>plugin; its SessionStart hook injects ~1.4k tokens of rules</td><td>under-building: edge cases, validation</td></tr>
-            <tr><th>rtk</th><td>input · shell output</td><td>a PreToolUse hook that rewrites <code>pytest</code> → <code>rtk pytest</code></td><td>the one line that mattered, compressed away</td></tr>
-            <tr><th>headroom</th><td>input · the whole request</td><td>localhost proxy (<code>ANTHROPIC_BASE_URL</code>)</td><td>lossy tool results and history</td></tr>
-            <tr><th>effort-high<br>effort-low</th><td>native · reasoning</td><td><code>--effort high</code> / <code>low</code></td><td><strong>the yardstick</strong> — what turning Claude Code's own dial buys, for free</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="prose">
-        <ul class="plain">
-          <li><strong>Tasks by measured difficulty.</strong> Candidates come from public per-task solve rates, then get calibrated here: baseline runs first, and a task is kept only if it passes some but not all of them. The list is frozen before any tool runs.</li>
-          <li><strong>Quality is graded, not one bit:</strong> resolved · fraction of target tests passing · regressions · whether tests ran after the last edit · repeated tool calls · patch size.</li>
-          <li><strong>The frontier.</strong> Plot cost against pass rate; the effort arms draw the line you get for free. A tool above it earns its install; on it, you could have turned the dial; below it, the dial was better.</li>
-          <li><strong>Power, stated up front:</strong> 10 tasks × 3 trials sees drops of roughly 20 points, not 5. Differences are paired by task; intervals are bootstraps clustered by task.</li>
-        </ul>
-      </div>
+    <section id="replication" style="max-width:880px">
+      <figure>
+        <figcaption>Fig. 5 — headroom's 28/30, re-run</figcaption>
+        <svg class="chart-svg" viewBox="0 0 880 236" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pass or fail of every trial for baseline and headroom on the two replicated tasks"><text class="delta" x="200" y="16" text-anchor="middle">original 3 trials</text><text class="delta" x="420" y="16" text-anchor="middle">7 new trials (the test)</text><line x1="268" y1="24" x2="268" y2="196" stroke="#000" stroke-opacity=".15" stroke-dasharray="3 3"/><text class="rowlab" x="0" y="48" font-weight="600">sphinx-7748</text><text class="rowlab" x="146" y="48" text-anchor="end">baseline</text><circle cx="172" cy="44" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="sphinx-7748 · baseline · t1: solved"/><circle cx="200" cy="44" r="9" fill="#F7F6F5" stroke="#7048e8" stroke-width="2" data-tip="sphinx-7748 · baseline · t2: failed"/><circle cx="228" cy="44" r="9" fill="#F7F6F5" stroke="#7048e8" stroke-width="2" data-tip="sphinx-7748 · baseline · t3: failed"/><circle cx="296" cy="44" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="sphinx-7748 · baseline · new t1: solved"/><circle cx="324" cy="44" r="9" fill="#F7F6F5" stroke="#7048e8" stroke-width="2" data-tip="sphinx-7748 · baseline · new t2: failed"/><circle cx="352" cy="44" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="sphinx-7748 · baseline · new t3: solved"/><circle cx="380" cy="44" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="sphinx-7748 · baseline · new t4: solved"/><circle cx="408" cy="44" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="sphinx-7748 · baseline · new t5: solved"/><circle cx="436" cy="44" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="sphinx-7748 · baseline · new t6: solved"/><circle cx="464" cy="44" r="9" fill="#F7F6F5" stroke="#7048e8" stroke-width="2" data-tip="sphinx-7748 · baseline · new t7: failed"/><text class="val" x="600" y="48">1/3 → 5/7</text><text class="rowlab" x="146" y="88" text-anchor="end">headroom</text><circle cx="172" cy="84" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="sphinx-7748 · headroom · t1: solved"/><circle cx="200" cy="84" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="sphinx-7748 · headroom · t2: solved"/><circle cx="228" cy="84" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="sphinx-7748 · headroom · t3: solved"/><circle cx="296" cy="84" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="sphinx-7748 · headroom · new t1: solved"/><circle cx="324" cy="84" r="9" fill="#F7F6F5" stroke="#317cff" stroke-width="2" data-tip="sphinx-7748 · headroom · new t2: failed"/><circle cx="352" cy="84" r="9" fill="#F7F6F5" stroke="#317cff" stroke-width="2" data-tip="sphinx-7748 · headroom · new t3: failed"/><circle cx="380" cy="84" r="9" fill="#F7F6F5" stroke="#317cff" stroke-width="2" data-tip="sphinx-7748 · headroom · new t4: failed"/><circle cx="408" cy="84" r="9" fill="#F7F6F5" stroke="#317cff" stroke-width="2" data-tip="sphinx-7748 · headroom · new t5: failed"/><circle cx="436" cy="84" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="sphinx-7748 · headroom · new t6: solved"/><circle cx="464" cy="84" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="sphinx-7748 · headroom · new t7: solved"/><text class="val" x="600" y="88">3/3 → 3/7</text><text class="rowlab" x="0" y="138" font-weight="600">xarray-7229</text><text class="rowlab" x="146" y="138" text-anchor="end">baseline</text><circle cx="172" cy="134" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="xarray-7229 · baseline · t1: solved"/><circle cx="200" cy="134" r="9" fill="#F7F6F5" stroke="#7048e8" stroke-width="2" data-tip="xarray-7229 · baseline · t2: failed"/><circle cx="228" cy="134" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="xarray-7229 · baseline · t3: solved"/><circle cx="296" cy="134" r="9" fill="#F7F6F5" stroke="#7048e8" stroke-width="2" data-tip="xarray-7229 · baseline · new t1: failed"/><circle cx="324" cy="134" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="xarray-7229 · baseline · new t2: solved"/><circle cx="352" cy="134" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="xarray-7229 · baseline · new t3: solved"/><circle cx="380" cy="134" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="xarray-7229 · baseline · new t4: solved"/><circle cx="408" cy="134" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="xarray-7229 · baseline · new t5: solved"/><circle cx="436" cy="134" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="xarray-7229 · baseline · new t6: solved"/><circle cx="464" cy="134" r="9" fill="#7048e8" stroke="#7048e8" stroke-width="2" data-tip="xarray-7229 · baseline · new t7: solved"/><text class="val" x="600" y="138">2/3 → 6/7</text><text class="rowlab" x="146" y="178" text-anchor="end">headroom</text><circle cx="172" cy="174" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="xarray-7229 · headroom · t1: solved"/><circle cx="200" cy="174" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="xarray-7229 · headroom · t2: solved"/><circle cx="228" cy="174" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="xarray-7229 · headroom · t3: solved"/><circle cx="296" cy="174" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="xarray-7229 · headroom · new t1: solved"/><circle cx="324" cy="174" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="xarray-7229 · headroom · new t2: solved"/><circle cx="352" cy="174" r="9" fill="#F7F6F5" stroke="#317cff" stroke-width="2" data-tip="xarray-7229 · headroom · new t3: failed"/><circle cx="380" cy="174" r="9" fill="#F7F6F5" stroke="#317cff" stroke-width="2" data-tip="xarray-7229 · headroom · new t4: failed"/><circle cx="408" cy="174" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="xarray-7229 · headroom · new t5: solved"/><circle cx="436" cy="174" r="9" fill="#F7F6F5" stroke="#317cff" stroke-width="2" data-tip="xarray-7229 · headroom · new t6: failed"/><circle cx="464" cy="174" r="9" fill="#317cff" stroke="#317cff" stroke-width="2" data-tip="xarray-7229 · headroom · new t7: solved"/><text class="val" x="600" y="178">3/3 → 4/7</text><text class="val" x="0" y="226" font-weight="600">new trials pooled: headroom 7/14 · baseline 11/14 · Fisher p = 0.24</text></svg>
+        <p class="fig-note">filled = solved. headroom went 6/6 where the arms disagreed, so both were re-run 7 more times, rule fixed in advance (PLAN.md §5b). The streak did not hold: luck. Every baseline miss traced to an ordinary slip — a dropped <code>-&gt; retann</code>; an ambiguous attrs convention.</p>
+      </figure>
     </section>
 
-    <section id="calib" style="max-width:880px">
+    <section id="method" style="max-width:880px">
       <div class="prose">
-        <h2>Calibration: 58 baseline runs, ten tasks frozen<a class="anchor" href="#calib">#</a></h2>
-        <p>The first pool was chosen where public agents succeed 2–7 times in 10. Opus 5 at extra-high effort solved <strong>18 of 19 on the first try</strong> — for this model that pool is the ceiling again. The remaining budget went to a reserve pool that public agents solve at most once in ten; Opus 5 solved <strong>ten of those fourteen</strong> at least once, eight of them tasks no public agent had solved — among them sphinx-7590, labelled “&gt;4 hours” of human work in SWE-bench.</p>
-        <p>The surprise is how <em>consistent</em> it is. Of 25 tasks run twice, 17 passed both times, 5 failed both times, and only <strong>3 split</strong>. At this effort level a task is mostly either solved or not; there is little luck to average over.</p>
+        <h2>Method<a class="anchor" href="#method">#</a></h2>
+        <p>v1 tied at 10/14 everywhere because its tasks were ones every agent solves. v2 picks tasks by measured difficulty, then keeps only those that can move.</p>
       </div>
+      <figure>
+        <figcaption>Fig. 6 — How hard the tasks are</figcaption>
+        <svg class="chart-svg" viewBox="0 0 880 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Public difficulty of v1 and v2 tasks"><line x1="170" y1="20" x2="170" y2="160" stroke="#000" stroke-opacity=".05"/><text class="axlabel" x="170" y="178" text-anchor="middle">0</text><line x1="236" y1="20" x2="236" y2="160" stroke="#000" stroke-opacity=".05"/><text class="axlabel" x="236" y="178" text-anchor="middle">1</text><line x1="302" y1="20" x2="302" y2="160" stroke="#000" stroke-opacity=".05"/><text class="axlabel" x="302" y="178" text-anchor="middle">2</text><line x1="368" y1="20" x2="368" y2="160" stroke="#000" stroke-opacity=".05"/><text class="axlabel" x="368" y="178" text-anchor="middle">3</text><line x1="434" y1="20" x2="434" y2="160" stroke="#000" stroke-opacity=".05"/><text class="axlabel" x="434" y="178" text-anchor="middle">4</text><line x1="500" y1="20" x2="500" y2="160" stroke="#000" stroke-opacity=".05"/><text class="axlabel" x="500" y="178" text-anchor="middle">5</text><line x1="566" y1="20" x2="566" y2="160" stroke="#000" stroke-opacity=".05"/><text class="axlabel" x="566" y="178" text-anchor="middle">6</text><line x1="632" y1="20" x2="632" y2="160" stroke="#000" stroke-opacity=".05"/><text class="axlabel" x="632" y="178" text-anchor="middle">7</text><line x1="698" y1="20" x2="698" y2="160" stroke="#000" stroke-opacity=".05"/><text class="axlabel" x="698" y="178" text-anchor="middle">8</text><line x1="764" y1="20" x2="764" y2="160" stroke="#000" stroke-opacity=".05"/><text class="axlabel" x="764" y="178" text-anchor="middle">9</text><line x1="830" y1="20" x2="830" y2="160" stroke="#000" stroke-opacity=".05"/><text class="axlabel" x="830" y="178" text-anchor="middle">10</text><text class="rowlab" x="0" y="64" font-weight="600">v1 tasks</text><text class="delta" x="0" y="78">every condition solved all</text><circle cx="764" cy="60" r="6" fill="#adb5bd" data-tip="v1 tasks: solved by 9 of 10 public frontier agents"/><circle cx="632" cy="60" r="6" fill="#adb5bd" data-tip="v1 tasks: solved by 7 of 10 public frontier agents"/><circle cx="764" cy="46" r="6" fill="#adb5bd" data-tip="v1 tasks: solved by 9 of 10 public frontier agents"/><text class="rowlab" x="0" y="154" font-weight="600">v2 tasks</text><text class="delta" x="0" y="168">the ten frozen tasks</text><circle cx="170" cy="150" r="6" fill="#7048e8" data-tip="v2 tasks: solved by 0 of 10 public frontier agents"/><circle cx="170" cy="136" r="6" fill="#7048e8" data-tip="v2 tasks: solved by 0 of 10 public frontier agents"/><circle cx="170" cy="122" r="6" fill="#7048e8" data-tip="v2 tasks: solved by 0 of 10 public frontier agents"/><circle cx="632" cy="150" r="6" fill="#7048e8" data-tip="v2 tasks: solved by 7 of 10 public frontier agents"/><circle cx="434" cy="150" r="6" fill="#7048e8" data-tip="v2 tasks: solved by 4 of 10 public frontier agents"/><circle cx="500" cy="150" r="6" fill="#7048e8" data-tip="v2 tasks: solved by 5 of 10 public frontier agents"/><circle cx="236" cy="150" r="6" fill="#7048e8" data-tip="v2 tasks: solved by 1 of 10 public frontier agents"/><circle cx="368" cy="150" r="6" fill="#7048e8" data-tip="v2 tasks: solved by 3 of 10 public frontier agents"/><circle cx="170" cy="108" r="6" fill="#7048e8" data-tip="v2 tasks: solved by 0 of 10 public frontier agents"/><circle cx="170" cy="94" r="6" fill="#7048e8" data-tip="v2 tasks: solved by 0 of 10 public frontier agents"/><text class="axlabel" x="500" y="200" text-anchor="middle">solved by N of 10 public frontier agents (SWE-bench Verified leaderboard) →</text></svg>
+      </figure>
+      <figure>
+        <figcaption>Fig. 7 — Calibration: 25 tasks run twice by the baseline, 10 frozen</figcaption>
+        <svg class="chart-svg" viewBox="0 0 880 104" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Calibration outcome of 25 tasks run twice"><text class="rowlab" x="0" y="14">always solved · 17</text><rect x="0" y="26" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="1" data-tip="always solved — frozen into the ten"/><rect x="24" y="26" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="1" data-tip="always solved — frozen into the ten"/><rect x="48" y="26" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="1" data-tip="always solved — frozen into the ten"/><rect x="72" y="26" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="1" data-tip="always solved — frozen into the ten"/><rect x="96" y="26" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="1" data-tip="always solved — frozen into the ten"/><rect x="120" y="26" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="1" data-tip="always solved — frozen into the ten"/><rect x="144" y="26" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="1" data-tip="always solved — frozen into the ten"/><rect x="168" y="26" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="0.28" data-tip="always solved"/><rect x="192" y="26" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="0.28" data-tip="always solved"/><rect x="0" y="50" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="0.28" data-tip="always solved"/><rect x="24" y="50" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="0.28" data-tip="always solved"/><rect x="48" y="50" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="0.28" data-tip="always solved"/><rect x="72" y="50" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="0.28" data-tip="always solved"/><rect x="96" y="50" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="0.28" data-tip="always solved"/><rect x="120" y="50" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="0.28" data-tip="always solved"/><rect x="144" y="50" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="0.28" data-tip="always solved"/><rect x="168" y="50" width="20" height="20" rx="3" fill="#7048e8" fill-opacity="0.28" data-tip="always solved"/><text class="rowlab" x="256" y="14">split · 3</text><rect x="256" y="26" width="20" height="20" rx="3" fill="#f58e3a" fill-opacity="1" data-tip="split — frozen into the ten"/><rect x="280" y="26" width="20" height="20" rx="3" fill="#f58e3a" fill-opacity="1" data-tip="split — frozen into the ten"/><rect x="304" y="26" width="20" height="20" rx="3" fill="#f58e3a" fill-opacity="1" data-tip="split — frozen into the ten"/><text class="rowlab" x="368" y="14">never solved · 5</text><rect x="368" y="26" width="20" height="20" rx="3" fill="#adb5bd" fill-opacity="0.28" data-tip="never solved"/><rect x="392" y="26" width="20" height="20" rx="3" fill="#adb5bd" fill-opacity="0.28" data-tip="never solved"/><rect x="416" y="26" width="20" height="20" rx="3" fill="#adb5bd" fill-opacity="0.28" data-tip="never solved"/><rect x="440" y="26" width="20" height="20" rx="3" fill="#adb5bd" fill-opacity="0.28" data-tip="never solved"/><rect x="464" y="26" width="20" height="20" rx="3" fill="#adb5bd" fill-opacity="0.28" data-tip="never solved"/><text class="delta" x="0" y="96">solid = one of the ten frozen tasks: the 3 split tasks, plus the 7 always-solved tasks that took the most turns</text></svg>
+      </figure>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>frozen task</th><th>10 public agents</th><th>baseline</th><th>mean turns</th><th>est $ (API price)</th><th>why it is in</th></tr></thead>
+          <thead><tr><th>arm</th><th>cuts</th><th>injected per run as</th></tr></thead>
           <tbody>
-            <tr><th>xarray-6992</th><td class="num">0/10</td><td class="num">1/2</td><td class="num">44</td><td class="num">2.60</td><td>in band</td></tr>
-            <tr><th>sphinx-7748</th><td class="num">0/10</td><td class="num">1/2</td><td class="num">40</td><td class="num">2.65</td><td>in band</td></tr>
-            <tr><th>xarray-7229</th><td class="num">0/10</td><td class="num">1/2</td><td class="num">31</td><td class="num">1.26</td><td>in band</td></tr>
-            <tr><th>sphinx-10673</th><td class="num">7/10</td><td class="num">2/2</td><td class="num">61</td><td class="num">3.50</td><td>always solved · most turns</td></tr>
-            <tr><th>sphinx-8548</th><td class="num">4/10</td><td class="num">2/2</td><td class="num">58</td><td class="num">3.83</td><td>always solved · most turns</td></tr>
-            <tr><th>pylint-6386</th><td class="num">5/10</td><td class="num">2/2</td><td class="num">53</td><td class="num">2.36</td><td>always solved · most turns</td></tr>
-            <tr><th>sphinx-9461</th><td class="num">1/10</td><td class="num">2/2</td><td class="num">52</td><td class="num">3.05</td><td>always solved · most turns</td></tr>
-            <tr><th>pylint-4970</th><td class="num">3/10</td><td class="num">2/2</td><td class="num">46</td><td class="num">1.97</td><td>always solved · most turns</td></tr>
-            <tr><th>sphinx-9229</th><td class="num">0/10</td><td class="num">2/2</td><td class="num">41</td><td class="num">1.76</td><td>always solved · most turns</td></tr>
-            <tr><th>pylint-4551</th><td class="num">0/10</td><td class="num">2/2</td><td class="num">40</td><td class="num">2.56</td><td>always solved · most turns</td></tr>
+            <tr><th>caveman</th><td>answer prose</td><td>plugin (<code>--plugin-dir</code>)</td></tr>
+            <tr><th>ponytail</th><td>generated code</td><td>plugin; SessionStart hook, ~1.4k tokens of rules</td></tr>
+            <tr><th>rtk</th><td>shell output</td><td>PreToolUse hook: <code>pytest</code> → <code>rtk pytest</code></td></tr>
+            <tr><th>headroom</th><td>the whole request</td><td>localhost proxy via <code>ANTHROPIC_BASE_URL</code></td></tr>
+            <tr><th>effort-high / low</th><td>reasoning</td><td><code>--effort high</code> / <code>low</code> — the free yardstick</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="tfoot">frozen 2026-09-18 17:41 and committed before any tool ran. Rule, written into PLAN.md before the reserve pool was run: in-band tasks first; if fewer than ten, top up with always-solved tasks that took the most turns — they have the most to lose; never-solved tasks are dropped. Dropped as never solved: pylint-4604, pytest-10356, pytest-5840, sphinx-7462, sphinx-9602. All 58 runs were audited for lookups: two flags, both read by hand and benign — in each the task's own subject tripped the pattern (a proxy-handling bug; a <code>sys.path</code> fixture full of <code>site-packages</code> strings).</p>
-      <div class="prose">
-        <p>So the test v2 could run was sharper than planned: with a baseline this stable, <strong>a tool that makes an always-solved hard task start failing</strong> is a signal, not noise. The baseline's third trial ran interleaved with the tool arms; it finished 25 of 30.</p>
-      </div>
+      <p class="tfoot">all arms: <code>claude-opus-5</code> at <code>--effort xhigh</code>, six pinned tools, no MCP, offline shell, fresh workspace, 3 trials per task. Graded gate: official FAIL_TO_PASS / PASS_TO_PASS, environments verified against the gold patch.</p>
     </section>
 
     <section id="leaks" style="max-width:880px">
-      <div class="prose">
-        <h2>Leaks closed before the first real run<a class="anchor" href="#leaks">#</a></h2>
-        <p>Opus 5 at extra-high effort is resourceful, and a benchmark it can shortcut measures nothing. Each of these surfaced in smoke tests or the first calibration runs; nothing from an affected run is used.</p>
-      </div>
+      <div class="prose"><h2>Leaks closed before the first real run<a class="anchor" href="#leaks">#</a></h2></div>
       <div class="tablewrap">
         <table>
-          <colgroup><col style="width:17%"><col style="width:45%"><col style="width:38%"></colgroup>
-          <thead><tr><th>leak</th><th>how it showed up</th><th>fix</th></tr></thead>
+          <colgroup><col style="width:22%"><col style="width:44%"><col style="width:34%"></colgroup>
+          <thead><tr><th>leak</th><th>symptom</th><th>fix</th></tr></thead>
           <tbody>
-            <tr><th>account connectors</th><td>One smoke run in two loaded the account's claude.ai connectors — Drive, Calendar, a brokerage — into the nested agent: ~75k tokens of tool schemas, and live account access under skip-permissions.</td><td><code>--strict-mcp-config</code>; a run is not gated unless its init event shows exactly the six pinned tools and no MCP server.</td></tr>
-            <tr><th>future commits</th><td>A plain clone carries every branch and tag, so <code>git log --all</code> contains the real fix.</td><td>Workspaces fetch only the base commit's ancestry, plus the tags that already precede it.</td></tr>
-            <tr><th>the released fix</th><td>The first calibration run did <code>pip download pylint==2.11.1</code> and diffed the fixed release against its checkout.</td><td>The agent's shell is offline (proxy variables aimed at a dead port, the API exempted); the prompt forbids other copies; every run is audited for lookups.</td></tr>
-            <tr><th>the harness itself</th><td>v1 workspaces sat inside the harness tree, beside the held-out tests, under a path that named the condition.</td><td>Workspaces live elsewhere under an opaque id; gold patches are deleted before agents run.</td></tr>
-            <tr><th>a verdict-stealing bug</th><td>With two runs in parallel every pytest-repo task failed its gate — including a patch byte-identical to the gold fix (0/10 target tests, 16/16 “regressions”). Concurrent pytest sessions race to clean a shared temp root, and pytest's own suite turns that warning into an error.</td><td>A private <code>TMPDIR</code> per agent and per gate. The same patch re-gated: 10/10, no regressions.</td></tr>
+            <tr><th>account connectors</th><td>claude.ai MCP connectors loaded into the nested agent</td><td><code>--strict-mcp-config</code> + init-event check</td></tr>
+            <tr><th>future commits</th><td><code>git log --all</code> contained the real fix</td><td>fetch only the base commit's ancestry</td></tr>
+            <tr><th>the released fix</th><td>agent ran <code>pip download</code> of the fixed release</td><td>offline shell + lookup audit</td></tr>
+            <tr><th>harness in reach</th><td>workspaces beside the held-out tests</td><td>opaque paths outside the tree</td></tr>
+            <tr><th>shared temp dir</th><td>gold-identical patch scored 0/10 under parallel runs</td><td>private <code>TMPDIR</code> per run and gate</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="tfoot">the fifth row is v1's stale-bytecode story again (§ v1 · failures): a harness artifact that reads exactly like a tool breaking a task. Both were caught the same way — a failing patch that matched a passing one.</p>
     </section>
+
+    <details class="archive" id="v1">
+      <summary>v1 archive — August 2026, Opus 4.8, 56 runs (caveman vs headroom on easy tasks)</summary>
 
     <section id="matchup" style="max-width:880px">
       <div class="prose">
-        <p class="small-note">v1 RESULTS · AUGUST 2026 · claude-opus-4-8 · 56 runs</p>
-        <h2>v1 · The matchup<a class="anchor" href="#matchup">#</a></h2>
+                <h2>v1 · The matchup<a class="anchor" href="#matchup">#</a></h2>
         <p><strong>Caveman</strong> makes Claude answer in fragments; <strong>headroom</strong> compresses what Claude reads. One figure each.</p>
       </div>
 
@@ -418,7 +306,7 @@ footer a:hover{color:var(--accent);text-decoration:none}
           <text x="775" y="134" text-anchor="middle" style="font-family:var(--mono);font-size:8.5px" fill="rgba(25,25,25,.56)">fragments · code intact</text>
           <text x="775" y="170" text-anchor="middle" style="font-family:var(--mono);font-size:10.5px;font-weight:600" fill="#c77a29">3.4k (−42%)</text>
 
-          <text x="440" y="218" text-anchor="middle" style="font-family:var(--mono);font-size:10px" fill="rgba(25,25,25,.56)">price: +1.6k prompt tax · reasoning −42% — quality cost: not measurable in v1 (§ why v1 tied)</text>
+          <text x="440" y="218" text-anchor="middle" style="font-family:var(--mono);font-size:10px" fill="rgba(25,25,25,.56)">price: +1.6k prompt tax · reasoning −42% — quality cost: not measurable in v1 (§ method)</text>
         </svg>
         <p class="fig-note">* a shorter transcript also shrinks the replayed context (−33%) — a second-order effect, not compression.</p>
       </figure>
@@ -552,34 +440,6 @@ footer a:hover{color:var(--accent);text-decoration:none}
           </g>
         </svg>
         <p class="fig-note">replayed context vs output ≈ 80:1. berry tick = all generated output; caveman's −42% cut is invisible at this scale — the point.</p>
-        <div class="vs" style="margin-top:20px">
-          <div class="vs-side">
-            <select class="vs-sel r1" id="sel-left" aria-label="Select left condition">
-              <option value="caveman" selected>CAVEMAN</option>
-              <option value="baseline">BASELINE</option>
-              <option value="headroom">HEADROOM</option>
-              <option value="both">BOTH</option>
-            </select>
-            <div class="pband r2">TOKENS — MEAN PER RUN</div>
-            <div class="r3" id="lg-left"></div>
-            <div class="pband r4">QUALITY</div>
-            <div class="r5" id="ql-left"></div>
-            <div class="pauto r6" id="vd-left"></div>
-          </div>
-          <div class="vs-side">
-            <select class="vs-sel r1" id="sel-right" aria-label="Select right condition">
-              <option value="caveman">CAVEMAN</option>
-              <option value="baseline">BASELINE</option>
-              <option value="headroom" selected>HEADROOM</option>
-              <option value="both">BOTH</option>
-            </select>
-            <div class="pband r2">TOKENS — MEAN PER RUN</div>
-            <div class="r3" id="lg-right"></div>
-            <div class="pband r4">QUALITY</div>
-            <div class="r5" id="ql-right"></div>
-            <div class="pauto r6" id="vd-right"></div>
-          </div>
-        </div>
       </figure>
     </section>
 
@@ -649,7 +509,7 @@ footer a:hover{color:var(--accent);text-decoration:none}
           </tbody>
         </table>
       </div>
-      <p class="tfoot">no condition separates on quality — and no task here could have (§ why v1 tied). O1/O3 are four-way ties (§ why tasks failed); C3's −68% is caveman's biggest legitimate saving. C4, pure writing: −15%.</p>
+      <p class="tfoot">no condition separates on quality — and no task here could have (§ method). O1/O3 are four-way ties (§ why tasks failed); C3's −68% is caveman's biggest legitimate saving. C4, pure writing: −15%.</p>
     </section>
 
     <section id="quality" style="max-width:880px">
@@ -683,22 +543,20 @@ footer a:hover{color:var(--accent);text-decoration:none}
         </table>
       </div>
       <div class="prose">
-        <p>After the appeal: zero failures separate the conditions — 10/14 everywhere. The scariest finding reversed on forensics: caveman's speed didn't break the sphinx task, it outran the bytecode cache's one-second mtime resolution and broke our gate. Its −42% reasoning cut shows no measured quality cost in this battery — and this battery could not have shown one: every task sat at the ceiling or the floor (§ why v1 tied). That is the question v2 exists to answer.</p>
+        <p>After the appeal: zero failures separate the conditions — 10/14 everywhere. The scariest finding reversed on forensics: caveman's speed didn't break the sphinx task, it outran the bytecode cache's one-second mtime resolution and broke our gate. Its −42% reasoning cut shows no measured quality cost in this battery — and this battery could not have shown one: every task sat at the ceiling or the floor (§ method). That is the question v2 exists to answer.</p>
       </div>
     </section>
+
+    </details>
 
     <section class="prose" id="caveats">
       <h2>Caveats<a class="anchor" href="#caveats">#</a></h2>
       <ul class="plain">
-        <li><strong>v1's quality tie is not a finding.</strong> Its tasks sat at the ceiling or the floor; its token and cost numbers stand.</li>
-        <li>v1: N=2 — big deltas robust; single-cell effects are flags, not convictions (C3 proved it: the flag was our bug).</li>
-        <li><strong>v2's quality differences are not resolved.</strong> 30 runs per arm sees drops of roughly 20 points. Every tool's interval includes zero; only effort-low's excludes it. The cost differences are large and consistent across tasks; the pass-rate differences between tools are leads, not findings.</li>
-        <li>Seven of the ten tasks are ones the baseline always solves, so v2 mostly measures whether a tool <em>breaks</em> something, and can barely see one <em>helping</em>.</li>
-        <li>Dollar figures are the CLI's cost estimate at public API prices; the runs themselves billed a subscription.</li>
-        <li>headroom 0.37.0 and rtk 0.49.0 at their defaults, on one kind of traffic: an agent that lives in the shell and already trims its own output. Log-heavy or JSON-heavy work is a different regime — v1 shows headroom doing well in one.</li>
-        <li>One model per version (Opus 4.8, then Opus 5 at <code>xhigh</code>); each tool's ceiling moves with model and task mix.</li>
-        <li>Native SWE-bench envs (no Docker; official test patches at gate time). v2 envs are ported from the official recipes and verified against the gold patch — still token measurement, not official scores.</li>
-        <li>Harness bugs caught and fixed — v1: per-block stream events; a test-path false-flag; a stale-bytecode gate (C2 re-gated 0/8&#8202;→&#8202;8/8; C3 caveman 0/2&#8202;→&#8202;2/2). v2: § leaks closed.</li>
+        <li>30 runs per arm sees ~20-point pass-rate drops, not 5. Cost differences are solid; pass-rate differences between tools are leads.</li>
+        <li>7 of 10 tasks are ones the baseline always solves: v2 mostly tests whether a tool <em>breaks</em> something.</li>
+        <li>Dollar figures are the CLI's estimate at API prices; the runs billed a subscription.</li>
+        <li>rtk 0.49.0 and headroom 0.37.0 at defaults, on a Bash-first agent. Log- or JSON-heavy work is a different regime.</li>
+        <li>Native environments, not the official Docker images: not SWE-bench scores.</li>
       </ul>
     </section>
 
@@ -742,7 +600,6 @@ python3 analyze_v2.py report</pre>
     <span><a href="https://github.com/BrandeisPatrick/blog/tree/main/reports/skill-gym">repo</a> · built with Claude Code</span>
   </footer>
 </div>
-
 <script>
 (function(){
   /* ASCII density field in the devin-vs-cursor hero idiom: a figure emerges
@@ -881,51 +738,11 @@ python3 analyze_v2.py report</pre>
   resize();
   if (!reduce) requestAnimationFrame(tick);
 })();
-
-
-/* ---------- ledger comparator ---------- */
 (function(){
-  const row = (l, v, d) => '<i><span>' + l + '</span><span>' + v +
-    (d ? ' <em>' + d + '</em>' : '') + '</span></i>';
-  const C = {
-    baseline: {
-      ledger: row('out: reasoning','3.8k','') + row('out: answer text','1.1k','') +
-              row('out: tool / code','953','') + row('in: cache-read','461.9k','') +
-              row('est $ / run','$0.528','') + row('est $ / solved','$0.740',''),
-      quality: '<div class="pbox"><b>10 / 14 solved</b><span>the control</span></div>',
-      verdict: 'the reference: 80:1 read vs said.'
-    },
-    caveman: {
-      ledger: row('out: reasoning','2.2k','−42%') + row('out: answer text','590','−47%') +
-              row('out: tool / code','605','−37%') + row('in: cache-read','308.0k','−33%') +
-              row('est $ / run','$0.367','−31%') + row('est $ / solved','$0.514','−30%'),
-      quality: '<div class="pbox"><b>10 / 14 solved</b><span>identical pass pattern — an earlier 8/14 was a stale-bytecode harness artifact</span></div>',
-      verdict: 'tied winner on cost per solve.'
-    },
-    headroom: {
-      ledger: row('out: reasoning','4.5k','≈') + row('out: answer text','1.1k','≈') +
-              row('out: tool / code','1.1k','≈') + row('in: cache-read','254.3k','−45%') +
-              row('est $ / run','$0.431','−18%') + row('est $ / solved','$0.604','−18%'),
-      quality: '<div class="pbox"><b>10 / 14 solved</b><span>identical behavior to baseline</span></div>',
-      verdict: 'same fixes, smaller bill, slower clock.'
-    },
-    both: {
-      ledger: row('out: reasoning','3.3k','−14%') + row('out: answer text','670','−40%') +
-              row('out: tool / code','977','≈') + row('in: cache-read','236.0k','−49%') +
-              row('est $ / run','$0.369','−30%') + row('est $ / solved','$0.516','−30%'),
-      quality: '<div class="pbox"><b>10 / 14 solved</b><span>baseline quality held</span></div>',
-      verdict: 'tied winner on cost per solve.'
-    }
-  };
-  const $ = id => document.getElementById(id);
-  function fill(side, key){
-    $('lg-' + side).innerHTML = '<div class="ledger">' + C[key].ledger + '</div>';
-    $('ql-' + side).innerHTML = C[key].quality;
-    $('vd-' + side).innerHTML = C[key].verdict;
-  }
-  fill('left', 'caveman'); fill('right', 'headroom');
-  $('sel-left').addEventListener('change', e => fill('left', e.target.value));
-  $('sel-right').addEventListener('change', e => fill('right', e.target.value));
+  const t = document.createElement('div'); t.className = 'tip'; document.body.appendChild(t);
+  document.addEventListener('pointerover', e => { const el = e.target.closest('[data-tip]'); if (!el) return; t.textContent = el.dataset.tip; t.style.opacity = 1; });
+  document.addEventListener('pointermove', e => { if (t.style.opacity === '1') { t.style.left = Math.min(e.clientX + 14, innerWidth - 340) + 'px'; t.style.top = (e.clientY + 14) + 'px'; } });
+  document.addEventListener('pointerout', e => { if (e.target.closest('[data-tip]')) t.style.opacity = 0; });
 })();
 </script>
 </body>
