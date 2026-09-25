@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Caveman vs Headroom: Which Tokens Actually Get Saved?</title>
-<meta name="description" content="A sandbox-isolated benchmark of Claude Code token-saving add-ons. v1: 56 Opus runs showed which tokens each tool saves. v2, running: harder tasks, more tools, and what the saving costs in solved tasks.">
+<meta name="description" content="A sandbox-isolated benchmark of Claude Code token-saving add-ons. v2: 276 Opus 5 runs on tasks hard enough to fail — caveman cuts cost 43% at no measurable quality loss; rtk and headroom cost more than running nothing.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600&family=Inter:wght@400;500&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -132,7 +132,9 @@ footer a:hover{color:var(--accent);text-decoration:none}
         <a class="backlink" href="../">&larr; All reports</a>
       </div>
       <nav>
-        <a href="#verdict">Where it stands</a>
+        <a href="#verdict">Verdict</a>
+        <a href="#results">v2 results</a>
+        <a href="#why">Why it went that way</a>
         <a href="#ceiling">Why v1 tied</a>
         <a href="#v2">v2 design</a>
         <a href="#calib">Calibration</a>
@@ -156,16 +158,128 @@ footer a:hover{color:var(--accent);text-decoration:none}
 
     <header class="postheader">
       <h1>Caveman vs Headroom: Which Tokens Actually Get Saved?</h1>
-      <p class="dek">v1 — 56 isolated Opus runs, every token classified — showed which tokens each Claude Code token saver removes. It could not show what removing them costs: its tasks were too easy to fail. v2 is running to find out.</p>
+      <p class="dek">Four Claude Code token savers and the effort dial, on ten SWE-bench tasks hard enough to fail: 276 isolated Opus 5 runs at extra-high effort. One tool beats turning the dial. Two cost more than running nothing.</p>
     </header>
 
     <section class="prose" id="verdict">
-      <h2>Where it stands<a class="anchor" href="#verdict">#</a></h2>
-      <p><strong>Stands:</strong> where the tokens go. A Claude Code run reads ~460k tokens and writes ~6k. Caveman shrinks the 6k (output −42%); headroom shrinks the 460k (cache-read −45%). Cost per solved task fell −30% and −18%.</p>
-      <p><strong>Withdrawn:</strong> “at identical quality”. All four conditions solved the same 10 of 14 — but every task was one that everything passes or nothing passes. A battery with nothing in between cannot show a quality cost, so v1 never tested for one (§ why v1 tied).</p>
-      <p><strong>Running:</strong> v2 — tasks kept only if the baseline solves them <em>some</em> of the time, two more tools (ponytail, rtk), Claude Code's own effort dial as the yardstick, Opus 5 at extra-high effort. Calibration is done and ten tasks are frozen; the tool arms are running, and no tool has been scored yet.</p>
-      <div class="takehome">v1 measured the saving. v2 is built to measure the price.</div>
-      <p class="small-note">updated 2026-09-18 · the v2 design is fixed in <a href="https://github.com/BrandeisPatrick/blog/blob/main/reports/skill-gym/PLAN.md">PLAN.md</a> before any tool runs</p>
+      <h2>Verdict<a class="anchor" href="#verdict">#</a></h2>
+      <p><strong>Caveman works, and beats the free alternative.</strong> −43% cost per run, cheaper on all ten tasks, 24 of 30 solved against the baseline's 25. Turning Claude Code's own effort dial down one notch costs about the same and solves 20.</p>
+      <p><strong>Ponytail saves, at about the dial's price.</strong> −34% cost, 22 of 30 solved: worse than baseline on three tasks, better on none.</p>
+      <p><strong>rtk and headroom cost more than running nothing</strong> — +12% and +21% per run. Both keep their own ledgers of tokens saved; on this traffic neither ledger survived contact with the bill.</p>
+      <div class="takehome">On a model that over-thinks, the saver that works is the one that makes it say less. The ones that make it read less had nothing left to cut.</div>
+      <p class="small-note">210 runs on ten frozen tasks · claude-opus-5 at xhigh · 7 arms × 3 trials · the cost differences are statistically solid; no pass-rate difference between a tool and baseline is</p>
+    </section>
+
+    <section id="results" style="max-width:880px">
+      <div class="prose">
+        <h2>v2 results<a class="anchor" href="#results">#</a></h2>
+        <p>Cost per run against tasks solved. The grey line is what Claude Code gives away: the same model with the effort dial at <code>xhigh</code>, <code>high</code> and <code>low</code>. A tool above the line earns its install; on it, you could have turned the dial; to the right of baseline, it costs more than doing nothing.</p>
+      </div>
+      <figure>
+        <figcaption>Fig. 0 — Four tools against the free dial</figcaption>
+        <svg class="chart-svg" viewBox="0 0 880 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Scatter of cost per run against pass rate for seven arms. The effort dial runs from low at 0.57 dollars and 60 percent, through high at 1.63 dollars and 67 percent, to the extra-high baseline at 2.52 dollars and 83 percent. Caveman sits above that line at 1.44 dollars and 80 percent; ponytail just above it at 1.67 dollars and 73 percent; rtk and headroom sit to the right of baseline at 2.83 and 3.05 dollars.">
+          <g stroke="#000" stroke-opacity=".07">
+            <line x1="90" y1="40" x2="820" y2="40"/><line x1="90" y1="85.7" x2="820" y2="85.7"/><line x1="90" y1="131.4" x2="820" y2="131.4"/>
+            <line x1="90" y1="177.1" x2="820" y2="177.1"/><line x1="90" y1="222.9" x2="820" y2="222.9"/><line x1="90" y1="268.6" x2="820" y2="268.6"/><line x1="90" y1="314.3" x2="820" y2="314.3"/>
+          </g>
+          <line class="axis" x1="90" y1="360" x2="820" y2="360"/><line class="axis" x1="90" y1="40" x2="90" y2="360"/>
+          <g class="axlabel" text-anchor="end"><text x="82" y="44">100%</text><text x="82" y="89.7">90%</text><text x="82" y="135.4">80%</text><text x="82" y="181.1">70%</text><text x="82" y="226.9">60%</text><text x="82" y="272.6">50%</text><text x="82" y="318.3">40%</text><text x="82" y="364">30%</text></g>
+          <g class="axlabel" text-anchor="middle"><text x="90" y="378">$0</text><text x="314.6" y="378">$1</text><text x="539.2" y="378">$2</text><text x="763.8" y="378">$3</text></g>
+          <text class="axlabel" x="455" y="402" text-anchor="middle">est. cost per run (API prices) →</text>
+          <text class="axlabel" x="24" y="200" text-anchor="middle" transform="rotate(-90 24 200)">runs solved, % of 30 →</text>
+          <!-- baseline cost -->
+          <line x1="656" y1="40" x2="656" y2="360" stroke="#7048e8" stroke-opacity=".35" stroke-dasharray="3 4"/>
+          <text class="axlabel" x="662" y="352">costs more than doing nothing →</text>
+          <!-- the dial -->
+          <polyline points="218,222.9 456.1,192.2 656,116.3" fill="none" stroke="#191919" stroke-opacity=".45" stroke-width="1.5"/>
+          <!-- 95% intervals -->
+          <g stroke="#191919" stroke-opacity=".22" stroke-width="1.2">
+            <line x1="218" y1="346.3" x2="218" y2="117.7"/><line x1="456.1" y1="282.3" x2="456.1" y2="99.4"/><line x1="656" y1="209.1" x2="656" y2="40"/>
+            <line x1="413.4" y1="236.6" x2="413.4" y2="53.7"/><line x1="465.1" y1="282.3" x2="465.1" y2="72"/><line x1="725.6" y1="222.9" x2="725.6" y2="53.7"/><line x1="775" y1="145.1" x2="775" y2="40"/>
+          </g>
+          <!-- native points -->
+          <circle cx="218" cy="222.9" r="5" fill="#F7F6F5" stroke="#191919" stroke-width="1.5"><title>effort-low: $0.57/run, 18/30</title></circle>
+          <circle cx="456.1" cy="192.2" r="5" fill="#F7F6F5" stroke="#191919" stroke-width="1.5"><title>effort-high: $1.63/run, 20/30</title></circle>
+          <circle cx="656" cy="116.3" r="6" fill="#7048e8"><title>baseline (xhigh): $2.52/run, 25/30</title></circle>
+          <text class="val" x="218" y="246" text-anchor="middle">effort-low</text><text class="delta" x="218" y="259" text-anchor="middle">$0.57 · 18/30</text>
+          <text class="val" x="474" y="214">effort-high</text><text class="delta" x="474" y="227">$1.63 · 20/30</text>
+          <text class="val" x="646" y="106" text-anchor="end">baseline · xhigh</text><text class="delta" x="646" y="119" text-anchor="end">$2.52 · 25/30</text>
+          <!-- tools -->
+          <circle cx="413.4" cy="131.4" r="6" fill="#f58e3a"><title>caveman: $1.44/run, 24/30</title></circle>
+          <text class="val" x="403" y="127" text-anchor="end" font-weight="600">caveman</text><text class="delta" x="403" y="140" text-anchor="end">$1.44 · 24/30 · +15 pts over the dial</text>
+          <circle cx="465.1" cy="162" r="6" fill="#15aabf"><title>ponytail: $1.67/run, 22/30</title></circle>
+          <text class="val" x="476" y="160">ponytail</text><text class="delta" x="476" y="173">$1.67 · 22/30 · +6</text>
+          <circle cx="725.6" cy="131.4" r="6" fill="#2f9e44"><title>rtk: $2.83/run, 24/30</title></circle>
+          <text class="val" x="736" y="150">rtk</text><text class="delta" x="736" y="163">$2.83 · 24/30</text>
+          <circle cx="775" cy="70.6" r="6" fill="#317cff"><title>headroom: $3.05/run, 28/30</title></circle>
+          <text class="val" x="765" y="62" text-anchor="end">headroom</text><text class="delta" x="765" y="75" text-anchor="end">$3.05 · 28/30</text>
+        </svg>
+        <p class="fig-note">whiskers = 95% intervals on the pass rate (bootstrap clustered by task). They overlap everywhere except effort-low vs baseline: the vertical differences between tools are suggestions, the horizontal ones are not. headroom's 28/30 did not replicate (§ why it went that way).</p>
+      </figure>
+
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>arm</th><th>solved</th><th>vs baseline [95% CI]</th><th>tasks better / worse</th><th>est $/run</th><th>cost vs baseline [95% CI]</th><th>cheaper on</th><th>est $/solved</th></tr></thead>
+          <tbody>
+            <tr><th><i class="dot" style="background:#7048e8"></i>baseline</th><td class="num">25/30</td><td class="num">—</td><td class="num">—</td><td class="num">2.52</td><td class="num">—</td><td class="num">—</td><td class="num">3.02</td></tr>
+            <tr><th><i class="dot" style="background:#f58e3a"></i>caveman</th><td class="num">24/30</td><td class="num">−3 pts [−23, +13]</td><td class="num">1 / 2</td><td class="num">1.44</td><td class="num"><strong>−43%</strong> [−50, −36]</td><td class="num">10/10 tasks</td><td class="num"><strong>1.80</strong></td></tr>
+            <tr><th><i class="dot" style="background:#15aabf"></i>ponytail</th><td class="num">22/30</td><td class="num">−10 pts [−27, +7]</td><td class="num">0 / 3</td><td class="num">1.67</td><td class="num"><strong>−34%</strong> [−41, −25]</td><td class="num">9/10</td><td class="num">2.27</td></tr>
+            <tr><th><i class="dot" style="background:#2f9e44"></i>rtk</th><td class="num">24/30</td><td class="num">−3 pts [−27, +20]</td><td class="num">2 / 2</td><td class="num">2.83</td><td class="num bad">+12% [+0, +27]</td><td class="num">3/10</td><td class="num">3.54</td></tr>
+            <tr><th><i class="dot" style="background:#317cff"></i>headroom</th><td class="num">28/30</td><td class="num">+10 pts [−3, +30]</td><td class="num">2 / 0</td><td class="num">3.05</td><td class="num bad">+21% [+5, +44]</td><td class="num">2/10</td><td class="num">3.27</td></tr>
+            <tr><th>effort-high</th><td class="num">20/30</td><td class="num">−17 pts [−37, +3]</td><td class="num">0 / 5</td><td class="num">1.63</td><td class="num">−35% [−45, −21]</td><td class="num">8/10</td><td class="num">2.45</td></tr>
+            <tr><th>effort-low</th><td class="num">18/30</td><td class="num bad">−23 pts [−50, −3]</td><td class="num">0 / 5</td><td class="num">0.57</td><td class="num">−77% [−82, −71]</td><td class="num">10/10</td><td class="num">0.95</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tfoot">differences are paired by task; intervals are bootstraps clustered by task. No tool's pass rate is distinguishable from baseline's; the effort arms sit at the edge (sign test p = 0.06 each), and headroom's +3 did not survive replication — 7/14 against baseline's 11/14 on fresh trials of the two tasks that produced it (§ why it went that way). Caveman against effort-high, the closest pair on price: better on 4 tasks, worse on none (p = 0.125). 0 of 210 runs flagged by the lookup audit, no regressions, no test files touched.</p>
+
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>task</th><th>baseline</th><th>caveman</th><th>ponytail</th><th>rtk</th><th>headroom</th><th>effort-high</th><th>effort-low</th></tr></thead>
+          <tbody>
+            <tr><th>xarray-6992</th><td class="num">1/3</td><td class="num">1/3</td><td class="num">1/3</td><td class="num">2/3</td><td class="num">1/3</td><td class="num">1/3</td><td class="num bad">0/3</td></tr>
+            <tr><th>sphinx-7748</th><td class="num">1/3</td><td class="num">1/3</td><td class="num bad">0/3</td><td class="num">2/3</td><td class="num">3/3</td><td class="num">1/3</td><td class="num">1/3</td></tr>
+            <tr><th>xarray-7229</th><td class="num">2/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">2/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">1/3</td></tr>
+            <tr><th>sphinx-10673</th><td class="num">3/3</td><td class="num">2/3</td><td class="num">3/3</td><td class="num bad">1/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">2/3</td></tr>
+            <tr><th>sphinx-8548</th><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td></tr>
+            <tr><th>pylint-6386</th><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td></tr>
+            <tr><th>sphinx-9461</th><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">3/3</td></tr>
+            <tr><th>pylint-4970</th><td class="num">3/3</td><td class="num">2/3</td><td class="num">2/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num bad">0/3</td></tr>
+            <tr><th>sphinx-9229</th><td class="num">3/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">3/3</td></tr>
+            <tr><th>pylint-4551</th><td class="num">3/3</td><td class="num">3/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">3/3</td><td class="num">2/3</td><td class="num">2/3</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tfoot">the first three are the tasks the baseline solves only sometimes; the other seven it always solves, chosen as the ones that took the most turns. This is what v1 could not produce: columns that differ.</p>
+    </section>
+
+    <section id="why" style="max-width:880px">
+      <div class="prose">
+        <h2>Why it went that way<a class="anchor" href="#why">#</a></h2>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>mean per run</th><th>reasoning tok</th><th>answer tok</th><th>tool/code tok</th><th>cache-read tok</th><th>turns</th><th>test commands</th><th>wall</th></tr></thead>
+          <tbody>
+            <tr><th>baseline</th><td class="num">26.3k</td><td class="num">782</td><td class="num">5.3k</td><td class="num">2,058k</td><td class="num">47</td><td class="num">11.6</td><td class="num">8.9 min</td></tr>
+            <tr><th>caveman</th><td class="num"><strong>13.2k</strong></td><td class="num">476</td><td class="num">3.5k</td><td class="num">1,096k</td><td class="num">34</td><td class="num">7.8</td><td class="num">4.9 min</td></tr>
+            <tr><th>ponytail</th><td class="num">17.4k</td><td class="num">490</td><td class="num">3.3k</td><td class="num">1,208k</td><td class="num">35</td><td class="num">8.5</td><td class="num">6.2 min</td></tr>
+            <tr><th>rtk</th><td class="num">29.9k</td><td class="num">771</td><td class="num">6.0k</td><td class="num">2,378k</td><td class="num">51</td><td class="num">14.0</td><td class="num">9.5 min</td></tr>
+            <tr><th>headroom</th><td class="num">28.9k</td><td class="num">768</td><td class="num">5.6k</td><td class="num">2,457k</td><td class="num">53</td><td class="num">12.0</td><td class="num">10.1 min</td></tr>
+            <tr><th>effort-high</th><td class="num">15.9k</td><td class="num">677</td><td class="num">3.6k</td><td class="num">1,257k</td><td class="num">37</td><td class="num">8.9</td><td class="num">6.1 min</td></tr>
+            <tr><th>effort-low</th><td class="num">4.7k</td><td class="num">323</td><td class="num">1.9k</td><td class="num">358k</td><td class="num">19</td><td class="num">5.7</td><td class="num">2.3 min</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <ul class="plain">
+          <li><strong>Caveman halves the thinking, not just the prose.</strong> Reasoning falls 26.3k → 13.2k tokens and turns 47 → 34; with a shorter transcript, replayed context halves too. That is a deeper cut than the dial's <code>high</code> setting makes (15.9k) — and it keeps four more tasks. Told to speak in fragments, the model drops the redundancy and keeps the work. Told to try less, it drops both.</li>
+          <li><strong>Ponytail does write less code</strong> — 43 lines added per run against 50, −14%, almost exactly what JetBrains measured — and spends a third less. But it slipped on three tasks and gained on none — one the baseline solves sometimes (0/3 against 1/3), two it never fails. Not significant, and not nothing.</li>
+          <li><strong>rtk had the whole channel and nothing to cut.</strong> Opus 5 does 99–100% of its work in the shell: it reads with <code>sed</code> and <code>grep</code>, edits with heredocs, and almost never calls Read or Edit. rtk rewrote some 945 of those commands and its ledger claims 89% saved — against raw output. The agent was already trimming its own output with <code>| tail</code> and <code>-q</code>; what reached the model did not shrink (75.7k characters of tool results per run against 72.4k), and runs got longer: more turns, more test commands, +12% cost.</li>
+          <li><strong>Headroom barely compressed this traffic.</strong> Its own ledger: 1.87M of 90.8M tokens removed, 2.1%. In v1, on Opus 4.8 and tasks full of logs and workbooks, it cut replayed context 45%; here the context is source code read in small slices. Meanwhile cache writes rose 37% and turns 13%, and the bill rose with them. Its runs did solve the most — 28 of 30, better on two tasks and worse on none. Checked, because a compressor solving <em>more</em> is odd: all nine disagreeing runs were re-scored from their saved patches in fresh workspaces and every verdict held; the three headroom trajectories share no tool calls; the baseline's misses are real near-misses, and each has a mundane cause: on sphinx-7748 both failing runs wrote the new overload branch without the return annotation, then printed rendered output in which the second signature visibly lacked its <code>-&gt; int</code> — and moved on to editing CHANGES; the one headroom run that made the same slip re-read its own code two calls later and fixed it; on xarray-7229 the failing run chose a defensible other reading of “coordinate attributes should be preserved” (keep the first argument's, not <code>x</code>'s), which the issue's own example cannot distinguish and the hidden test does. Five of the six other runs picked <code>x</code>'s. Simulated against the pooled per-task rates, an arm this lucky turns up about 1 time in 20 when six arms are tried. So we ran the bigger run, decision rule written down first (PLAN.md §5b): seven fresh trials each of baseline and headroom on the two tasks where they had disagreed. <strong>New trials only: headroom 7/14, baseline 11/14</strong> (Fisher p = 0.24); over all ten trials per cell, 6/10 against 6/10 on sphinx-7748 and 7/10 against 8/10 on xarray-7229. The 28/30 was luck.</li>
+          <li><strong>The dial is a blunt instrument.</strong> One notch down saves 35% and solves five fewer runs (worse on 5 tasks, better on none); the bottom saves 77% and solves 18 of 30. The first tool worth installing is one that beats that line, and one did.</li>
+        </ul>
+      </div>
     </section>
 
     <section id="ceiling" style="max-width:880px">
@@ -246,7 +360,7 @@ footer a:hover{color:var(--accent);text-decoration:none}
       </div>
       <p class="tfoot">frozen 2026-09-18 17:41 and committed before any tool ran. Rule, written into PLAN.md before the reserve pool was run: in-band tasks first; if fewer than ten, top up with always-solved tasks that took the most turns — they have the most to lose; never-solved tasks are dropped. Dropped as never solved: pylint-4604, pytest-10356, pytest-5840, sphinx-7462, sphinx-9602. All 58 runs were audited for lookups: two flags, both read by hand and benign — in each the task's own subject tripped the pattern (a proxy-handling bug; a <code>sys.path</code> fixture full of <code>site-packages</code> strings).</p>
       <div class="prose">
-        <p>So the test v2 can run is sharper than planned: with a baseline this stable, <strong>a tool that makes an always-solved hard task start failing</strong> is a signal, not noise. The tool arms are running now.</p>
+        <p>So the test v2 could run was sharper than planned: with a baseline this stable, <strong>a tool that makes an always-solved hard task start failing</strong> is a signal, not noise. The baseline's third trial ran interleaved with the tool arms; it finished 25 of 30.</p>
       </div>
     </section>
 
@@ -578,7 +692,10 @@ footer a:hover{color:var(--accent);text-decoration:none}
       <ul class="plain">
         <li><strong>v1's quality tie is not a finding.</strong> Its tasks sat at the ceiling or the floor; its token and cost numbers stand.</li>
         <li>v1: N=2 — big deltas robust; single-cell effects are flags, not convictions (C3 proved it: the flag was our bug).</li>
-        <li>v2 results are not in. This page reports its design, its calibration, and the harness faults it had to fix — nothing about any tool yet.</li>
+        <li><strong>v2's quality differences are not resolved.</strong> 30 runs per arm sees drops of roughly 20 points. Every tool's interval includes zero; only effort-low's excludes it. The cost differences are large and consistent across tasks; the pass-rate differences between tools are leads, not findings.</li>
+        <li>Seven of the ten tasks are ones the baseline always solves, so v2 mostly measures whether a tool <em>breaks</em> something, and can barely see one <em>helping</em>.</li>
+        <li>Dollar figures are the CLI's cost estimate at public API prices; the runs themselves billed a subscription.</li>
+        <li>headroom 0.37.0 and rtk 0.49.0 at their defaults, on one kind of traffic: an agent that lives in the shell and already trims its own output. Log-heavy or JSON-heavy work is a different regime — v1 shows headroom doing well in one.</li>
         <li>One model per version (Opus 4.8, then Opus 5 at <code>xhigh</code>); each tool's ceiling moves with model and task mix.</li>
         <li>Native SWE-bench envs (no Docker; official test patches at gate time). v2 envs are ported from the official recipes and verified against the gold patch — still token measurement, not official scores.</li>
         <li>Harness bugs caught and fixed — v1: per-block stream events; a test-path false-flag; a stale-bytecode gate (C2 re-gated 0/8&#8202;→&#8202;8/8; C3 caveman 0/2&#8202;→&#8202;2/2). v2: § leaks closed.</li>
@@ -621,7 +738,7 @@ python3 analyze_v2.py report</pre>
   </article>
 
   <footer>
-    <span>skill-gym — v1: 56 runs · claude-opus-4-8 · 2026-08-07 — v2: tool arms running · claude-opus-5 xhigh · updated 2026-09-18</span>
+    <span>skill-gym — v1: 56 runs · claude-opus-4-8 · 2026-08-07 — v2: 276 runs (38 calibration-only + 210 on the ten frozen tasks + 28 replication) · claude-opus-5 xhigh · zero errors · 2026-09-25</span>
     <span><a href="https://github.com/BrandeisPatrick/blog/tree/main/reports/skill-gym">repo</a> · built with Claude Code</span>
   </footer>
 </div>

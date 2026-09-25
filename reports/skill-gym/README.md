@@ -82,7 +82,26 @@ Custom slices: `python3 gym.py run --conditions baseline,caveman --tasks C4 --tr
 Runs are resumable (completed cells skipped). Interleaved condition order within
 each task keeps prompt-cache warmth fair.
 
-## v2 — tasks that can move, more tools (in progress)
+## v2 — tasks that can move, more tools
+
+**Results** (276 runs, `claude-opus-5` at `xhigh`; full tables in
+[`results/summary-v2.md`](results/summary-v2.md), calibration in
+[`results/summary-v2-calib.md`](results/summary-v2-calib.md)):
+
+| arm | solved | cost vs baseline [95% CI] | cheaper on | reading |
+|---|---|---|---|---|
+| baseline | 25/30 | — | — | $2.52/run |
+| caveman | 24/30 | **−43%** [−50, −36] | 10/10 tasks | beats the free effort dial by ~15 points at its price |
+| ponytail | 22/30 | **−34%** [−41, −25] | 9/10 | about what the dial buys; worse on 3 tasks, better on 0 |
+| rtk | 24/30 | +12% [+0, +27] | 3/10 | its ledger says 89% saved; what reached the model did not shrink |
+| headroom | 28/30 | +21% [+5, +44] | 2/10 | its ledger says 2.1% removed; more cache writes, more turns; the 28/30 did not replicate (7/14 vs 11/14 on fresh trials, PLAN.md 5b) |
+| effort-high | 20/30 | −35% [−45, −21] | 8/10 | the dial, one notch down |
+| effort-low | 18/30 | −77% [−82, −71] | 10/10 | the dial, bottom |
+
+No tool's pass rate is statistically distinguishable from baseline's (30 runs per arm
+sees ~20-point drops); the cost differences are. Opus 5 does 99–100% of its work through
+Bash, so an output-side register change (caveman) had something to cut and the input-side
+tools did not.
 
 v1's verdict was a tie on quality because its tasks could not show anything else: the
 three SWE-bench tasks are solved by 7–9 of 10 public frontier agents, and the two
@@ -158,7 +177,9 @@ a plain `rmtree` silently skips.
 
 Host footprint in v2: `~/.claude/.ponytail-active` and `.ponytail-statusline-nudged`
 (ponytail's hook; removed after each run), `~/Library/Application Support/rtk/` (rtk's
-command history), `~/Library/Caches/pyws/` (workspaces; emptied after each gate).
+command history), `~/.headroom/` (headroom's savings ledger and store),
+`~/Library/Caches/pyws/` (workspaces; emptied after each gate) and
+`~/Library/Caches/pyplug/` (neutral copies of the tools under test).
 
 ## Caveats
 
